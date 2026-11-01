@@ -9,6 +9,7 @@ import {
   getCities,
 } from "../../services/tournamentApi";
 import { addDays, toISO } from "../../utils/date";
+import { newSponsor, MAX_SPONSOR } from "../../utils/sponsor";
 
 const FUNDING_OPTIONS = [
   { value: "sponsor", label: "Sponsor" },
@@ -36,8 +37,7 @@ const FIELD_MAP = {
   total_hadiah: "prize",
   rincian_pendanaan: "fundingDetail",
   sumber_pendanaan: "funding",
-  "sponsor.0.nama_sponsor": "sponsorName",
-  "sponsor.0.kontak_sponsor": "sponsorContact",
+  sponsor: "funding",
   jenis_biaya: "fee",
   biaya_pendaftaran: "feeAmount",
   metode_pembayaran: "paymentMethod",
@@ -63,8 +63,7 @@ export const emptyForm = {
   description: "",
   prize: "",
   funding: [],
-  sponsorName: "",
-  sponsorContact: "",
+  sponsors: [newSponsor()],
   fundingDetail: "",
   fee: "",
   feeAmount: "",
@@ -149,14 +148,47 @@ function TournamentForm({
   const useQris = ["qris", "qris_transfer"].includes(form.paymentMethod);
   const useBank = ["transfer", "qris_transfer"].includes(form.paymentMethod);
 
+  const clearSponsorErrors = () =>
+    setErrors((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).filter(([k]) => !k.startsWith("sponsor.")),
+      ),
+    );
+
+  const updateSponsor = (index, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      sponsors: prev.sponsors.map((s, i) =>
+        i === index ? { ...s, [field]: value } : s,
+      ),
+    }));
+    setErrors((prev) => ({ ...prev, [`sponsor.${index}.${field}`]: "" }));
+    setMessage("");
+  };
+
+  const addSponsor = () =>
+    setForm((prev) =>
+      prev.sponsors.length < MAX_SPONSOR
+        ? { ...prev, sponsors: [...prev.sponsors, newSponsor()] }
+        : prev,
+    );
+
+  const removeSponsor = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      sponsors: prev.sponsors.filter((_, i) => i !== index),
+    }));
+    clearSponsorErrors(); // index bergeser, jadi error lama dibersihkan
+  };
+
   const toggleFunding = (value) => {
     const next = form.funding.includes(value)
       ? form.funding.filter((x) => x !== value)
       : [...form.funding, value];
     set("funding", next);
     if (!next.includes("sponsor")) {
-      set("sponsorName", "");
-      set("sponsorContact", "");
+      set("sponsors", [newSponsor()]);
+      clearSponsorErrors();
     }
   };
 
@@ -203,9 +235,13 @@ function TournamentForm({
     if (form.funding.length === 0)
       e.funding = "Pilih minimal satu sumber pendanaan.";
     if (form.funding.includes("sponsor")) {
-      if (!form.sponsorName.trim()) e.sponsorName = "Nama sponsor wajib diisi.";
-      if (!form.sponsorContact.trim())
-        e.sponsorContact = "Contact person sponsor wajib diisi.";
+      form.sponsors.forEach((s, i) => {
+        if (!s.nama_sponsor.trim())
+          e[`sponsor.${i}.nama_sponsor`] = "Nama sponsor wajib diisi.";
+        if (!s.kontak_sponsor.trim())
+          e[`sponsor.${i}.kontak_sponsor`] =
+            "Contact person sponsor wajib diisi.";
+      });
     }
     if (form.fundingDetail.trim().length < 10)
       e.fundingDetail = "Rincian pendanaan minimal 10 karakter.";
@@ -229,7 +265,7 @@ function TournamentForm({
     setTimeout(
       () =>
         document
-          .querySelector(".t-form-section.has-error")
+          .querySelector(".t-form-section.has-error, .t-line.has-error")
           ?.scrollIntoView({ behavior: "smooth", block: "center" }),
       0,
     );
@@ -447,21 +483,58 @@ function TournamentForm({
         {form.funding.includes("sponsor") && (
           <>
             <h3>Informasi Sponsor</h3>
-            <label className="t-label">Nama Sponsor</label>
-            {underline("sponsorName", {
-              placeholder: "Nama perusahaan atau pihak sponsor",
-              ...text("sponsorName"),
+
+            {form.sponsors.map((s, i) => {
+              const nKey = `sponsor.${i}.nama_sponsor`;
+              const kKey = `sponsor.${i}.kontak_sponsor`;
+              return (
+                <div key={s.key} className="t-sponsor-item">
+                  <div className="t-sponsor-head">
+                    <span className="t-sponsor-title">Sponsor {i + 1}</span>
+                    {form.sponsors.length > 1 && (
+                      <button
+                        type="button"
+                        className="t-sponsor-remove"
+                        onClick={() => removeSponsor(i)}
+                      >
+                        ✕ Hapus
+                      </button>
+                    )}
+                  </div>
+
+                  <label className="t-label">Nama Sponsor</label>
+                  {underline(nKey, {
+                    placeholder: "Nama perusahaan atau pihak sponsor",
+                    value: s.nama_sponsor,
+                    onChange: (e) =>
+                      updateSponsor(i, "nama_sponsor", e.target.value),
+                  })}
+                  {errors[nKey] && (
+                    <p className="t-field-error">{errors[nKey]}</p>
+                  )}
+
+                  <label className="t-label">Contact Person Sponsor</label>
+                  {underline(kKey, {
+                    placeholder: "Nomer Hp/email",
+                    value: s.kontak_sponsor,
+                    onChange: (e) =>
+                      updateSponsor(i, "kontak_sponsor", e.target.value),
+                  })}
+                  {errors[kKey] && (
+                    <p className="t-field-error">{errors[kKey]}</p>
+                  )}
+                </div>
+              );
             })}
-            {errors.sponsorName && (
-              <p className="t-field-error">{errors.sponsorName}</p>
-            )}
-            <label className="t-label">Contact Person Sponsor</label>
-            {underline("sponsorContact", {
-              placeholder: "Nomer Hp/email",
-              ...text("sponsorContact"),
-            })}
-            {errors.sponsorContact && (
-              <p className="t-field-error">{errors.sponsorContact}</p>
+
+            {form.sponsors.length < MAX_SPONSOR && (
+              <button
+                type="button"
+                className="t-sponsor-add"
+                onClick={addSponsor}
+              >
+                + Tambah Sponsor
+              </button>
             )}
           </>
         )}

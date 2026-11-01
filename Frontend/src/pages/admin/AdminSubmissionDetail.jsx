@@ -354,11 +354,12 @@ function AdminSubmissionDetail() {
               {data.funding.length ? data.funding.join(", ") : "-"}
             </div>
             {data.sponsors.map((s, i) => (
-              <div key={i}>
+              <div key={i} className="d-sponsor">
+                <p className="d-sponsor-title">Sponsor {i + 1}</p>
                 <p className="d-label">Nama Sponsor</p>
-                <div className="d-value">{s.name}</div>
+                <div className="d-value">{s.name || "-"}</div>
                 <p className="d-label">Contact Person Sponsor</p>
-                <div className="d-value">{s.contact}</div>
+                <div className="d-value">{s.contact || "-"}</div>
               </div>
             ))}
           </section>

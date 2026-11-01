@@ -153,8 +153,9 @@ function TournamentInfo({ d, action }) {
       {d.sponsors.length > 0 && (
         <section className="td-card">
           <h2>Sponsor</h2>
-          {d.sponsors.map((name) => (
-            <div className="td-item" key={name}>
+
+          {d.sponsors.map((name, i) => (
+            <div className="td-item" key={i}>
               <span className="td-icon">
                 <Icon name="user-plus" size={20} />
               </span>

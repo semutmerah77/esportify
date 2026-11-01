@@ -480,6 +480,51 @@
   color: #f87171;
 }
 
+/* ===== Sponsor dinamis (form turnamen) ===== */
+.t-sponsor-item {
+  padding: 12px 0 4px;
+}
+.t-sponsor-item + .t-sponsor-item {
+  margin-top: 12px;
+  border-top: 1px solid #243044;
+}
+.t-sponsor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.t-sponsor-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.t-sponsor-remove {
+  border: none;
+  background: none;
+  color: #f87171;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.t-sponsor-remove:hover {
+  color: #ef4444;
+}
+.t-sponsor-add {
+  margin-top: 12px;
+  padding: 8px 14px;
+  border: 1px dashed #3a4558;
+  border-radius: 8px;
+  background: none;
+  color: var(--white);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.t-sponsor-add:hover {
+  border-color: var(--blue);
+  color: #6aa3ff;
+}
+
 /* Input bergaris bawah */
 .t-line {
   width: 100%;
@@ -1051,6 +1096,39 @@
 .t-edit-btn:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+
+/* ===== Sponsor di halaman detail ===== */
+.d-sponsor {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid #243044;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.d-sponsor-title {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #6aa3ff;
+}
+/* ===== Sponsor di halaman detail ===== */
+.d-sponsor {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid #243044;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.d-sponsor-title {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #6aa3ff;
 }
 
 /* ========== Responsive ========== */

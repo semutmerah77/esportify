@@ -104,14 +104,20 @@ function SubmissionView({ d }) {
         <div className="d-value">
           {d.funding.map((k) => FUNDING_LABEL[k]).join(", ") || "-"}
         </div>
-        {d.funding.includes("sponsor") && (
-          <>
-            <p className="d-label">Nama Sponsor</p>
-            <div className="d-value">{d.sponsorName || "-"}</div>
-            <p className="d-label">Email / Nomor Telepon</p>
-            <div className="d-value">{d.sponsorContact || "-"}</div>
-          </>
-        )}
+        {d.funding.includes("sponsor") &&
+          (d.sponsors.length > 0 ? (
+            d.sponsors.map((s, i) => (
+              <div key={i} className="d-sponsor">
+                <p className="d-sponsor-title">Sponsor {i + 1}</p>
+                <p className="d-label">Nama Sponsor</p>
+                <div className="d-value">{s.nama_sponsor || "-"}</div>
+                <p className="d-label">Contact Person Sponsor</p>
+                <div className="d-value">{s.kontak_sponsor || "-"}</div>
+              </div>
+            ))
+          ) : (
+            <div className="d-value">-</div>
+          ))}
       </section>
 
       <Field label="Rincian Pendanaan">{d.fundingDetail}</Field>

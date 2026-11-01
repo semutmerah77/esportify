@@ -1,5 +1,6 @@
 import { apiRequest } from "./httpClient";
 import { toMediaUrl } from "../utils/media";
+import { newSponsor } from "../utils/sponsor";
 
 // Semua fungsi di file ini SELALU memakai backend (tanpa mock).
 // Respons player: { success, message, data }.
@@ -71,6 +72,17 @@ export async function getCities(provinceId) {
   }));
 }
 
+const appendSponsors = (f, sponsors) =>
+  sponsors.forEach((s, i) => {
+    f.append(`sponsor[${i}][nama_sponsor]`, s.nama_sponsor.trim());
+    f.append(`sponsor[${i}][kontak_sponsor]`, s.kontak_sponsor.trim());
+  });
+
+const sponsorSig = (list) =>
+  JSON.stringify(
+    list.map((s) => [s.nama_sponsor.trim(), s.kontak_sponsor.trim()]),
+  );
+
 // ----- Buat Turnamen -----
 // POST /api/pengajuan-turnamen (multipart/form-data)
 export async function submitTournament(v) {
@@ -98,10 +110,7 @@ export async function submitTournament(v) {
     f.append("sumber_pendanaan[]", String(FUNDING_IDS[key])),
   );
   // Data sponsor hanya dikirim kalau Sponsor dipilih
-  if (v.funding.includes("sponsor")) {
-    f.append("sponsor[0][nama_sponsor]", v.sponsorName.trim());
-    f.append("sponsor[0][kontak_sponsor]", v.sponsorContact.trim());
-  }
+  if (v.funding.includes("sponsor")) appendSponsors(f, v.sponsors);
 
   f.append("jenis_biaya", v.fee);
   if (v.fee === "berbayar") {
@@ -151,7 +160,6 @@ export async function getSubmissionDetail(id) {
   const d = response?.data ?? response;
   const pay = d.pembayaran ?? {};
   const fee = d.pendanaan ?? {};
-  const sponsor = (d.sponsor ?? [])[0] ?? {};
 
   const fundingIds = { ...FUNDING_IDS };
   const funding = [];
@@ -187,8 +195,10 @@ export async function getSubmissionDetail(id) {
     prize: d.total_hadiah ?? "",
     funding,
     fundingIds,
-    sponsorName: sponsor.nama_sponsor ?? "",
-    sponsorContact: sponsor.kontak_sponsor ?? "",
+    sponsors: (d.sponsor ?? []).map((s) => ({
+      nama_sponsor: s.nama_sponsor ?? "",
+      kontak_sponsor: s.kontak_sponsor ?? "",
+    })),
     fundingDetail: d.rincian_pendanaan ?? "",
     feeType: String(fee.jenis_biaya ?? "").toLowerCase(),
     fee: fee.biaya_pendaftaran ?? "",
@@ -215,8 +225,9 @@ export const detailToForm = (d) => ({
   description: d.description,
   prize: money(d.prize),
   funding: d.funding,
-  sponsorName: d.sponsorName,
-  sponsorContact: d.sponsorContact,
+  sponsors: d.sponsors.length
+    ? d.sponsors.map((s) => newSponsor(s))
+    : [newSponsor()],
   fundingDetail: d.fundingDetail,
   fee: d.feeType,
   feeAmount: money(d.fee),
@@ -277,15 +288,18 @@ export async function updateSubmission(
 
   const fundingChanged =
     [...v.funding].sort().join() !== [...initial.funding].sort().join() ||
-    diff("sponsorName") ||
-    diff("sponsorContact");
+    (v.funding.includes("sponsor") &&
+      sponsorSig(v.sponsors) !== sponsorSig(initial.sponsors));
+
   if (fundingChanged) {
     v.funding.forEach((k) =>
       f.append("sumber_pendanaan[]", String(fundingIds[k])),
     );
     if (v.funding.includes("sponsor")) {
-      f.append("sponsor[0][nama_sponsor]", v.sponsorName.trim());
-      f.append("sponsor[0][kontak_sponsor]", v.sponsorContact.trim());
+      appendSponsors(f, v.sponsors);
+    } else {
+      // PENTING: kirim kosong supaya backend hapus sponsor lama
+      f.append("sponsor", "");
     }
   }
 
@@ -342,7 +356,9 @@ export async function getTournamentDetail(id) {
     prize: p.total_hadiah ?? null,
     feeType: String(fee.jenis_biaya ?? "").toLowerCase(),
     fee: fee.biaya_pendaftaran ?? null,
-    sponsors: (p.sponsor ?? []).map((s) => s.nama_sponsor).filter(Boolean),
+    sponsors: (p.sponsor ?? [])
+      .map((s) => (typeof s === "string" ? s : s?.nama_sponsor))
+      .filter(Boolean),
     paymentMethod: String(pay.metode_pembayaran ?? "").toLowerCase(),
   };
 }
