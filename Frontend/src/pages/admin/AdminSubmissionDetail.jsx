@@ -364,7 +364,33 @@ function AdminSubmissionDetail() {
             ))}
           </section>
 
-          <Field label="Rincian Pendanaan">{data.fundingDetail}</Field>
+          <section className="d-card">
+            <p className="d-label">Rincian Pendanaan</p>
+            {data.rincian.length === 0 ? (
+              <div className="d-value">-</div>
+            ) : (
+              <>
+                {data.rincian.map((r, i) => (
+                  <div key={i} className="d-sponsor">
+                    <p className="d-sponsor-title">{r.peruntukanDana}</p>
+                    <div className="d-value">{rupiah(r.nominal)}</div>
+                    {r.keterangan && <p className="d-label">{r.keterangan}</p>}
+                  </div>
+                ))}
+                <p className="t-total">
+                  Total alokasi:{" "}
+                  <b>
+                    {rupiah(
+                      data.rincian.reduce(
+                        (sum, r) => sum + (Number(r.nominal) || 0),
+                        0,
+                      ),
+                    )}
+                  </b>
+                </p>
+              </>
+            )}
+          </section>
 
           <section className="d-card">
             <p className="d-label">Biaya Pendaftaran</p>
