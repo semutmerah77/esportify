@@ -120,6 +120,15 @@ class PengajuanTurnamen extends Model
             'id_pengajuan'
         );
     }
+    public function rincian(): HasMany
+    {
+        return $this->hasMany(
+            RincianPendanaan::class,
+            'id_pengajuan',
+            'id_pengajuan'
+        );
+    }
+
 
     public function sumberPendanaan(): BelongsToMany
     {
