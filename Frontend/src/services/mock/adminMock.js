@@ -220,8 +220,18 @@ export const mockSubmissionDetail = {
   prize: 3000000,
   funding: ["Sponsor"],
   sponsors: [{ name: "Super Gresik", contact: "089294838080" }],
-  fundingDetail:
-    "Total perkiraan anggaran untuk turnamen ini adalah sebesar Rp10.000.000.",
+  rincian: [
+    {
+      peruntukanDana: "Hadiah pemenang",
+      keterangan: "Juara 1 sampai 3",
+      nominal: 3000000,
+    },
+    {
+      peruntukanDana: "Sewa tempat",
+      keterangan: "Venue 1 hari",
+      nominal: 2000000,
+    },
+  ],
   feeType: "berbayar",
   fee: 50000,
   paymentMethod: "qris",

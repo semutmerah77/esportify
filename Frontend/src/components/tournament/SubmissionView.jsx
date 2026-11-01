@@ -120,7 +120,33 @@ function SubmissionView({ d }) {
           ))}
       </section>
 
-      <Field label="Rincian Pendanaan">{d.fundingDetail}</Field>
+      <section className="d-card">
+        <p className="d-label">Rincian Pendanaan</p>
+        {d.rincian.length === 0 ? (
+          <div className="d-value">-</div>
+        ) : (
+          <>
+            {d.rincian.map((r, i) => (
+              <div key={i} className="d-sponsor">
+                <p className="d-sponsor-title">{r.peruntukanDana}</p>
+                <div className="d-value">{rupiah(r.nominal)}</div>
+                {r.keterangan && <p className="d-label">{r.keterangan}</p>}
+              </div>
+            ))}
+            <p className="t-total">
+              Total alokasi:{" "}
+              <b>
+                {rupiah(
+                  d.rincian.reduce(
+                    (sum, r) => sum + (Number(r.nominal) || 0),
+                    0,
+                  ),
+                )}
+              </b>
+            </p>
+          </>
+        )}
+      </section>
 
       <section className="d-card">
         <p className="d-label">Biaya Pendaftaran</p>

@@ -1,6 +1,7 @@
 import { apiRequest } from "./httpClient";
 import { toMediaUrl } from "../utils/media";
 import { newSponsor } from "../utils/sponsor";
+import { newRincian, newRincianRows } from "../utils/rincian";
 
 // Semua fungsi di file ini SELALU memakai backend (tanpa mock).
 // Respons player: { success, message, data }.
@@ -72,6 +73,7 @@ export async function getCities(provinceId) {
   }));
 }
 
+// ----- Helper sponsor -----
 const appendSponsors = (f, sponsors) =>
   sponsors.forEach((s, i) => {
     f.append(`sponsor[${i}][nama_sponsor]`, s.nama_sponsor.trim());
@@ -81,6 +83,24 @@ const appendSponsors = (f, sponsors) =>
 const sponsorSig = (list) =>
   JSON.stringify(
     list.map((s) => [s.nama_sponsor.trim(), s.kontak_sponsor.trim()]),
+  );
+
+// ----- Helper rincian pendanaan -----
+const appendRincian = (f, list) =>
+  list.forEach((r, i) => {
+    f.append(`rincian[${i}][peruntukanDana]`, r.peruntukanDana.trim());
+    if (r.keterangan.trim())
+      f.append(`rincian[${i}][keterangan]`, r.keterangan.trim());
+    f.append(`rincian[${i}][nominal]`, String(Number(r.nominal)));
+  });
+
+const rincianSig = (list) =>
+  JSON.stringify(
+    list.map((r) => [
+      r.peruntukanDana.trim(),
+      r.keterangan.trim(),
+      String(r.nominal),
+    ]),
   );
 
 // ----- Buat Turnamen -----
@@ -104,13 +124,15 @@ export async function submitTournament(v) {
   f.append("jadwal_main", v.matchDate);
   f.append("deskripsi_turnamen", v.description.trim());
   f.append("total_hadiah", String(Number(v.prize)));
-  f.append("rincian_pendanaan", v.fundingDetail.trim());
 
   v.funding.forEach((key) =>
     f.append("sumber_pendanaan[]", String(FUNDING_IDS[key])),
   );
   // Data sponsor hanya dikirim kalau Sponsor dipilih
   if (v.funding.includes("sponsor")) appendSponsors(f, v.sponsors);
+
+  // Rincian pendanaan (wajib)
+  appendRincian(f, v.rincian);
 
   f.append("jenis_biaya", v.fee);
   if (v.fee === "berbayar") {
@@ -199,7 +221,11 @@ export async function getSubmissionDetail(id) {
       nama_sponsor: s.nama_sponsor ?? "",
       kontak_sponsor: s.kontak_sponsor ?? "",
     })),
-    fundingDetail: d.rincian_pendanaan ?? "",
+    rincian: (d.rincian ?? []).map((r) => ({
+      peruntukanDana: r.peruntukanDana ?? "",
+      keterangan: r.keterangan ?? "",
+      nominal: money(r.nominal),
+    })),
     feeType: String(fee.jenis_biaya ?? "").toLowerCase(),
     fee: fee.biaya_pendaftaran ?? "",
     paymentMethod: String(pay.metode_pembayaran ?? "").toLowerCase(),
@@ -228,7 +254,9 @@ export const detailToForm = (d) => ({
   sponsors: d.sponsors.length
     ? d.sponsors.map((s) => newSponsor(s))
     : [newSponsor()],
-  fundingDetail: d.fundingDetail,
+  rincian: d.rincian.length
+    ? d.rincian.map((r) => newRincian(r))
+    : newRincianRows(),
   fee: d.feeType,
   feeAmount: money(d.fee),
   paymentMethod: d.paymentMethod,
@@ -284,7 +312,10 @@ export async function updateSubmission(
   put("jadwal_main", "matchDate");
   put("deskripsi_turnamen", "description", (s) => s.trim());
   put("total_hadiah", "prize", (s) => String(Number(s)));
-  put("rincian_pendanaan", "fundingDetail", (s) => s.trim());
+
+  // Rincian: kirim ulang seluruh daftar hanya kalau ada yang berubah
+  if (rincianSig(v.rincian) !== rincianSig(initial.rincian))
+    appendRincian(f, v.rincian);
 
   const fundingChanged =
     [...v.funding].sort().join() !== [...initial.funding].sort().join() ||

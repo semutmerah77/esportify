@@ -10,6 +10,13 @@ import {
 } from "../../services/tournamentApi";
 import { addDays, toISO } from "../../utils/date";
 import { newSponsor, MAX_SPONSOR } from "../../utils/sponsor";
+import {
+  newRincian,
+  newRincianRows,
+  rincianPlaceholder,
+  MIN_RINCIAN,
+  MAX_RINCIAN,
+} from "../../utils/rincian";
 
 const FUNDING_OPTIONS = [
   { value: "sponsor", label: "Sponsor" },
@@ -35,7 +42,7 @@ const FIELD_MAP = {
   jadwal_main: "matchDate",
   deskripsi_turnamen: "description",
   total_hadiah: "prize",
-  rincian_pendanaan: "fundingDetail",
+  rincian: "rincian",
   sumber_pendanaan: "funding",
   sponsor: "funding",
   jenis_biaya: "fee",
@@ -64,7 +71,7 @@ export const emptyForm = {
   prize: "",
   funding: [],
   sponsors: [newSponsor()],
-  fundingDetail: "",
+  rincian: newRincianRows(),
   fee: "",
   feeAmount: "",
   paymentMethod: "",
@@ -148,6 +155,7 @@ function TournamentForm({
   const useQris = ["qris", "qris_transfer"].includes(form.paymentMethod);
   const useBank = ["transfer", "qris_transfer"].includes(form.paymentMethod);
 
+  // ---------- Sponsor ----------
   const clearSponsorErrors = () =>
     setErrors((prev) =>
       Object.fromEntries(
@@ -191,6 +199,46 @@ function TournamentForm({
       clearSponsorErrors();
     }
   };
+
+  // ---------- Rincian pendanaan ----------
+  const clearRincianErrors = () =>
+    setErrors((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).filter(([k]) => !k.startsWith("rincian.")),
+      ),
+    );
+
+  const updateRincian = (index, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      rincian: prev.rincian.map((r, i) =>
+        i === index ? { ...r, [field]: value } : r,
+      ),
+    }));
+    setErrors((prev) => ({ ...prev, [`rincian.${index}.${field}`]: "" }));
+    setMessage("");
+  };
+
+  const addRincian = () =>
+    setForm((prev) =>
+      prev.rincian.length < MAX_RINCIAN
+        ? { ...prev, rincian: [...prev.rincian, newRincian()] }
+        : prev,
+    );
+
+  const removeRincian = (index) => {
+    setForm((prev) =>
+      prev.rincian.length > MIN_RINCIAN
+        ? { ...prev, rincian: prev.rincian.filter((_, i) => i !== index) }
+        : prev,
+    );
+    clearRincianErrors();
+  };
+
+  const totalRincian = form.rincian.reduce(
+    (sum, r) => sum + (Number(r.nominal) || 0),
+    0,
+  );
 
   const changePayment = (value) => {
     set("paymentMethod", value);
@@ -243,8 +291,14 @@ function TournamentForm({
             "Contact person sponsor wajib diisi.";
       });
     }
-    if (form.fundingDetail.trim().length < 10)
-      e.fundingDetail = "Rincian pendanaan minimal 10 karakter.";
+    if (form.rincian.length < MIN_RINCIAN)
+      e.rincian = `Isi minimal ${MIN_RINCIAN} peruntukan dana.`;
+    form.rincian.forEach((r, i) => {
+      if (!r.peruntukanDana.trim())
+        e[`rincian.${i}.peruntukanDana`] = "Peruntukan dana wajib diisi.";
+      if (!(Number(r.nominal) > 0))
+        e[`rincian.${i}.nominal`] = "Nominal harus lebih dari 0.";
+    });
     if (!form.fee) e.fee = "Pilih biaya pendaftaran.";
     if (form.fee === "berbayar") {
       if (!(Number(form.feeAmount) > 0))
@@ -540,13 +594,77 @@ function TournamentForm({
         )}
       </FormSection>
 
-      <FormSection title="Rincian Pendanaan" error={errors.fundingDetail}>
-        <textarea
-          className={`t-box ${errors.fundingDetail ? "has-error" : ""}`}
-          rows={4}
-          placeholder="Jelaskan perkiraan total anggaran turnamen serta rencana penggunaan dana, seperti hadiah pemenang dan biaya operasional. Pastikan rincian sesuai dengan sumber pendanaan yang dipilih."
-          {...text("fundingDetail")}
-        />
+      <FormSection title="Rincian Pendanaan" error={errors.rincian}>
+        <p className="t-upload-hint" style={{ justifyContent: "flex-start" }}>
+          Jelaskan dana ini didistribusikan ke mana saja (minimal {MIN_RINCIAN}{" "}
+          peruntukan).
+        </p>
+
+        {form.rincian.map((r, i) => {
+          const pKey = `rincian.${i}.peruntukanDana`;
+          const nKey = `rincian.${i}.nominal`;
+          const ph = rincianPlaceholder(i);
+          return (
+            <div key={r.key} className="t-sponsor-item">
+              <div className="t-sponsor-head">
+                <span className="t-sponsor-title">Rincian {i + 1}</span>
+                {form.rincian.length > MIN_RINCIAN && (
+                  <button
+                    type="button"
+                    className="t-sponsor-remove"
+                    onClick={() => removeRincian(i)}
+                  >
+                    ✕ Hapus
+                  </button>
+                )}
+              </div>
+
+              <label className="t-label">Peruntukan Dana</label>
+              {underline(pKey, {
+                placeholder: ph.peruntukanDana,
+                value: r.peruntukanDana,
+                onChange: (e) =>
+                  updateRincian(i, "peruntukanDana", e.target.value),
+              })}
+              {errors[pKey] && <p className="t-field-error">{errors[pKey]}</p>}
+
+              <label className="t-label">Keterangan (opsional)</label>
+              {underline(`rincian.${i}.keterangan`, {
+                placeholder: ph.keterangan,
+                value: r.keterangan,
+                onChange: (e) => updateRincian(i, "keterangan", e.target.value),
+              })}
+
+              <label className="t-label">Nominal</label>
+              <div className="t-money">
+                <span>Rp.</span>
+                {underline(nKey, {
+                  placeholder: "Masukkan nominal",
+                  inputMode: "numeric",
+                  value: r.nominal,
+                  onChange: (e) =>
+                    updateRincian(i, "nominal", digits(e.target.value)),
+                })}
+              </div>
+              {errors[nKey] && <p className="t-field-error">{errors[nKey]}</p>}
+            </div>
+          );
+        })}
+
+        {form.rincian.length < MAX_RINCIAN && (
+          <button type="button" className="t-sponsor-add" onClick={addRincian}>
+            + Tambah Rincian
+          </button>
+        )}
+
+        <p className="t-total">
+          Total alokasi: <b>Rp. {totalRincian.toLocaleString("id-ID")}</b>
+        </p>
+        {Number(form.prize) > 0 && totalRincian < Number(form.prize) && (
+          <p className="t-upload-hint" style={{ justifyContent: "flex-start" }}>
+            Perhatian: total alokasi masih lebih kecil dari total hadiah.
+          </p>
+        )}
       </FormSection>
 
       <FormSection title="Biaya Pendaftaran" error={errors.fee}>

@@ -686,7 +686,11 @@ export async function getAdminSubmissionDetail(id) {
       name: s.nama_sponsor,
       contact: s.kontak_sponsor,
     })),
-    fundingDetail: d.rincian_pendanaan ?? "",
+    rincian: (d.rincian ?? []).map((r) => ({
+      peruntukanDana: r.peruntukanDana ?? "",
+      keterangan: r.keterangan ?? "",
+      nominal: r.nominal,
+    })),
     feeType: String(fee.jenis_biaya ?? d.jenis_biaya ?? "").toLowerCase(),
     fee: fee.biaya_pendaftaran,
     // ASSUMPTION: nama field pembayaran belum ada contohnya
