@@ -68,6 +68,7 @@ class PengajuanTurnamenController extends Controller
             'pendanaan',
             'pembayaran',
             'sponsor',
+            'rincian',
             'sumberPendanaan',
             'turnamen',
         ])
@@ -90,8 +91,6 @@ class PengajuanTurnamenController extends Controller
             'data' => $pengajuan,
         ]);
     }
-
-   
 
     public function lihatKtp(Request $request, $id)
     {
@@ -185,25 +184,26 @@ class PengajuanTurnamenController extends Controller
                 'max:5120',
             ],
             'setuju_pertanggungjawaban' => ['required', 'accepted'],
+
+            // Kolom lama (narasi). Tidak lagi dikirim frontend, dibiarkan opsional.
             'rincian_pendanaan' => ['nullable', 'string'],
+
             'sumber_pendanaan' => ['required', 'array', 'min:1'],
             'sumber_pendanaan.*' => [
                 'required',
                 'distinct',
                 'exists:sumber_pendanaan,id_sumber',
             ],
-            // SESUDAH
+
             'sponsor' => ['nullable', 'array', 'min:1', 'max:20'],
-            'sponsor.*.nama_sponsor' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-            'sponsor.*.kontak_sponsor' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+            'sponsor.*.nama_sponsor' => ['required', 'string', 'max:255'],
+            'sponsor.*.kontak_sponsor' => ['required', 'string', 'max:255'],
+
+            'rincian' => ['required', 'array', 'min:2', 'max:20'],
+            'rincian.*.peruntukanDana' => ['required', 'string', 'max:100'],
+            'rincian.*.keterangan' => ['nullable', 'string', 'max:255'],
+            'rincian.*.nominal' => ['required', 'numeric', 'min:1'],
+
             'jenis_biaya' => [
                 'required',
                 Rule::in(['gratis', 'berbayar']),
@@ -331,6 +331,14 @@ class PengajuanTurnamenController extends Controller
                     ]);
                 }
 
+                foreach ($validated['rincian'] as $r) {
+                    $pengajuan->rincian()->create([
+                        'peruntukanDana' => $r['peruntukanDana'],
+                        'keterangan' => $r['keterangan'] ?? null,
+                        'nominal' => $r['nominal'],
+                    ]);
+                }
+
                 $pengajuan->pendanaan()->create([
                     'jenis_biaya' => $validated['jenis_biaya'],
                     'biaya_pendaftaran' => $validated['jenis_biaya'] === 'berbayar'
@@ -358,6 +366,7 @@ class PengajuanTurnamenController extends Controller
                     'pendanaan',
                     'pembayaran',
                     'sponsor',
+                    'rincian',
                     'sumberPendanaan',
                 ])->makeHidden(['ktp']),
             ], 201);
@@ -559,6 +568,7 @@ class PengajuanTurnamenController extends Controller
 
             'setuju_pertanggungjawaban' => ['sometimes', 'accepted'],
 
+            // Kolom lama (narasi). Tidak lagi dikirim frontend, dibiarkan opsional.
             'rincian_pendanaan' => ['nullable', 'string'],
 
             'sumber_pendanaan' => ['sometimes', 'required', 'array', 'min:1'],
@@ -568,7 +578,6 @@ class PengajuanTurnamenController extends Controller
                 'exists:sumber_pendanaan,id_sumber',
             ],
 
-            
             'sponsor' => ['sometimes', 'nullable', 'array', 'max:20'],
             'sponsor.*.nama_sponsor' => [
                 'required_with:sponsor',
@@ -579,6 +588,19 @@ class PengajuanTurnamenController extends Controller
                 'required_with:sponsor',
                 'string',
                 'max:255',
+            ],
+
+            'rincian' => ['sometimes', 'required', 'array', 'min:2', 'max:20'],
+            'rincian.*.peruntukanDana' => [
+                'required_with:rincian',
+                'string',
+                'max:100',
+            ],
+            'rincian.*.keterangan' => ['nullable', 'string', 'max:255'],
+            'rincian.*.nominal' => [
+                'required_with:rincian',
+                'numeric',
+                'min:1',
             ],
 
             'jenis_biaya' => [
@@ -634,6 +656,7 @@ class PengajuanTurnamenController extends Controller
                 ->pluck('sumber_pendanaan.id_sumber')
                 ->toArray();
 
+        // array_key_exists membedakan "tidak dikirim" dan "dikirim kosong".
         $sponsor = array_key_exists('sponsor', $validated)
             ? ($validated['sponsor'] ?? [])
             : $pengajuan->sponsor()
@@ -643,8 +666,9 @@ class PengajuanTurnamenController extends Controller
                     'kontak_sponsor' => $item->kontak_sponsor,
                 ])
                 ->toArray();
-                $tipeTurnamen = $validated['tipe_turnamen']
-                    ?? $pengajuan->tipe_turnamen;
+
+        $tipeTurnamen = $validated['tipe_turnamen']
+            ?? $pengajuan->tipe_turnamen;
 
         // Turnamen offline wajib memiliki kota. Saat berpindah dari online ke offline,
         // Player harus memilih kota; untuk online, lokasi akan dikosongkan.
@@ -776,6 +800,18 @@ class PengajuanTurnamenController extends Controller
                     }
                 }
 
+                if (array_key_exists('rincian', $validated)) {
+                    $pengajuan->rincian()->delete();
+
+                    foreach ($validated['rincian'] as $r) {
+                        $pengajuan->rincian()->create([
+                            'peruntukanDana' => $r['peruntukanDana'],
+                            'keterangan' => $r['keterangan'] ?? null,
+                            'nominal' => $r['nominal'],
+                        ]);
+                    }
+                }
+
                 if (
                     array_key_exists('jenis_biaya', $validated)
                     || array_key_exists('biaya_pendaftaran', $validated)
@@ -854,6 +890,7 @@ class PengajuanTurnamenController extends Controller
                     'pendanaan',
                     'pembayaran',
                     'sponsor',
+                    'rincian',
                     'sumberPendanaan',
                     'turnamen',
                 ])->makeHidden(['ktp']),
