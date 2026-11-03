@@ -155,7 +155,20 @@ class PengajuanTurnamenController extends Controller
                 'max:5120',
             ],
             'nama_turnamen' => ['required', 'string', 'max:150'],
-            'nama_penyelenggara' => ['required', 'string', 'max:150'],
+            'nama_penanggung_jawab' => ['required', 'string', 'max:150'],
+            'perwakilan_instansi' => ['nullable', 'boolean'],
+            'nama_instansi' => [
+                'nullable',
+                'required_if:perwakilan_instansi,1',
+                'string',
+                'max:150',
+            ],
+            'nomor_instansi' => [
+                'nullable',
+                'required_if:perwakilan_instansi,1',
+                'string',
+                'regex:/^\+?[0-9\s\-]{8,20}$/',
+            ],
             'id_game' => ['required', 'exists:games,id_game'],
             'tipe_turnamen' => [
                 'required',
@@ -244,6 +257,12 @@ class PengajuanTurnamenController extends Controller
             $validated['jadwal_main']
         );
 
+        // Apakah penanggung jawab mewakili instansi.
+        $perwakilan = filter_var(
+            $validated['perwakilan_instansi'] ?? false,
+            FILTER_VALIDATE_BOOLEAN
+        );
+
         $posterPath = null;
         $ktpPath = null;
         $qrisPath = null;
@@ -267,7 +286,8 @@ class PengajuanTurnamenController extends Controller
                 $player,
                 $posterPath,
                 $ktpPath,
-                $qrisPath
+                $qrisPath,
+                $perwakilan
             ) {
                 /*
                  * Kunci baris Player agar dua request pengajuan
@@ -301,7 +321,13 @@ class PengajuanTurnamenController extends Controller
                     'id_game' => $validated['id_game'],
                     'poster' => $posterPath,
                     'nama_turnamen' => $validated['nama_turnamen'],
-                    'nama_penyelenggara' => $validated['nama_penyelenggara'],
+                    'nama_penanggung_jawab' => $validated['nama_penanggung_jawab'],
+                    'nama_instansi' => $perwakilan
+                        ? $validated['nama_instansi']
+                        : null,
+                    'nomor_instansi' => $perwakilan
+                        ? $validated['nomor_instansi']
+                        : null,
                     'tipe_turnamen' => $validated['tipe_turnamen'],
                     'id_kota' => $validated['tipe_turnamen'] === 'offline'
                         ? ($validated['id_kota'] ?? null)
@@ -541,7 +567,20 @@ class PengajuanTurnamenController extends Controller
             ],
 
             'nama_turnamen' => ['sometimes', 'required', 'string', 'max:150'],
-            'nama_penyelenggara' => ['sometimes', 'required', 'string', 'max:150'],
+            'nama_penanggung_jawab' => ['sometimes', 'required', 'string', 'max:150'],
+            'perwakilan_instansi' => ['sometimes', 'boolean'],
+            'nama_instansi' => [
+                'nullable',
+                'required_if:perwakilan_instansi,1',
+                'string',
+                'max:150',
+            ],
+            'nomor_instansi' => [
+                'nullable',
+                'required_if:perwakilan_instansi,1',
+                'string',
+                'regex:/^\+?[0-9\s\-]{8,20}$/',
+            ],
             'id_game' => ['sometimes', 'required', 'exists:games,id_game'],
 
             'tipe_turnamen' => [
@@ -724,7 +763,7 @@ class PengajuanTurnamenController extends Controller
             ) {
                 $fieldPengajuan = [
                     'nama_turnamen',
-                    'nama_penyelenggara',
+                    'nama_penanggung_jawab',
                     'id_game',
                     'slot',
                     'jadwal_pendaftaran_tutup',
@@ -740,6 +779,21 @@ class PengajuanTurnamenController extends Controller
                     if (array_key_exists($field, $validated)) {
                         $dataPengajuan[$field] = $validated[$field];
                     }
+                }
+
+                // Perwakilan instansi: isi kalau dicentang, kosongkan kalau tidak.
+                if (array_key_exists('perwakilan_instansi', $validated)) {
+                    $perwakilan = filter_var(
+                        $validated['perwakilan_instansi'],
+                        FILTER_VALIDATE_BOOLEAN
+                    );
+
+                    $dataPengajuan['nama_instansi'] = $perwakilan
+                        ? ($validated['nama_instansi'] ?? null)
+                        : null;
+                    $dataPengajuan['nomor_instansi'] = $perwakilan
+                        ? ($validated['nomor_instansi'] ?? null)
+                        : null;
                 }
 
                 if (array_key_exists('tipe_turnamen', $validated)) {
