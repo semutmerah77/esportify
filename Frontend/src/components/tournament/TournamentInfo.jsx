@@ -126,7 +126,11 @@ function TournamentInfo({ d, action }) {
         </section>
       </div>
 
-      <InfoCard title="Nama Penyelenggara" icon="person">
+      <InfoCard
+        title="Nama Penyelenggara"
+        icon="person"
+        sub={d.agencyName ? `Instansi: ${d.agencyName}` : ""}
+      >
         {d.organizer}
       </InfoCard>
       <InfoCard title="Lokasi" icon="pin" sub={offline ? d.address : ""}>
