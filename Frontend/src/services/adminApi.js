@@ -647,6 +647,8 @@ export async function getAdminSubmissions() {
       s.player?.user?.username ??
       s.player?.username ??
       "-",
+    agencyName: d.nama_instansi ?? "",
+    agencyPhone: d.nomor_instansi ?? "",
     createdAt: s.created_at ?? "",
     // Terakhir kali player mengajukan ulang setelah revisi (null = belum pernah).
     resubmittedAt: s.diajukan_ulang_pada ?? null,

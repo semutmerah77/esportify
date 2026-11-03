@@ -110,6 +110,11 @@ export async function submitTournament(v) {
   f.append("poster", v.poster);
   f.append("nama_turnamen", v.name.trim());
   f.append("nama_penyelenggara", v.organizer.trim());
+  if (v.isAgency) {
+    f.append("perwakilan_instansi", "1");
+    f.append("nama_instansi", v.agencyName.trim());
+    f.append("nomor_instansi", v.agencyPhone.trim());
+  }
   f.append("id_game", String(v.gameId));
   f.append("tipe_turnamen", v.type);
 
@@ -202,6 +207,9 @@ export async function getSubmissionDetail(id) {
     posterUrl: d.poster_url ?? toMediaUrl(d.poster),
     name: d.nama_turnamen ?? "",
     organizer: d.nama_penyelenggara ?? "",
+    isAgency: Boolean(d.nama_instansi),
+    agencyName: d.nama_instansi ?? "",
+    agencyPhone: d.nomor_instansi ?? "",
     gameId: d.game?.id_game ?? d.id_game ?? null,
     gameName: d.game?.nama_game ?? "-",
     type: String(d.tipe_turnamen ?? "").toLowerCase(),
@@ -240,6 +248,9 @@ export const detailToForm = (d) => ({
   poster: null,
   name: d.name,
   organizer: d.organizer,
+  isAgency: d.isAgency,
+  agencyName: d.agencyName,
+  agencyPhone: d.agencyPhone,
   gameId: d.gameId ? Number(d.gameId) : null,
   type: d.type,
   province: d.provinceId ? String(d.provinceId) : "",
@@ -297,6 +308,13 @@ export async function updateSubmission(
   if (v.poster) f.append("poster", v.poster);
   put("nama_turnamen", "name", (s) => s.trim());
   put("nama_penyelenggara", "organizer", (s) => s.trim());
+  if (diff("isAgency") || diff("agencyName") || diff("agencyPhone")) {
+    f.append("perwakilan_instansi", v.isAgency ? "1" : "0");
+    if (v.isAgency) {
+      f.append("nama_instansi", v.agencyName.trim());
+      f.append("nomor_instansi", v.agencyPhone.trim());
+    }
+  }
   put("id_game", "gameId", String);
 
   if (diff("type") || diff("city") || diff("address")) {
@@ -375,6 +393,7 @@ export async function getTournamentDetail(id) {
     game: p.game?.nama_game ?? "-",
     organizer:
       p.nama_penyelenggara ?? t.penyelenggara?.nama_penyelenggara ?? "-",
+    agencyName: p.nama_instansi ?? "",
     posterUrl: p.poster_url ?? toMediaUrl(p.poster),
     type: String(p.tipe_turnamen ?? "").toLowerCase(),
     city: p.kota?.nama_kota ?? "",

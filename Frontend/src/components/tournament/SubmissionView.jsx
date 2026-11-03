@@ -70,7 +70,18 @@ function SubmissionView({ d }) {
       </section>
 
       <Field label="Nama Turnamen">{d.name}</Field>
-      <Field label="Nama Lengkap">{d.organizer}</Field>
+      <section className="d-card">
+        <p className="d-label">Nama Lengkap Penyelenggara</p>
+        <div className="d-value">{d.organizer || "-"}</div>
+        {d.isAgency && (
+          <>
+            <p className="d-label">Nama Instansi</p>
+            <div className="d-value">{d.agencyName || "-"}</div>
+            <p className="d-label">Nomor Telepon Instansi</p>
+            <div className="d-value">{d.agencyPhone || "-"}</div>
+          </>
+        )}
+      </section>
       <Field label="Game">{d.gameName}</Field>
       <Field label="Tipe">{d.type === "offline" ? "Offline" : "Online"}</Field>
 

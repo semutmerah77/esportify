@@ -79,7 +79,7 @@ class TurnamenSeeder extends Seeder
                     'id_admin' => null,
                     'poster' => 'poster-turnamen/seed.jpg',
                     'nama_turnamen' => $row['nama'],
-                    'nama_penanggung_jawab' => 'Penanggung Jawab Seed',
+                    'nama_penyelenggara' => 'Penyelenggara Seed',
                     'nama_instansi' => null,
                     'nomor_instansi' => null,
                     'tipe_turnamen' => $isOffline ? 'offline' : 'online',

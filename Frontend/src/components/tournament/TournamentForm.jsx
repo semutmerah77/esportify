@@ -32,7 +32,9 @@ const PAYMENT_OPTIONS = [
 const FIELD_MAP = {
   poster: "poster",
   nama_turnamen: "name",
-  nama_penyelenggara: "organizer",
+  perwakilan_instansi: "isAgency",
+  nama_instansi: "agencyName",
+  nomor_instansi: "agencyPhone",
   id_game: "gameId",
   tipe_turnamen: "type",
   id_kota: "city",
@@ -59,6 +61,9 @@ export const emptyForm = {
   poster: null,
   name: "",
   organizer: "",
+  isAgency: false,
+  agencyName: "",
+  agencyPhone: "",
   gameId: null,
   type: "",
   province: "",
@@ -254,6 +259,12 @@ function TournamentForm({
       e.name = "Nama turnamen minimal 3 karakter.";
     if (form.organizer.trim().length < 3)
       e.organizer = "Nama penyelenggara minimal 3 karakter.";
+    if (form.isAgency) {
+      if (form.agencyName.trim().length < 3)
+        e.agencyName = "Nama instansi minimal 3 karakter.";
+      if (!/^\+?[0-9\s-]{8,20}$/.test(form.agencyPhone.trim()))
+        e.agencyPhone = "Isi nomor telepon instansi yang valid (8-20 digit).";
+    }
     if (!form.gameId) e.gameId = "Pilih game.";
     if (!form.type) e.type = "Pilih tipe turnamen.";
     if (form.type === "offline") {
@@ -399,6 +410,38 @@ function TournamentForm({
           placeholder: "Masukkan nama lengkap Anda",
           ...text("organizer"),
         })}
+
+        <label className="t-radio">
+          <input
+            type="checkbox"
+            checked={form.isAgency}
+            onChange={(e) => set("isAgency", e.target.checked)}
+          />
+          Saya mewakili suatu instansi
+        </label>
+
+        {form.isAgency && (
+          <>
+            <label className="t-label">Nama Instansi</label>
+            {underline("agencyName", {
+              placeholder: "Contoh: Himpunan Mahasiswa Informatika",
+              ...text("agencyName"),
+            })}
+            {errors.agencyName && (
+              <p className="t-field-error">{errors.agencyName}</p>
+            )}
+
+            <label className="t-label">Nomor Telepon Instansi</label>
+            {underline("agencyPhone", {
+              placeholder: "Contoh: 081234567890",
+              inputMode: "tel",
+              ...text("agencyPhone"),
+            })}
+            {errors.agencyPhone && (
+              <p className="t-field-error">{errors.agencyPhone}</p>
+            )}
+          </>
+        )}
       </FormSection>
 
       <FormSection title="Pilih Game" error={errors.gameId}>
