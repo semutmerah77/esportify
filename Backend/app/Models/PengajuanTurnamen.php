@@ -21,7 +21,9 @@ class PengajuanTurnamen extends Model
         'id_kota',
         'poster',
         'nama_turnamen',
-        'nama_penyelenggara',
+        'nama_penanggung_jawab',   // ganti dari 'nama_penyelenggara'
+        'nama_instansi',
+        'nomor_instansi',
         'tipe_turnamen',
         'deskripsi_lokasi',
         'slot',

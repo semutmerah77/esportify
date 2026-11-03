@@ -44,7 +44,7 @@ class TurnamenController extends Controller
         $turnamen = Turnamen::query()
             ->whereHas('pengajuan')
             ->with([
-                'pengajuan:id_pengajuan,id_game,id_kota,nama_turnamen,nama_penyelenggara,poster,tipe_turnamen,slot,total_hadiah,jadwal_pendaftaran_tutup,jadwal_main,deskripsi_lokasi',
+                'pengajuan:id_pengajuan,id_game,id_kota,nama_turnamen,nama_penyelenggara,nama_instansi,poster,tipe_turnamen,slot,total_hadiah,jadwal_pendaftaran_tutup,jadwal_main,deskripsi_lokasi',
                 'pengajuan.game:id_game,nama_game',
                 'pengajuan.game.kategoris:id_kategori,nama_kategori',
                 'pengajuan.kota:id_kota,id_provinsi,nama_kota',
@@ -66,7 +66,8 @@ class TurnamenController extends Controller
                     'pengajuan' => [
                         'id_pengajuan' => $pengajuan->id_pengajuan,
                         'nama_turnamen' => $pengajuan->nama_turnamen,
-                        'nama_penyelenggara' => $pengajuan->nama_penyelenggara,
+                        'nama_penanggung_jawab' => $pengajuan->nama_penanggung_jawab,
+                        'nama_instansi' => $pengajuan->nama_instansi,
                         'poster' => $pengajuan->poster,
                         'tipe_turnamen' => $pengajuan->tipe_turnamen,
                         'slot' => $pengajuan->slot,
@@ -166,7 +167,7 @@ class TurnamenController extends Controller
             ->whereIn('id_penyelenggara', $idPenyelenggara)
             ->whereHas('pengajuan')
             ->with([
-                'pengajuan:id_pengajuan,id_game,nama_turnamen,nama_penyelenggara,poster,tipe_turnamen,slot,jadwal_pendaftaran_tutup,jadwal_main,deskripsi_lokasi',
+                'pengajuan:id_pengajuan,id_game,nama_turnamen,nama_penanggung_jawab,nama_instansi,poster,tipe_turnamen,slot,jadwal_pendaftaran_tutup,jadwal_main,deskripsi_lokasi',
                 'pengajuan.game:id_game,nama_game',
             ])
             ->orderByDesc('created_at')
@@ -182,7 +183,8 @@ class TurnamenController extends Controller
                     'pengajuan' => [
                         'id_pengajuan' => $pengajuan->id_pengajuan,
                         'nama_turnamen' => $pengajuan->nama_turnamen,
-                        'nama_penyelenggara' => $pengajuan->nama_penyelenggara,
+                        'nama_penanggung_jawab' => $pengajuan->nama_penanggung_jawab,
+                        'nama_instansi' => $pengajuan->nama_instansi,
                         'poster' => $pengajuan->poster,
                         'tipe_turnamen' => $pengajuan->tipe_turnamen,
                         'slot' => $pengajuan->slot,
@@ -253,7 +255,10 @@ class TurnamenController extends Controller
                 'pengajuan' => [
                     'id_pengajuan' => $pengajuan->id_pengajuan,
                     'nama_turnamen' => $pengajuan->nama_turnamen,
-                    'nama_penyelenggara' => $pengajuan->nama_penyelenggara,
+                    'nama_penanggung_jawab' => $pengajuan->nama_penanggung_jawab,
+                    // Nama instansi tampil publik. Nomor instansi sengaja
+                    // tidak dikirim (hanya untuk admin dan pengaju).
+                    'nama_instansi' => $pengajuan->nama_instansi,
                     'poster' => $pengajuan->poster,
                     'tipe_turnamen' => $pengajuan->tipe_turnamen,
                     'slot' => $pengajuan->slot,

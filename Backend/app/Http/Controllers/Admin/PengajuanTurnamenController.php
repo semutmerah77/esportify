@@ -16,41 +16,40 @@ class PengajuanTurnamenController extends Controller
      * Menampilkan daftar pengajuan turnamen.
      */
     public function index(Request $request)
-    {
-        $query = PengajuanTurnamen::with([
-            'player.user',
-            'game',
-        ]);
+{
+    $query = PengajuanTurnamen::with([
+        'player.user',
+        'game',
+    ]);
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_turnamen', 'like', "%{$search}%")
-                    ->orWhere('nama_penyelenggara', 'like', "%{$search}%");
-            });
-        }
-        $pengajuan = $query
-            ->orderByRaw("
-                CASE
-                    WHEN status = 'Menunggu Verifikasi' THEN 1
-                    ELSE 2
-                END ASC
-            ")
-            ->orderByRaw(
-                'COALESCE(diajukan_ulang_pada, created_at) DESC'
-            )
-            ->paginate(15);
-
-        return response()->json([
-            'message' => 'Daftar pengajuan turnamen berhasil diambil.',
-            'data' => $pengajuan,
-        ]);
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
     }
+
+    if ($request->filled('search')) {
+        $search = $request->search;
+
+        $query->where(function ($q) use ($search) {
+            $q->where('nama_turnamen', 'like', "%{$search}%")
+                ->orWhere('nama_penyelenggara', 'like', "%{$search}%");
+        });
+    }
+
+    $pengajuan = $query
+        ->orderByRaw("
+            CASE
+                WHEN status = 'Menunggu Verifikasi' THEN 1
+                ELSE 2
+            END ASC
+        ")
+        ->orderByRaw('COALESCE(diajukan_ulang_pada, created_at) DESC')
+        ->paginate(15);
+
+    return response()->json([
+        'message' => 'Daftar pengajuan turnamen berhasil diambil.',
+        'data' => $pengajuan,
+    ]);
+}
 
     /**
      * Menampilkan detail pengajuan.

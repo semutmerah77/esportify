@@ -79,7 +79,9 @@ class TurnamenSeeder extends Seeder
                     'id_admin' => null,
                     'poster' => 'poster-turnamen/seed.jpg',
                     'nama_turnamen' => $row['nama'],
-                    'nama_penyelenggara' => 'Penyelenggara Seed',
+                    'nama_penanggung_jawab' => 'Penanggung Jawab Seed',
+                    'nama_instansi' => null,
+                    'nomor_instansi' => null,
                     'tipe_turnamen' => $isOffline ? 'offline' : 'online',
                     'id_kota' => $kota?->id_kota,
                     'deskripsi_lokasi' => $isOffline ? 'Lokasi contoh untuk data uji.' : null,
@@ -122,6 +124,21 @@ class TurnamenSeeder extends Seeder
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                DB::table('rincian_pendanaan_pengajuan')->insert([
+                [
+                    'id_pengajuan' => $idPengajuan,
+                    'peruntukanDana' => 'Hadiah pemenang',
+                    'keterangan' => 'Juara 1 sampai 3',
+                    'nominal' => $row['hadiah'],
+                ],
+                [
+                    'id_pengajuan' => $idPengajuan,
+                    'peruntukanDana' => 'Operasional',
+                    'keterangan' => 'Server, konsumsi, dan perlengkapan',
+                    'nominal' => 500000,
+                ],
+            ]);
             }
         });
 
