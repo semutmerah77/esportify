@@ -155,7 +155,7 @@ class PengajuanTurnamenController extends Controller
                 'max:5120',
             ],
             'nama_turnamen' => ['required', 'string', 'max:150'],
-            'nama_penanggung_jawab' => ['required', 'string', 'max:150'],
+            'nama_penyelenggara' => ['required', 'string', 'max:150'],
             'perwakilan_instansi' => ['nullable', 'boolean'],
             'nama_instansi' => [
                 'nullable',
@@ -321,7 +321,7 @@ class PengajuanTurnamenController extends Controller
                     'id_game' => $validated['id_game'],
                     'poster' => $posterPath,
                     'nama_turnamen' => $validated['nama_turnamen'],
-                    'nama_penanggung_jawab' => $validated['nama_penanggung_jawab'],
+                    'nama_penyelenggara' => $validated['nama_penyelenggara'],
                     'nama_instansi' => $perwakilan
                         ? $validated['nama_instansi']
                         : null,
@@ -567,7 +567,7 @@ class PengajuanTurnamenController extends Controller
             ],
 
             'nama_turnamen' => ['sometimes', 'required', 'string', 'max:150'],
-            'nama_penanggung_jawab' => ['sometimes', 'required', 'string', 'max:150'],
+            'nama_penyelenggara' => ['sometimes', 'required', 'string', 'max:150'],
             'perwakilan_instansi' => ['sometimes', 'boolean'],
             'nama_instansi' => [
                 'nullable',
@@ -763,7 +763,7 @@ class PengajuanTurnamenController extends Controller
             ) {
                 $fieldPengajuan = [
                     'nama_turnamen',
-                    'nama_penanggung_jawab',
+                    'nama_penyelenggara',
                     'id_game',
                     'slot',
                     'jadwal_pendaftaran_tutup',
