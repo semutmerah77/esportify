@@ -896,6 +896,31 @@
   color: var(--white);
   font-size: 15px;
 }
+.t-required {
+  color: #ef4444;
+  font-weight: 700;
+}
+.t-radio.is-disabled,
+.t-radio:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.t-info-note {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid #243049;
+  border-radius: 8px;
+  background: #182033;
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.d-head {
+  max-width: 820px;
+  margin: 0 auto;
+}
 
 /* ===== Status Pengajuan ===== */
 /* ===== Tab Kelola Turnamen: segmented ===== */

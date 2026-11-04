@@ -17,6 +17,8 @@ import {
   MIN_RINCIAN,
   MAX_RINCIAN,
 } from "../../utils/rincian";
+import FilePreview from "./FilePreview";
+import useKtpPreview from "../../hooks/useKtpPreview";
 
 const FUNDING_OPTIONS = [
   { value: "sponsor", label: "Sponsor" },
@@ -89,6 +91,12 @@ export const emptyForm = {
 const MIN_CLOSE_DAYS = 6; // tidak boleh hari ini sampai 5 hari ke depan
 const MIN_GAP_DAYS = 1; // hari pertandingan minimal 1 hari setelah pendaftaran ditutup
 const digits = (v) => v.replace(/\D/g, "");
+const Req = () => (
+  <span className="t-required" aria-hidden="true">
+    {" "}
+    *
+  </span>
+);
 
 // mode: "create" | "edit". initial = nilai awal. existing = file lama (edit).
 // onSubmit(values) melempar error kalau gagal. header = isi di atas poster.
@@ -109,6 +117,8 @@ function TournamentForm({
   const [provinces, setProvinces] = useState([]);
   const [cities, setCities] = useState([]);
   const [loadError, setLoadError] = useState("");
+  const ktp = useKtpPreview(existing?.id);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const minClose = addDays(toISO(new Date()), MIN_CLOSE_DAYS);
   const minMatch = form.closeDate
@@ -199,6 +209,9 @@ function TournamentForm({
       ? form.funding.filter((x) => x !== value)
       : [...form.funding, value];
     set("funding", next);
+    if (next.includes("biaya_peserta") && form.fee !== "berbayar") {
+      set("fee", "berbayar");
+    }
     if (!next.includes("sponsor")) {
       set("sponsors", [newSponsor()]);
       clearSponsorErrors();
@@ -311,6 +324,9 @@ function TournamentForm({
         e[`rincian.${i}.nominal`] = "Nominal harus lebih dari 0.";
     });
     if (!form.fee) e.fee = "Pilih biaya pendaftaran.";
+    if (form.fee === "gratis" && form.funding.includes("biaya_peserta"))
+      e.fee =
+        "Sumber dana Biaya Pendaftaran Peserta tidak bisa dipakai jika pendaftaran gratis.";
     if (form.fee === "berbayar") {
       if (!(Number(form.feeAmount) > 0))
         e.feeAmount = "Nominal pendaftaran harus lebih dari 0.";
@@ -335,18 +351,8 @@ function TournamentForm({
       0,
     );
 
-  const handleSubmit = async (ev) => {
-    ev.preventDefault();
-    if (submitting || !form.agree) return;
-
-    const found = validate();
-    setErrors(found);
-    if (Object.keys(found).length > 0) {
-      setMessage("Periksa kembali isian yang ditandai merah.");
-      scrollToError();
-      return;
-    }
-
+  const doSubmit = async () => {
+    setConfirmOpen(false);
     setSubmitting(true);
     try {
       await onSubmit(form);
@@ -363,12 +369,28 @@ function TournamentForm({
     }
   };
 
-  const radio = (key, value, label) => (
-    <label className="t-radio">
+  const handleSubmit = (ev) => {
+    ev.preventDefault();
+    if (submitting || !form.agree) return;
+
+    const found = validate();
+    setErrors(found);
+    if (Object.keys(found).length > 0) {
+      setMessage("Periksa kembali isian yang ditandai merah.");
+      scrollToError();
+      return;
+    }
+
+    setConfirmOpen(true); // validasi lolos, tampilkan popup dulu
+  };
+
+  const radio = (key, value, label, disabled = false) => (
+    <label className={`t-radio ${disabled ? "is-disabled" : ""}`}>
       <input
         type="radio"
         name={key}
         checked={form[key] === value}
+        disabled={disabled}
         onChange={() => set(key, value)}
       />
       {label}
@@ -383,7 +405,7 @@ function TournamentForm({
       {header}
       {loadError && <p className="admin-message error">{loadError}</p>}
 
-      <FormSection title="Poster" error={errors.poster}>
+      <FormSection title={<>Poster{!edit && <Req />}</>} error={errors.poster}>
         <UploadButton
           hint="FORMAT JPG, PNG, WEBP • MAKS 5 MB"
           maxMB={5}
@@ -398,14 +420,30 @@ function TournamentForm({
         />
       </FormSection>
 
-      <FormSection title="Nama Turnamen" error={errors.name}>
+      <FormSection
+        title={
+          <>
+            Nama Turnamen
+            <Req />
+          </>
+        }
+        error={errors.name}
+      >
         {underline("name", {
           placeholder: "Masukkan nama turnamen",
           ...text("name"),
         })}
       </FormSection>
 
-      <FormSection title="Nama Lengkap Penyelenggara" error={errors.organizer}>
+      <FormSection
+        title={
+          <>
+            Nama Lengkap Penyelenggara
+            <Req />
+          </>
+        }
+        error={errors.organizer}
+      >
         {underline("organizer", {
           placeholder: "Masukkan nama lengkap Anda",
           ...text("organizer"),
@@ -422,7 +460,9 @@ function TournamentForm({
 
         {form.isAgency && (
           <>
-            <label className="t-label">Nama Instansi</label>
+            <label className="t-label">
+              Nama Instansi <Req />
+            </label>
             {underline("agencyName", {
               placeholder: "Contoh: Himpunan Mahasiswa Informatika",
               ...text("agencyName"),
@@ -431,7 +471,9 @@ function TournamentForm({
               <p className="t-field-error">{errors.agencyName}</p>
             )}
 
-            <label className="t-label">Nomor Telepon Instansi</label>
+            <label className="t-label">
+              Nomor Telepon Instansi <Req />
+            </label>
             {underline("agencyPhone", {
               placeholder: "Contoh: 081234567890",
               inputMode: "tel",
@@ -444,7 +486,15 @@ function TournamentForm({
         )}
       </FormSection>
 
-      <FormSection title="Pilih Game" error={errors.gameId}>
+      <FormSection
+        title={
+          <>
+            Pilih Game
+            <Req />
+          </>
+        }
+        error={errors.gameId}
+      >
         <GameSelect
           games={games}
           value={form.gameId}
@@ -452,13 +502,23 @@ function TournamentForm({
         />
       </FormSection>
 
-      <FormSection title="Tipe" error={errors.type}>
+      <FormSection
+        title={
+          <>
+            Tipe
+            <Req />
+          </>
+        }
+        error={errors.type}
+      >
         {radio("type", "online", "Online")}
         {radio("type", "offline", "Offline")}
 
         {form.type === "offline" && (
           <>
-            <h3>Lokasi</h3>
+            <h3>
+              Lokasi <Req />
+            </h3>
             <select
               className={`t-dropdown ${errors.province ? "has-error" : ""}`}
               value={form.province}
@@ -506,11 +566,26 @@ function TournamentForm({
         )}
       </FormSection>
 
-      <FormSection title="Slot" error={errors.slot}>
+      <FormSection
+        title={
+          <>
+            Slot
+            <Req />
+          </>
+        }
+        error={errors.slot}
+      >
         {underline("slot", { placeholder: "Contoh: 32", ...number("slot") })}
       </FormSection>
 
-      <FormSection title="Jadwal Turnamen">
+      <FormSection
+        title={
+          <>
+            Jadwal Turnamen
+            <Req />
+          </>
+        }
+      >
         <label className="t-label">Pendaftaran ditutup</label>
         <div className="t-date">
           <Icon name="calendar" size={18} />
@@ -531,8 +606,7 @@ function TournamentForm({
         {errors.closeDate && (
           <p className="t-field-error">{errors.closeDate}</p>
         )}
-
-        <label className="t-label">Hari Pertandingan</label>
+        <label className="t-label">Hari Pertandingan</label>{" "}
         <div className="t-date">
           <Icon name="calendar" size={18} />
           {underline("matchDate", {
@@ -546,7 +620,15 @@ function TournamentForm({
         )}
       </FormSection>
 
-      <FormSection title="Deskripsi" error={errors.description}>
+      <FormSection
+        title={
+          <>
+            Deskripsi
+            <Req />
+          </>
+        }
+        error={errors.description}
+      >
         <textarea
           className={`t-box ${errors.description ? "has-error" : ""}`}
           rows={4}
@@ -555,7 +637,15 @@ function TournamentForm({
         />
       </FormSection>
 
-      <FormSection title="Total Hadiah" error={errors.prize}>
+      <FormSection
+        title={
+          <>
+            Total Hadiah
+            <Req />
+          </>
+        }
+        error={errors.prize}
+      >
         <div className="t-money">
           <span>Rp.</span>
           {underline("prize", {
@@ -565,17 +655,32 @@ function TournamentForm({
         </div>
       </FormSection>
 
-      <FormSection title="Sumber Pendanaan" error={errors.funding}>
-        {FUNDING_OPTIONS.map((o) => (
-          <label key={o.value} className="t-radio">
-            <input
-              type="checkbox"
-              checked={form.funding.includes(o.value)}
-              onChange={() => toggleFunding(o.value)}
-            />
-            {o.label}
-          </label>
-        ))}
+      <FormSection
+        title={
+          <>
+            Sumber Pendanaan
+            <Req />
+          </>
+        }
+        error={errors.funding}
+      >
+        {FUNDING_OPTIONS.map((o) => {
+          const locked = o.value === "biaya_peserta" && form.fee === "gratis";
+          return (
+            <label
+              key={o.value}
+              className={`t-radio ${locked ? "is-disabled" : ""}`}
+            >
+              <input
+                type="checkbox"
+                checked={form.funding.includes(o.value)}
+                disabled={locked}
+                onChange={() => toggleFunding(o.value)}
+              />
+              {o.label}
+            </label>
+          );
+        })}
 
         {form.funding.includes("sponsor") && (
           <>
@@ -599,7 +704,9 @@ function TournamentForm({
                     )}
                   </div>
 
-                  <label className="t-label">Nama Sponsor</label>
+                  <label className="t-label">
+                    Nama Sponsor <Req />
+                  </label>
                   {underline(nKey, {
                     placeholder: "Nama perusahaan atau pihak sponsor",
                     value: s.nama_sponsor,
@@ -610,7 +717,9 @@ function TournamentForm({
                     <p className="t-field-error">{errors[nKey]}</p>
                   )}
 
-                  <label className="t-label">Contact Person Sponsor</label>
+                  <label className="t-label">
+                    Contact Person Sponsor <Req />
+                  </label>
                   {underline(kKey, {
                     placeholder: "Nomer Hp/email",
                     value: s.kontak_sponsor,
@@ -637,7 +746,15 @@ function TournamentForm({
         )}
       </FormSection>
 
-      <FormSection title="Rincian Pendanaan" error={errors.rincian}>
+      <FormSection
+        title={
+          <>
+            Rincian Pendanaan
+            <Req />
+          </>
+        }
+        error={errors.rincian}
+      >
         <p className="t-upload-hint" style={{ justifyContent: "flex-start" }}>
           Jelaskan dana ini didistribusikan ke mana saja (minimal {MIN_RINCIAN}{" "}
           peruntukan).
@@ -662,7 +779,9 @@ function TournamentForm({
                 )}
               </div>
 
-              <label className="t-label">Peruntukan Dana</label>
+              <label className="t-label">
+                Peruntukan Dana <Req />
+              </label>
               {underline(pKey, {
                 placeholder: ph.peruntukanDana,
                 value: r.peruntukanDana,
@@ -678,7 +797,9 @@ function TournamentForm({
                 onChange: (e) => updateRincian(i, "keterangan", e.target.value),
               })}
 
-              <label className="t-label">Nominal</label>
+              <label className="t-label">
+                Nominal <Req />
+              </label>
               <div className="t-money">
                 <span>Rp.</span>
                 {underline(nKey, {
@@ -710,13 +831,28 @@ function TournamentForm({
         )}
       </FormSection>
 
-      <FormSection title="Biaya Pendaftaran" error={errors.fee}>
-        {radio("fee", "gratis", "Gratis")}
+      <FormSection
+        title={
+          <>
+            Biaya Pendaftaran
+            <Req />
+          </>
+        }
+        error={errors.fee}
+      >
+        {radio(
+          "fee",
+          "gratis",
+          "Gratis",
+          form.funding.includes("biaya_peserta"),
+        )}
         {radio("fee", "berbayar", "Berbayar")}
 
         {form.fee === "berbayar" && (
           <>
-            <h3>Nominal Pendaftaran</h3>
+            <h3>
+              Nominal Pendaftaran <Req />
+            </h3>
             <div className="t-money">
               <span>Rp.</span>
               {underline("feeAmount", {
@@ -728,7 +864,9 @@ function TournamentForm({
               <p className="t-field-error">{errors.feeAmount}</p>
             )}
 
-            <h3>Metode Pembayaran</h3>
+            <h3>
+              Metode Pembayaran <Req />
+            </h3>
             <select
               className={`t-dropdown ${errors.paymentMethod ? "has-error" : ""}`}
               value={form.paymentMethod}
@@ -767,7 +905,9 @@ function TournamentForm({
 
             {useBank && (
               <>
-                <h3>Nomor Rekening</h3>
+                <h3>
+                  Nomor Rekening <Req />
+                </h3>{" "}
                 {underline("account", {
                   placeholder: "Contoh: 1234567890 - BCA - Budi Santoso",
                   ...text("account"),
@@ -784,7 +924,8 @@ function TournamentForm({
         )}
       </FormSection>
 
-      <FormSection title="Upload KTP" error={errors.ktp}>
+      <FormSection title={<>Upload KTP{!edit && <Req />}</>} error={errors.ktp}>
+        {" "}
         <div className="t-upload-frame">
           <UploadButton
             hint="JPG, PNG, atau PDF • maks 5 MB. Pastikan KTP terbaca jelas."
@@ -793,10 +934,14 @@ function TournamentForm({
             allowedTypes={["image/jpeg", "image/png", "application/pdf"]}
             file={form.ktp}
             existing={edit ? { name: "KTP sudah diunggah", url: null } : null}
+            onViewExisting={edit && existing?.id ? ktp.open : undefined}
+            viewLoading={ktp.loading}
             onChange={(f) => set("ktp", f)}
             onError={setError("ktp")}
           />
+          {ktp.error && <p className="t-field-error">{ktp.error}</p>}
         </div>
+        {ktp.preview && <FilePreview file={ktp.preview} onClose={ktp.close} />}
       </FormSection>
 
       <label className={`t-agree ${errors.agree ? "has-error" : ""}`}>
@@ -821,6 +966,78 @@ function TournamentForm({
           {submitting ? "Mengirim..." : submitLabel}
         </button>
       </div>
+      {confirmOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setConfirmOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 300,
+            display: "grid",
+            placeItems: "center",
+            padding: 16,
+            background: "rgba(5, 8, 14, 0.8)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(420px, 100%)",
+              padding: 24,
+              border: "1px solid #243049",
+              borderRadius: 12,
+              background: "#121826",
+              color: "#f1f5f9",
+              textAlign: "center",
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px" }}>
+              {edit ? "Kirim Ulang Pengajuan?" : "Ajukan Turnamen?"}
+            </h3>
+            <p
+              style={{ margin: "0 0 20px", color: "#94a3b8", lineHeight: 1.5 }}
+            >
+              Pengajuan akan diverifikasi oleh admin maksimal 5 hari kerja
+              setelah dikirim.
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                style={{
+                  height: 38,
+                  padding: "0 18px",
+                  border: "1px solid #243049",
+                  borderRadius: 8,
+                  background: "#182033",
+                  color: "#f1f5f9",
+                  cursor: "pointer",
+                }}
+              >
+                Periksa Lagi
+              </button>
+              <button
+                type="button"
+                onClick={doSubmit}
+                style={{
+                  height: 38,
+                  padding: "0 18px",
+                  border: 0,
+                  borderRadius: 8,
+                  background: "#16a34a",
+                  color: "#fff",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Ya, Ajukan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

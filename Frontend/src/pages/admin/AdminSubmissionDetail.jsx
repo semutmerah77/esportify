@@ -317,7 +317,21 @@ function AdminSubmissionDetail() {
           </section>
 
           <Field label="Nama Turnamen">{data.name}</Field>
-          <Field label="Nama Lengkap">{data.organizer}</Field>
+
+          <section className="d-card">
+            <p className="d-label">Nama Lengkap Penyelenggara</p>
+            <div className="d-value">{data.organizer || "-"}</div>
+
+            {data.agencyName && (
+              <>
+                <p className="d-label">Nama Instansi</p>
+                <div className="d-value">{data.agencyName}</div>
+                <p className="d-label">Nomor Telepon Instansi</p>
+                <div className="d-value">{data.agencyPhone || "-"}</div>
+              </>
+            )}
+          </section>
+
           <Field label="Game">{data.game}</Field>
           <Field label="Tipe">
             {data.type === "offline" ? "Offline" : "Online"}
