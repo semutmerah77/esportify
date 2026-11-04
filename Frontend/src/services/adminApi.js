@@ -3,15 +3,12 @@ import { apiRequest, ApiError } from "./httpClient";
 import {
   mockUsers,
   mockRoles,
-  mockAllPermissions,
   mockPermissionRoles,
   mockDirectPermissions,
   mockCategories,
   mockGames,
   mockPermissionList,
   mockRoleList,
-  mockSubmissions,
-  mockSubmissionDetail,
 } from "./mock/adminMock";
 
 const copy = (data) => JSON.parse(JSON.stringify(data));
@@ -647,8 +644,8 @@ export async function getAdminSubmissions() {
       s.player?.user?.username ??
       s.player?.username ??
       "-",
-    agencyName: d.nama_instansi ?? "",
-    agencyPhone: d.nomor_instansi ?? "",
+    agencyName: s.nama_instansi ?? "",
+    agencyPhone: s.nomor_instansi ?? "",
     createdAt: s.created_at ?? "",
     // Terakhir kali player mengajukan ulang setelah revisi (null = belum pernah).
     resubmittedAt: s.diajukan_ulang_pada ?? null,
@@ -668,9 +665,10 @@ export async function getAdminSubmissionDetail(id) {
     id: Number(d.id_pengajuan),
     name: d.nama_turnamen ?? "-",
     organizer: d.nama_penyelenggara ?? d.player?.user?.username ?? "-",
+    agencyName: d.nama_instansi ?? "",
+    agencyPhone: d.nomor_instansi ?? "",
     status: d.status ?? "",
     createdAt: d.created_at ?? "",
-    // BARU
     resubmittedAt: d.diajukan_ulang_pada ?? null,
     posterUrl: mediaOf(d.poster_url, d.poster),
     game: d.game?.nama_game ?? "-",

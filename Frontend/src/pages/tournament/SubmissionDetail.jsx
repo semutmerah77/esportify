@@ -9,6 +9,7 @@ import {
   startEdit,
   updateSubmission,
 } from "../../services/tournamentApi";
+import SuccessDialog from "../../components/tournament/SuccessDialog";
 import { clock, longDate, parseDeadline } from "../../utils/date";
 
 // Label khusus halaman ini. Nilai asli backend tidak diubah.
@@ -56,6 +57,7 @@ function SubmissionDetail() {
   const [mode, setMode] = useState("view"); // "view" | "edit"
   const [editInfo, setEditInfo] = useState(null);
   const [starting, setStarting] = useState(false);
+  const [success, setSuccess] = useState(null); // { title, text }
 
   const load = useCallback(async () => {
     try {
@@ -108,14 +110,23 @@ function SubmissionDetail() {
   };
 
   const handleSave = async (values) => {
+    const wasRevision = isRevision; // simpan sebelum state direset
     await updateSubmission(id, values, initialValues, d.fundingIds);
     await load();
     setMode("view");
     setEditInfo(null);
-    setMessage({
-      text: "Pengajuan diperbarui dan kembali menunggu verifikasi admin.",
-      type: "success",
-    });
+    setMessage({ text: "", type: "" });
+    setSuccess(
+      wasRevision
+        ? {
+            title: "Revisi Berhasil Diajukan",
+            text: "Revisi kamu sudah dikirim ulang dan kembali menunggu verifikasi admin.",
+          }
+        : {
+            title: "Pengajuan Berhasil Diperbarui",
+            text: "Perubahan tersimpan dan pengajuan kembali menunggu verifikasi admin.",
+          },
+    );
     window.scrollTo(0, 0);
   };
 
@@ -129,13 +140,18 @@ function SubmissionDetail() {
     </button>
   );
 
-  if (loading) return <p className="admin-message">Memuat...</p>;
+  if (loading)
+    return (
+      <div className="d-page">
+        <p className="admin-message">Memuat...</p>
+      </div>
+    );
   if (error) {
     return (
-      <>
+      <div className="d-page">
         {back}
         <p className="admin-message error">{error}</p>
-      </>
+      </div>
     );
   }
 
@@ -172,14 +188,17 @@ function SubmissionDetail() {
 
   if (mode === "edit") {
     return (
-      <>
-        {back}
-        <h1 className="admin-title">Detail Pengajuan Turnamen</h1>
+      <div className="d-page">
+        <div className="d-head">
+          {back}
+          <h1 className="admin-title">Detail Pengajuan Turnamen</h1>
+        </div>
         <TournamentForm
           key={`${d.id}-${d.status}`}
           mode="edit"
           initial={initialValues}
           existing={{
+            id: d.id,
             posterUrl: d.posterUrl,
             qrisName: d.qrisName,
             qrisUrl: d.qrisUrl,
@@ -201,14 +220,16 @@ function SubmissionDetail() {
             </>
           }
         />
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      {back}
-      <h1 className="admin-title">Detail Pengajuan Turnamen</h1>
+    <div className="d-page">
+      <div className="d-head">
+        {back}
+        <h1 className="admin-title">Detail Pengajuan Turnamen</h1>
+      </div>
       <div className="t-form d-stack">
         {header}
 
@@ -234,7 +255,15 @@ function SubmissionDetail() {
 
         <SubmissionView d={d} />
       </div>
-    </>
+
+      {success && (
+        <SuccessDialog
+          title={success.title}
+          text={success.text}
+          onClose={() => setSuccess(null)}
+        />
+      )}
+    </div>
   );
 }
 

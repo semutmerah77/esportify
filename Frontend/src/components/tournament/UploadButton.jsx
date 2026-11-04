@@ -14,6 +14,8 @@ function UploadButton({
   maxMB,
   file,
   existing,
+  onViewExisting,
+  viewLoading = false,
   onChange,
   onError,
 }) {
@@ -58,7 +60,7 @@ function UploadButton({
   const name = file ? file.name : existing?.name;
   const hasFile = Boolean(file || existing);
   const src = file ? blobUrl : existing?.url;
-  const canView = Boolean(file || existing?.url);
+  const canView = Boolean(file || existing?.url || onViewExisting);
   const isPdf = file?.type === "application/pdf";
 
   return (
@@ -93,11 +95,15 @@ function UploadButton({
             <button
               type="button"
               className="t-pill"
-              disabled={!canView}
+              disabled={!canView || viewLoading}
               title={canView ? "Lihat" : "File ini bersifat privat"}
-              onClick={() => setOpen(true)}
+              onClick={() =>
+                !file && !existing?.url && onViewExisting
+                  ? onViewExisting()
+                  : setOpen(true)
+              }
             >
-              Lihat
+              {viewLoading ? "Memuat..." : "Lihat"}
             </button>
           </div>
         </div>
