@@ -39,7 +39,10 @@ function SquadCard({ squad }) {
         </b>
       </div>
 
-      <Link to={`/squad/${squad.id}`} className="sq-detail-btn">
+      <Link
+        to={`/squad/${squad.squadId ?? squad.id}`}
+        className="sq-detail-btn"
+      >
         Lihat Detail <Icon name="chevron-right" size={14} />
       </Link>
     </article>

@@ -63,6 +63,7 @@ import {
   Inbox,
   Crown,
   PawPrint,
+  UploadCloud,
 } from "lucide-react";
 
 // Untuk menambah ikon: import di atas, lalu tambah satu baris di objek icons.
@@ -134,6 +135,7 @@ const icons = {
   inbox: Inbox,
   crown: Crown,
   "paw-print": PawPrint,
+  "upload-cloud": UploadCloud,
 };
 
 function Icon({ name, size = 16 }) {

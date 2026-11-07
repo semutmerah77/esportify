@@ -90,92 +90,110 @@ export async function searchSquads(query = "") {
 }
 
 // ===== Detail squad =====
-// Data tiruan: statistik & badge contoh. Saat backend siap, ganti dengan apiRequest(`/squads/${id}`).
-const SAMPLE_NAMES = [
-  "AlexShadow",
-  "NightFury",
-  "RavenX",
-  "Kenzoo",
-  "ArdanGG",
-  "Zephyr",
-  "Lynx",
-];
-const SAMPLE_WINRATES = [
-  { game: "Mobile Legends: Bang Bang", wins: 4, total: 5 },
-  { game: "PUBG Mobile", wins: 2, total: 3 },
-  { game: "Valorant", wins: 8, total: 8 },
-];
-const SAMPLE_BADGES = {
-  tier: "Elite Contender",
-  verified: "6/6",
-  items: [
-    { type: "gold", count: 3, title: "Gold Trophy", label: "Juara 1" },
-    { type: "silver", count: 2, title: "Silver Trophy", label: "Runner Up" },
-    { type: "bronze", count: 1, title: "Bronze Trophy", label: "Peringkat 3" },
-  ],
-};
+const roleOf = (peran) => (peran === "leader" ? "leader" : "member");
 
-// role pengguna di squad ini: "leader" | "member" | "guest"
+// GET /api/squad/:id (id = kode_squad atau id_squad). 404 -> null.
+// viewerRole: "leader" | "member" | "guest" (bukan anggota).
 export async function getSquadDetail(id) {
-  const squad = squads.find((s) => s.id === id);
-  if (!squad) return null;
-
-  const role = squad.role || "guest";
-  const members = Array.from({ length: squad.members }, (_, i) => ({
-    id: `${squad.id}-m${i}`,
-    username:
-      squad.fresh && i === 0 ? "Kamu" : SAMPLE_NAMES[i % SAMPLE_NAMES.length],
-    role: i === 0 ? "leader" : "member",
-    isMe:
-      role === "leader"
-        ? i === 0
-        : role === "member" && i === Math.min(1, squad.members - 1),
-  }));
+  let res;
+  try {
+    res = await apiRequest(`/squad/${encodeURIComponent(id)}`);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+  const d = res.data;
 
   return {
-    ...squad,
-    full: isFull(squad),
-    viewerRole: role,
-    createdAt: squad.createdAt || "2024-02-10",
-    locked: false, // roster terkunci (R2.01): dari backend
-    pendingRequests: role === "leader" ? 2 : 0,
-    members,
-    winrates: squad.fresh ? [] : SAMPLE_WINRATES,
-    badges: squad.fresh
-      ? { tier: "", verified: "0/0", items: [] }
-      : SAMPLE_BADGES,
+    ...mapSquad(d),
+    viewerRole: d.is_leader ? "leader" : d.is_anggota ? "member" : "guest",
+    locked: false, // status roster terkunci belum ada di kontrak PB-01
+    pendingRequests: 0, // permintaan bergabung: menunggu PB-04
+    members: (d.anggota ?? []).map((a) => ({
+      id: a.id_anggota_squad,
+      playerId: a.id_player,
+      username: a.username,
+      avatar: a.avatar_url || null,
+      joinedAt: a.tanggal_bergabung,
+      role: roleOf(a.peran),
+      isMe: false, // diisi halaman dari akun yang login
+    })),
+    // Selalu [] sampai Sprint 3 (PB-18, PB-19, PB-20): tampilan memakai keadaan kosong.
+    winrates: [],
+    badges: { tier: "", verified: "0/0", items: [] },
   };
 }
 
-// POST permintaan bergabung Mock: selalu berhasil.
-export async function requestJoin(id) {
-  const squad = squads.find((s) => s.id === id);
-  if (!squad) throw new Error("Squad tidak ditemukan.");
-  if (isFull(squad)) throw new Error("Squad sudah penuh.");
-  return true;
+// POST /api/squad/:id + _method=PUT (hanya Leader). Kirim field yang berubah saja.
+// Belum dipakai di UI (menunggu desain Edit Squad).
+export async function updateSquad(id, { name, description, logoFile } = {}) {
+  const form = new FormData();
+  form.append("_method", "PUT");
+  if (name !== undefined) form.append("nama_squad", name.trim());
+  if (description !== undefined) form.append("deskripsi", description.trim());
+  if (logoFile) form.append("logo_squad", logoFile);
+  try {
+    const res = await apiRequest(`/squad/${encodeURIComponent(id)}`, {
+      method: "POST",
+      body: form,
+    });
+    return mapSquad(res.data);
+  } catch (err) {
+    throw toFormError(err);
+  }
 }
 
-// POST keluar dari squad. Ditolak saat roster terkunci
-export async function leaveSquad(id) {
-  const index = squads.findIndex((s) => s.id === id);
-  if (index < 0) throw new Error("Squad tidak ditemukan.");
-  const squad = squads[index];
-  squad.members -= 1;
-  squad.role = null;
-  if (squad.members <= 0) squads.splice(index, 1); // diarsipkan, tidak tampil
-  return true;
+// Belum ada endpoint di kontrak PB-01 (permintaan bergabung: PB-04, keluar squad: sprint berikutnya).
+// Sengaja melempar error supaya tidak terlihat berhasil padahal tidak tersimpan.
+export async function requestJoin() {
+  throw new Error("Fitur gabung squad belum tersedia di backend.");
 }
-
+export async function leaveSquad() {
+  throw new Error("Fitur keluar squad belum tersedia di backend.");
+}
 
 // ===== Undangan squad (inbox) =====
 // Data tiruan, menunggu kontrak PB-04. Undangan tidak punya masa kedaluwarsa (R1.09).
 let invitations = [
-  { id: 1, invitedBy: "Captain_Rex",
-    squad: { id: "SQD-5128AX", name: "Apex Predators", icon: "crown", tone: "amber", logo: null, members: 4, capacity: SQUAD_CAPACITY } },
-  { id: 2, invitedBy: "ShadowWalker",
-    squad: { id: "SQD-3382BX", name: "Phantom Legion", icon: "paw-print", tone: "purple", logo: null, members: 5, capacity: SQUAD_CAPACITY } },
-  { id: 3, invitedBy: "ValkyrieLeader",
-    squad: { id: "SQD-8819CX", name: "Valkyrie Esports", icon: "shield", tone: "blue", logo: null, members: 6, capacity: SQUAD_CAPACITY } },
+  {
+    id: 1,
+    invitedBy: "Captain_Rex",
+    squad: {
+      id: "SQD-5128AX",
+      name: "Apex Predators",
+      icon: "crown",
+      tone: "amber",
+      logo: null,
+      members: 4,
+      capacity: SQUAD_CAPACITY,
+    },
+  },
+  {
+    id: 2,
+    invitedBy: "ShadowWalker",
+    squad: {
+      id: "SQD-3382BX",
+      name: "Phantom Legion",
+      icon: "paw-print",
+      tone: "purple",
+      logo: null,
+      members: 5,
+      capacity: SQUAD_CAPACITY,
+    },
+  },
+  {
+    id: 3,
+    invitedBy: "ValkyrieLeader",
+    squad: {
+      id: "SQD-8819CX",
+      name: "Valkyrie Esports",
+      icon: "shield",
+      tone: "blue",
+      logo: null,
+      members: 6,
+      capacity: SQUAD_CAPACITY,
+    },
+  },
 ];
 
 // GET undangan yang diterima player
@@ -198,5 +216,10 @@ export async function respondInvitation(id, accept) {
     throw err;
   }
   const members = invite.squad.members + 1;
-  return { ...invite.squad, members, full: members >= invite.squad.capacity, role: "member" };
+  return {
+    ...invite.squad,
+    members,
+    full: members >= invite.squad.capacity,
+    role: "member",
+  };
 }
