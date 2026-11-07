@@ -59,7 +59,7 @@ function SquadPerformance({ winrates, badges }) {
             )}
           </h3>
           <button type="button" className="sqd-link">
-            Lihat Semua ({badges.items.reduce((n, b) => n + b.count, 0)}){" "}
+            Lihat Semua
             <Icon name="chevron-right" size={13} />
           </button>
         </header>
