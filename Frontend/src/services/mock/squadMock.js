@@ -1,6 +1,10 @@
+// DATA SEMENTARA: dipakai pencarian squad (menunggu endpoint PB-03) dan detail squad (menunggu integrasi). Hapus file ini saat backend siap.
+// icon  : nama ikon di components/Icon.jsx (dipakai kalau squad belum punya logo)
+// tone  : warna kotak logo (teal, red, purple, amber, green, blue, pink, indigo)
+// role  : "leader" | "member" | null (peran user yang sedang login di squad itu)
 export const mockSquads = [
   {
-    id: "SQ-9021",
+    id: "SQD-9021AX",
     name: "Shadow Reapers",
     icon: "globe",
     tone: "purple",
@@ -10,7 +14,7 @@ export const mockSquads = [
       "Komunitas squad kompetitif push rank Immortal & turnamen regional. Latihan rutin setiap malam dengan evaluasi bersama.",
   },
   {
-    id: "SQ-4412",
+    id: "SQD-4412BX",
     name: "Elite Warriors",
     icon: "smartphone",
     tone: "amber",
@@ -19,7 +23,7 @@ export const mockSquads = [
       "Squad veteran tier Mythic Glory ke atas dengan jadwal scrim rutin tiap pekan dan analisis replay bersama.",
   },
   {
-    id: "SQ-7731",
+    id: "SQD-7731CX",
     name: "Phoenix Esports",
     icon: "moon",
     tone: "amber",
@@ -28,7 +32,7 @@ export const mockSquads = [
       "Fokus latihan semi-pro untuk turnamen kampus & regional. Terbuka untuk pemain yang disiplin dan komunikatif.",
   },
   {
-    id: "SQ-1109",
+    id: "SQD-1109DX",
     name: "Night Hunters",
     icon: "star",
     tone: "teal",
@@ -37,7 +41,7 @@ export const mockSquads = [
       "Squad santai namun solid untuk push rank tiap akhir pekan. Sisa 1 slot untuk pemain support.",
   },
   {
-    id: "SQ-5520",
+    id: "SQD-5520EX",
     name: "Apex Predator",
     icon: "zap",
     tone: "green",
@@ -46,7 +50,7 @@ export const mockSquads = [
       "Mencari pemain bermental juara untuk persiapan kualifikasi turnamen nasional musim depan.",
   },
   {
-    id: "SQ-3318",
+    id: "SQD-3318FX",
     name: "Valkyrie Legion",
     icon: "shield-check",
     tone: "pink",
@@ -55,7 +59,7 @@ export const mockSquads = [
       "Komunitas all-ladies gamer kompetitif & streamers dengan jadwal latihan dan konten mingguan.",
   },
   {
-    id: "SQ-8842",
+    id: "SQD-8842GX",
     name: "Cyber Ronin",
     icon: "sliders",
     tone: "indigo",
@@ -64,7 +68,7 @@ export const mockSquads = [
       "Squad taktis dengan gameplay makro kuat. Sering mengadakan diskusi strategi dan review pertandingan.",
   },
   {
-    id: "SQ-6671",
+    id: "SQD-6671HX",
     name: "Dark Nebula",
     icon: "sparkles",
     tone: "indigo",
@@ -73,7 +77,7 @@ export const mockSquads = [
       "Roster utama squad turnamen amatir. Pendaftaran squad sedang ditutup sampai turnamen berikutnya.",
   },
   {
-    id: "SQ-7789",
+    id: "SQD-7789IX",
     name: "Nexus Esports",
     icon: "shield",
     tone: "red",
@@ -83,7 +87,7 @@ export const mockSquads = [
       "Squad komunitas yang aktif mengikuti turnamen online setiap bulan.",
   },
   {
-    id: "SQ-6650",
+    id: "SQD-6650JX",
     name: "Vortex Gaming",
     icon: "sparkles",
     tone: "purple",
@@ -93,7 +97,7 @@ export const mockSquads = [
       "Tim solid dengan fokus kerja sama dan komunikasi saat bertanding.",
   },
   {
-    id: "SQ-5120",
+    id: "SQD-5120KX",
     name: "Apex Predators",
     icon: "zap",
     tone: "amber",
@@ -103,7 +107,7 @@ export const mockSquads = [
       "Squad agresif yang suka bermain cepat dan menekan sejak awal.",
   },
   {
-    id: "SQ-3384",
+    id: "SQD-3384LX",
     name: "Phantom Legion",
     icon: "map-pin",
     tone: "green",
@@ -113,7 +117,7 @@ export const mockSquads = [
       "Squad regional yang rutin berlatih dan mengikuti turnamen offline.",
   },
   {
-    id: "SQ-2201",
+    id: "SQD-2201MX",
     name: "Iron Wolves",
     icon: "shield",
     tone: "blue",
@@ -122,7 +126,7 @@ export const mockSquads = [
     description: "Squad baru yang sedang membangun roster inti.",
   },
   {
-    id: "SQ-9904",
+    id: "SQD-9904NX",
     name: "Crimson Tide",
     icon: "zap",
     tone: "red",
@@ -131,7 +135,7 @@ export const mockSquads = [
       "Squad kompetitif dengan latihan terjadwal tiga kali seminggu.",
   },
   {
-    id: "SQ-1180",
+    id: "SQD-1180OX",
     name: "Silent Fang",
     icon: "moon",
     tone: "indigo",
@@ -140,7 +144,7 @@ export const mockSquads = [
       "Fokus pada permainan tenang dan terukur, terbuka untuk pemain baru.",
   },
   {
-    id: "SQ-4075",
+    id: "SQD-4075PX",
     name: "Neon Drift",
     icon: "sparkles",
     tone: "pink",
@@ -148,7 +152,7 @@ export const mockSquads = [
     description: "Squad santai yang tetap serius saat turnamen.",
   },
   {
-    id: "SQ-3092",
+    id: "SQD-3092QX",
     name: "Blue Comet",
     icon: "star",
     tone: "blue",
@@ -156,7 +160,7 @@ export const mockSquads = [
     description: "Mencari pemain aktif untuk turnamen kampus semester ini.",
   },
   {
-    id: "SQ-7250",
+    id: "SQD-7250RX",
     name: "Titan Core",
     icon: "shield-check",
     tone: "teal",

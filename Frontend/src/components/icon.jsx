@@ -60,6 +60,9 @@ import {
   Sparkles,
   Image,
   Shield,
+  Inbox,
+  Crown,
+  PawPrint,
 } from "lucide-react";
 
 // Untuk menambah ikon: import di atas, lalu tambah satu baris di objek icons.
@@ -128,6 +131,9 @@ const icons = {
   sparkles: Sparkles,
   image: Image,
   shield: Shield,
+  inbox: Inbox,
+  crown: Crown,
+  "paw-print": PawPrint,
 };
 
 function Icon({ name, size = 16 }) {
