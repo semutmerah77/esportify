@@ -227,7 +227,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/squad/{id}', [
                 SquadController::class,
                 'show'
-            ])->whereNumber('id');
+            ]);
 
         });
 
@@ -242,7 +242,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/squad/{id}', [
             SquadController::class,
             'update'
-        ])->whereNumber('id')->middleware('permission:ubah_squad');
+        ])->middleware('permission:ubah_squad');
 
 
         // Mengubah pengajuan ketika mendapatkan kesempatan revisi

@@ -56,12 +56,10 @@ class SquadController extends Controller
         }
 
         $validated = $request->validate([
-            'nama_squad' => ['required', 'string', 'max:100', 'unique:squad,nama_squad'],
+            'nama_squad' => ['required', 'string', 'max:30', 'unique:squad,nama_squad'],
             'logo_squad' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
-            'deskripsi' => ['required', 'string', 'max:1000'],
-        ], [
-            'nama_squad.unique' => 'Nama Squad sudah ada.',
-        ]);
+            'deskripsi' => ['required', 'string', 'max:100'],
+        ], $this->pesanValidasi());
 
         $logoPath = $request->file('logo_squad')->store('squad-logos', 'public');
 
@@ -110,7 +108,7 @@ class SquadController extends Controller
     {
         $player = $request->user()->player;
 
-        $squad = Squad::find($id);
+        $squad = $this->findSquad($id);
 
         if (!$squad) {
             return $this->squadNotFound();
@@ -135,7 +133,7 @@ class SquadController extends Controller
             return $this->playerNotFound();
         }
 
-        $squad = Squad::with('leader')->find($id);
+        $squad = $this->findSquad($id);
 
         if (!$squad || $squad->status_squad !== 'aktif') {
             return $this->squadNotFound();
@@ -150,14 +148,12 @@ class SquadController extends Controller
 
         $validated = $request->validate([
             'nama_squad' => [
-                'sometimes', 'required', 'string', 'max:100',
+                'sometimes', 'required', 'string', 'max:30',
                 Rule::unique('squad', 'nama_squad')->ignore($squad->id_squad, 'id_squad'),
             ],
-            'logo_squad' => ['sometimes', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
-            'deskripsi' => ['sometimes', 'required', 'string', 'max:1000'],
-        ], [
-            'nama_squad.unique' => 'Nama Squad sudah ada.',
-        ]);
+            'logo_squad' => ['sometimes', 'required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'deskripsi' => ['sometimes', 'required', 'string', 'max:100'],
+        ], $this->pesanValidasi());
 
         $data = collect($validated)->only(['nama_squad', 'deskripsi'])->all();
 
@@ -202,15 +198,19 @@ class SquadController extends Controller
 
     private function formatSquadRingkas(Squad $squad, $player): array
     {
+        $jumlah = $squad->anggota_aktif_count ?? $squad->anggotaAktif()->count();
+
         return [
             'id_squad' => $squad->id_squad,
             'kode_squad' => $squad->kode_squad,
             'nama_squad' => $squad->nama_squad,
             'logo_squad' => $squad->logo_squad,
             'logo_url' => $this->fileUrl($squad->logo_squad),
-            'jumlah_anggota' => $squad->anggota_aktif_count ?? $squad->anggotaAktif()->count(),
+            'jumlah_anggota' => $jumlah,
             'maks_anggota' => $squad->maks_anggota,
+            'is_full' => $jumlah >= $squad->maks_anggota,
             'status_squad' => $squad->status_squad,
+            'peran' => $this->peranPlayer($squad, $player),
             'is_leader' => $squad->isLeader($player),
         ];
     }
@@ -243,17 +243,58 @@ class SquadController extends Controller
             'deskripsi' => $squad->deskripsi,
             'maks_anggota' => $squad->maks_anggota,
             'jumlah_anggota' => $anggota->count(),
+            'is_full' => $anggota->count() >= $squad->maks_anggota,
             'status_squad' => $squad->status_squad,
             'created_at' => $squad->created_at?->toDateTimeString(),
             'anggota' => $anggota,
 
             // Status Player yang sedang login terhadap Squad ini (untuk tombol di FE)
+            // peran: 'leader' | 'anggota' | null (bukan anggota)
+            'peran' => $player && $anggota->contains('id_player', $player->id_player)
+                ? ((int) $player->id_player === (int) $leaderPlayerId ? 'leader' : 'anggota')
+                : null,
             'is_leader' => $squad->isLeader($player),
             'is_anggota' => $player ? $anggota->contains('id_player', $player->id_player) : false,
 
             // Diisi pada Sprint 3 (PB-18 s.d. PB-20)
             'statistik' => [],
             'pencapaian' => [],
+        ];
+    }
+
+    /**
+     * Mencari Squad berdasarkan id_squad (angka) atau kode_squad (contoh: SQD-7K2M9Q).
+     */
+    private function findSquad($key): ?Squad
+    {
+        $query = Squad::with('leader');
+
+        return ctype_digit((string) $key)
+            ? $query->find($key)
+            : $query->where('kode_squad', strtoupper(ltrim($key, '#')))->first();
+    }
+
+    private function peranPlayer(Squad $squad, $player): ?string
+    {
+        if (!$player || !$squad->isAnggotaAktif($player)) {
+            return null;
+        }
+
+        return $squad->isLeader($player) ? 'leader' : 'anggota';
+    }
+
+    private function pesanValidasi(): array
+    {
+        return [
+            'nama_squad.required' => 'Nama Squad wajib diisi.',
+            'nama_squad.unique' => 'Nama Squad sudah ada.',
+            'nama_squad.max' => 'Nama Squad maksimal 30 karakter.',
+            'logo_squad.required' => 'Logo Squad wajib diunggah.',
+            'logo_squad.image' => 'Logo Squad harus berupa gambar.',
+            'logo_squad.mimes' => 'Logo Squad harus berformat JPG, JPEG, atau PNG.',
+            'logo_squad.max' => 'Ukuran logo Squad maksimal 2 MB.',
+            'deskripsi.required' => 'Deskripsi Squad wajib diisi.',
+            'deskripsi.max' => 'Deskripsi Squad maksimal 100 karakter.',
         ];
     }
 
