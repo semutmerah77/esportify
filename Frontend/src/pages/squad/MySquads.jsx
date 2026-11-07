@@ -4,6 +4,7 @@ import Pagination from "../../components/admin/Pagination";
 import SquadRow from "../../components/squad/SquadRow";
 import CreateSquadModal from "../../components/squad/CreateSquadModal";
 import InviteInboxModal from "../../components/squad/InviteInboxModal";
+import { useLocation } from "react-router-dom";
 import {
   MY_PAGE_SIZE,
   getInvitations,
@@ -20,7 +21,8 @@ function MySquads() {
   const [creating, setCreating] = useState(false);
   const [invites, setInvites] = useState([]);
   const [inboxOpen, setInboxOpen] = useState(false);
-  const [toast, setToast] = useState("");
+  const location = useLocation();
+  const [toast, setToast] = useState(location.state?.toast || "");
 
   useEffect(() => {
     let off = false;

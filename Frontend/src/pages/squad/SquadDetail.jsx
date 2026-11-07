@@ -7,8 +7,11 @@ import SquadPerformance from "../../components/squad/SquadPerformance";
 import SquadMembers from "../../components/squad/SquadMembers";
 import LeaveSquadDialog from "../../components/squad/LeaveSquadDialog";
 import EditSquadModal from "../../components/squad/EditSquadModal";
+import KickMemberDialog from "../../components/squad/KickMemberDialog";
 import {
   getSquadDetail,
+  isRosterLocked,
+  kickMember,
   leaveSquad,
   requestJoin,
 } from "../../services/squadApi";
@@ -32,6 +35,8 @@ function SquadDetail() {
   const [requested, setRequested] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [kicking, setKicking] = useState(null);
+  const [kickError, setKickError] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
@@ -107,14 +112,39 @@ function SquadDetail() {
     }
   };
 
+  const apiId = squad.squadId ?? squad.id;
+
   const handleLeave = async () => {
     setBusy(true);
     setError("");
     try {
-      await leaveSquad(squad.id);
-      navigate("/squad/saya", { replace: true });
+      const res = await leaveSquad(apiId);
+      navigate("/squad/saya", { replace: true, state: { toast: res.message } });
     } catch (err) {
+      if (isRosterLocked(err)) setSquad((s) => ({ ...s, locked: true }));
       setError(err.message || "Gagal keluar dari squad.");
+      setBusy(false);
+    }
+  };
+
+  const closeKick = () => {
+    setKicking(null);
+    setKickError("");
+  };
+
+  const handleKick = async () => {
+    if (!kicking) return;
+    setBusy(true);
+    setKickError("");
+    try {
+      const res = await kickMember(apiId, kicking.playerId);
+      setSquad(res.squad);
+      closeKick();
+      setToast(res.message || "Anggota berhasil dikeluarkan.");
+    } catch (err) {
+      if (isRosterLocked(err)) setSquad((s) => ({ ...s, locked: true }));
+      setKickError(err.message || "Gagal mengeluarkan anggota.");
+    } finally {
       setBusy(false);
     }
   };
@@ -175,12 +205,27 @@ function SquadDetail() {
       <h2 className="sqd-title">Performa Squad</h2>
       <SquadPerformance winrates={squad.winrates} badges={squad.badges} />
 
-      <SquadMembers squad={view} onLeave={() => setLeaving(true)} />
+      <SquadMembers
+        squad={view}
+        onLeave={() => setLeaving(true)}
+        onKick={setKicking}
+      />
       {editing && (
         <EditSquadModal
           squad={squad}
           onClose={() => setEditing(false)}
           onSaved={handleSaved}
+        />
+      )}
+
+      {kicking && (
+        <KickMemberDialog
+          member={kicking}
+          locked={squad.locked}
+          loading={busy}
+          error={kickError}
+          onConfirm={handleKick}
+          onClose={closeKick}
         />
       )}
 

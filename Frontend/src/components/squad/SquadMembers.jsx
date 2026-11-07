@@ -1,10 +1,10 @@
 import Icon from "../icon";
 
 // Daftar anggota. Tombol aksi menyesuaikan peran pengguna:
-// leader  : undang, permintaan bergabung, keluar
+// leader  : undang, permintaan bergabung, keluar, keluarkan anggota (tombol di kartu anggota)
 // anggota : keluar
 // bukan anggota : tidak ada tombol
-function SquadMembers({ squad, onLeave }) {
+function SquadMembers({ squad, onLeave, onKick }) {
   const isLeader = squad.viewerRole === "leader";
   const isMember = squad.viewerRole === "member" || isLeader;
 
@@ -78,6 +78,17 @@ function SquadMembers({ squad, onLeave }) {
                 {m.role === "leader" ? "Leader" : "Anggota"}
               </em>
             </div>
+            {isLeader && m.role !== "leader" && (
+              <button
+                type="button"
+                className="sqd-kick-btn"
+                title="Keluarkan anggota"
+                aria-label={`Keluarkan ${m.username}`}
+                onClick={() => onKick(m)}
+              >
+                <Icon name="user-minus" size={14} />
+              </button>
+            )}
           </div>
         ))}
       </div>
