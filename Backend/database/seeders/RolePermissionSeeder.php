@@ -72,6 +72,8 @@ class RolePermissionSeeder extends Seeder
             'lihat_squad',
             'buat_squad',
             'ubah_squad',
+            'keluar_squad',
+            'keluarkan_anggota_squad',
         ];
 
         $admin = Role::findByName('admin', 'web');
