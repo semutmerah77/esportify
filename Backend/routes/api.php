@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Player\ProfileController;
 use App\Http\Controllers\Player\PengajuanTurnamenController;
 use App\Http\Controllers\Player\SquadController;
+use App\Http\Controllers\Player\PlayerSearchController;
 use App\Http\Controllers\Api\Player\GameController as PlayerGameController;
 
 // ==========================================
@@ -216,6 +217,11 @@ Route::middleware('auth:sanctum')->group(function () {
         // ==========================================
 
         Route::middleware('permission:lihat_squad')->group(function () {
+            // Mencari Squad (PB-03) — ?q=<nama atau kode>
+            Route::get('/squad', [
+                SquadController::class,
+                'index'
+            ]);
 
             // Daftar Squad yang diikuti Player login
             Route::get('/squad-saya', [
@@ -260,6 +266,17 @@ Route::middleware('auth:sanctum')->group(function () {
             SquadController::class,
             'keluarkanAnggota'
         ])->whereNumber('idPlayer')->middleware('permission:keluarkan_anggota_squad');
+
+        
+        // ==========================================
+        // MODUL 3: PENCARIAN PLAYER (PB-03)
+        // ==========================================
+
+        // Mencari Player berdasarkan username — ?q=<username>
+        Route::get('/players', [
+            PlayerSearchController::class,
+            'index'
+        ])->middleware('permission:cari_player');
 
 
         // Mengubah pengajuan ketika mendapatkan kesempatan revisi

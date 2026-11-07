@@ -14,6 +14,43 @@ use Illuminate\Validation\Rule;
 class SquadController extends Controller
 {
     /**
+     * F2-US05 — Mencari Squad
+     * GET /squad?q=<nama atau kode>
+     * R1.17: Squad arsip tidak ditampilkan.
+     * Pagination diatur FE, BE mengirim semua hasil yang cocok.
+     */
+    public function index(Request $request)
+    {
+        $player = $request->user()->player;
+
+        $q = trim((string) $request->query('q', ''));
+        $q = ltrim($q, '#');
+
+        $squads = Squad::aktif()
+            ->when($q !== '', function ($query) use ($q) {
+                $like = '%' . addcslashes($q, '%_\\') . '%';
+
+                $query->where(function ($sub) use ($like) {
+                    $sub->where('nama_squad', 'like', $like)
+                        ->orWhere('kode_squad', 'like', strtoupper($like));
+                });
+            })
+            ->with('leader')
+            ->withCount('anggotaAktif')
+            ->orderBy('nama_squad')
+            ->get()
+            ->map(fn (Squad $squad) => $this->formatSquadRingkas($squad, $player));
+
+        return response()->json([
+            'success' => true,
+            'message' => $squads->isEmpty()
+                ? 'Hasil tidak ditemukan.'
+                : 'Daftar Squad berhasil ditampilkan.',
+            'data' => $squads,
+        ], 200);
+    }
+
+    /**
      * F2-US01 (Squad Saya)
      * Daftar Squad aktif yang diikuti Player yang sedang login.
      */
@@ -192,7 +229,7 @@ class SquadController extends Controller
         ], 200);
     }
 
-        /**
+    /**
      * F2-US13 — Keluar dari Squad
      * R1.20 / R2.03: hanya bisa keluar ketika roster tidak terkunci.
      * R1.13–R1.15: Leader keluar → anggota aktif paling awal jadi Leader baru (acak jika sama).
@@ -224,7 +261,6 @@ class SquadController extends Controller
         }
 
         if ($squad->isRosterLocked()) {
-
             return $this->rosterTerkunci();
         }
 
@@ -257,7 +293,6 @@ class SquadController extends Controller
                 ]);
 
                 $squad->update(['id_leader_squad' => $leaderRow->id_leader_squad]);
-
             }
 
             return [
@@ -290,7 +325,6 @@ class SquadController extends Controller
                     'id_player' => $leaderBaru->id_player,
                     'username' => $leaderBaru->player?->user?->username,
                 ] : null,
-
             ],
         ], 200);
     }
@@ -323,7 +357,6 @@ class SquadController extends Controller
         if ((int) $idPlayer === (int) $player->id_player) {
             return response()->json([
                 'success' => false,
-
                 'message' => 'Leader tidak dapat mengeluarkan dirinya sendiri. Gunakan fitur Keluar Squad.',
             ], 422);
         }
@@ -366,6 +399,7 @@ class SquadController extends Controller
             'nama_squad' => $squad->nama_squad,
             'logo_squad' => $squad->logo_squad,
             'logo_url' => $this->fileUrl($squad->logo_squad),
+            'deskripsi' => $squad->deskripsi,
             'jumlah_anggota' => $jumlah,
             'maks_anggota' => $squad->maks_anggota,
             'is_full' => $jumlah >= $squad->maks_anggota,
@@ -463,7 +497,7 @@ class SquadController extends Controller
         return $path ? asset('storage/' . $path) : null;
     }
 
-        private function rosterTerkunci()
+    private function rosterTerkunci()
     {
         return response()->json([
             'success' => false,
