@@ -450,6 +450,16 @@ class SquadController extends Controller
             'is_leader' => $squad->isLeader($player),
             'is_anggota' => $player ? $anggota->contains('id_player', $player->id_player) : false,
 
+            
+            // PB-04: simbol biru pada tombol "Permintaan" (hanya untuk Leader)
+            'jumlah_permintaan_menunggu' => $squad->isLeader($player)
+                ? $squad->permintaan()->where('status_permintaan', 'menunggu')->count()
+                : null,
+
+            // PB-04: status Player login terhadap Squad ini (untuk tombol "Bergabung")
+            'permintaan_saya' => $this->permintaanSaya($squad, $player),
+            'undangan_saya' => $this->undanganSaya($squad, $player),
+
             // Diisi pada Sprint 3 (PB-18 s.d. PB-20)
             'statistik' => [],
             'pencapaian' => [],
@@ -466,6 +476,41 @@ class SquadController extends Controller
         return ctype_digit((string) $key)
             ? $query->find($key)
             : $query->where('kode_squad', strtoupper(ltrim($key, '#')))->first();
+    }
+
+        private function permintaanSaya(Squad $squad, $player): ?array
+    {
+        if (!$player) {
+            return null;
+        }
+
+        $permintaan = $squad->permintaan()
+            ->where('id_player', $player->id_player)
+            ->where('status_permintaan', 'menunggu')
+            ->first();
+
+        return $permintaan ? [
+            'id_permintaan' => $permintaan->id_permintaan,
+            'status_permintaan' => $permintaan->status_permintaan,
+        ] : null;
+    }
+
+    private function undanganSaya(Squad $squad, $player): ?array
+    {
+        if (!$player) {
+            return null;
+        }
+
+        $undangan = $squad->undangan()
+            ->where('id_player', $player->id_player)
+            ->where('status_undangan', 'menunggu')
+            ->first();
+
+        return $undangan ? [
+            'id_undangan' => $undangan->id_undangan,
+            'status_undangan' => $undangan->status_undangan,
+        ] : null;
+
     }
 
     private function peranPlayer(Squad $squad, $player): ?string

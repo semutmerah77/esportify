@@ -46,6 +46,16 @@ class Squad extends Model
         return $this->anggota()->where('status_anggota', 'aktif');
     }
 
+    public function permintaan(): HasMany
+    {
+        return $this->hasMany(PermintaanBergabung::class, 'id_squad', 'id_squad');
+    }
+
+    public function undangan(): HasMany
+    {
+        return $this->hasMany(UndanganSquad::class, 'id_squad', 'id_squad');
+    }
+
     public function scopeAktif(Builder $query): Builder
     {
         return $query->where('status_squad', 'aktif');
@@ -62,6 +72,23 @@ class Squad extends Model
     {
         return $player !== null
             && $this->anggotaAktif()->where('id_player', $player->id_player)->exists();
+    }
+
+        public function isFull(): bool
+    {
+        return $this->anggotaAktif()->count() >= $this->maks_anggota;
+    }
+
+    /**
+     * Mencari Squad berdasarkan id_squad (angka) atau kode_squad (contoh: SQD-7K2M9Q).
+     */
+    public static function cariDenganKunci($key): ?self
+    {
+        $query = static::with('leader');
+
+        return ctype_digit((string) $key)
+            ? $query->find($key)
+            : $query->where('kode_squad', strtoupper(ltrim((string) $key, '#')))->first();
     }
 
         /**
