@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import Icon from "../../components/icon";
 import SquadLogo from "../../components/squad/SquadLogo";
 import SquadPerformance from "../../components/squad/SquadPerformance";
 import SquadMembers from "../../components/squad/SquadMembers";
 import LeaveSquadDialog from "../../components/squad/LeaveSquadDialog";
+import EditSquadModal from "../../components/squad/EditSquadModal";
 import {
   getSquadDetail,
   leaveSquad,
@@ -13,7 +15,8 @@ import {
 import "../../styles/squad.css";
 
 const createdText = (value) => {
-  const d = new Date(value);
+  // BE: "YYYY-MM-DD HH:mm:ss" -> format ISO agar terbaca di semua browser
+  const d = new Date(String(value ?? "").replace(" ", "T"));
   return Number.isNaN(d.getTime())
     ? "-"
     : d.toLocaleDateString("id-ID", { month: "short", year: "numeric" });
@@ -22,10 +25,13 @@ const createdText = (value) => {
 function SquadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [squad, setSquad] = useState(null);
   const [missing, setMissing] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [requested, setRequested] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
@@ -34,9 +40,13 @@ function SquadDetail() {
     let off = false;
     setSquad(null);
     setMissing(false);
+    setLoadError("");
     getSquadDetail(id)
       .then((data) => !off && (data ? setSquad(data) : setMissing(true)))
-      .catch(() => !off && setMissing(true));
+      .catch(
+        (err) =>
+          !off && setLoadError(err.message || "Gagal memuat detail squad."),
+      );
     return () => {
       off = true;
     };
@@ -62,6 +72,14 @@ function SquadDetail() {
       </div>
     );
   }
+  if (loadError) {
+    return (
+      <div className="sq-page">
+        {back}
+        <p className="admin-message error">{loadError}</p>
+      </div>
+    );
+  }
   if (!squad) return <div className="sq-page">{back}</div>;
 
   const handleJoin = async () => {
@@ -74,6 +92,18 @@ function SquadDetail() {
       setToast(err.message || "Gagal mengirim permintaan.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Setelah PUT berhasil: ambil ulang detail supaya data (termasuk logo_url baru) akurat
+  const handleSaved = async () => {
+    setEditing(false);
+    try {
+      const fresh = await getSquadDetail(id);
+      if (fresh) setSquad(fresh);
+      setToast("Perubahan squad berhasil disimpan.");
+    } catch (err) {
+      setToast(err.message || "Tersimpan, tetapi gagal memuat ulang data.");
     }
   };
 
@@ -90,6 +120,14 @@ function SquadDetail() {
   };
 
   const role = squad.viewerRole;
+  // Tandai anggota yang sedang login (dicocokkan lewat username)
+  const view = {
+    ...squad,
+    members: squad.members.map((m) => ({
+      ...m,
+      isMe: Boolean(user?.username) && m.username === user.username,
+    })),
+  };
 
   return (
     <div className="sq-page">
@@ -123,7 +161,11 @@ function SquadDetail() {
             </button>
           )}
           {role === "leader" && (
-            <button type="button" className="sq-btn outline sqd-hero-btn blue">
+            <button
+              type="button"
+              className="sq-btn outline sqd-hero-btn blue"
+              onClick={() => setEditing(true)}
+            >
               <Icon name="edit" size={14} /> Edit
             </button>
           )}
@@ -133,7 +175,14 @@ function SquadDetail() {
       <h2 className="sqd-title">Performa Squad</h2>
       <SquadPerformance winrates={squad.winrates} badges={squad.badges} />
 
-      <SquadMembers squad={squad} onLeave={() => setLeaving(true)} />
+      <SquadMembers squad={view} onLeave={() => setLeaving(true)} />
+      {editing && (
+        <EditSquadModal
+          squad={squad}
+          onClose={() => setEditing(false)}
+          onSaved={handleSaved}
+        />
+      )}
 
       {leaving && (
         <LeaveSquadDialog

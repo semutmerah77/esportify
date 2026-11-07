@@ -64,6 +64,13 @@ function SquadMembers({ squad, onLeave }) {
           <div key={m.id} className={`sqd-member ${m.isMe ? "me" : ""}`}>
             <span className="sqd-avatar">
               <Icon name="user" size={18} />
+              {m.avatar && (
+                <img
+                  src={m.avatar}
+                  alt=""
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+              )}
             </span>
             <div>
               <b>{m.username}</b>

@@ -4,7 +4,7 @@ import SquadLogo from "./SquadLogo";
 // Baris daftar "Squad Saya".
 function SquadRow({ squad }) {
   return (
-    <Link to={`/squad/${squad.id}`} className="sq-row">
+    <Link to={`/squad/${squad.squadId ?? squad.id}`} className="sq-row">
       <SquadLogo squad={squad} />
       <div className="sq-row-main">
         <h3>{squad.name}</h3>
