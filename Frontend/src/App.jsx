@@ -24,6 +24,7 @@ import TournamentDetail from "./pages/tournament/TournamentDetail";
 import ManagedTournamentDetail from "./pages/tournament/ManagedTournamentDetail";
 import SearchSquad from "./pages/squad/SearchSquad";
 import MySquads from "./pages/squad/MySquads";
+import SquadDetail from "./pages/squad/SquadDetail";
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
             />
             <Route path="/squad/cari" element={<SearchSquad />} />
             <Route path="/squad/saya" element={<MySquads />} />
+            <Route path="/squad/:id" element={<SquadDetail />} />
           </Route>
         </Route>
 

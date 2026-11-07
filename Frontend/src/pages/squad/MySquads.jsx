@@ -3,7 +3,12 @@ import Icon from "../../components/icon";
 import Pagination from "../../components/admin/Pagination";
 import SquadRow from "../../components/squad/SquadRow";
 import CreateSquadModal from "../../components/squad/CreateSquadModal";
-import { MY_PAGE_SIZE, getMySquads } from "../../services/squadApi";
+import InviteInboxModal from "../../components/squad/InviteInboxModal";
+import {
+  MY_PAGE_SIZE,
+  getInvitations,
+  getMySquads,
+} from "../../services/squadApi";
 import "../../styles/squad.css";
 
 function MySquads() {
@@ -13,6 +18,8 @@ function MySquads() {
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [invites, setInvites] = useState([]);
+  const [inboxOpen, setInboxOpen] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -24,6 +31,16 @@ function MySquads() {
           !off &&
           (setError(err.message || "Gagal memuat squad."), setReady(true)),
       );
+    return () => {
+      off = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let off = false;
+    getInvitations()
+      .then((data) => !off && setInvites(data))
+      .catch(() => {}); // inbox gagal dimuat: tombol tetap tampil tanpa angka
     return () => {
       off = true;
     };
@@ -58,6 +75,11 @@ function MySquads() {
     setToast(`Squad "${squad.name}" berhasil dibuat. Kamu menjadi Leader.`);
   };
 
+  const handleAccepted = (squad) => {
+    setItems((prev) => [squad, ...prev]);
+    setToast(`Kamu bergabung ke squad "${squad.name}".`);
+  };
+
   return (
     <div className="sq-page">
       <h1 className="admin-title">Squad Saya</h1>
@@ -75,13 +97,25 @@ function MySquads() {
             }}
           />
         </div>
-        <button
-          type="button"
-          className="sq-btn outline"
-          onClick={() => setCreating(true)}
-        >
-          <Icon name="plus" size={16} /> Buat Squad Kamu
-        </button>
+        <div className="sq-toolbar-actions">
+          <button
+            type="button"
+            className="sq-btn outline inbox"
+            onClick={() => setInboxOpen(true)}
+          >
+            <Icon name="mail" size={16} /> Inbox Undangan
+            {invites.length > 0 && (
+              <span className="sq-count">{invites.length}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            className="sq-btn outline"
+            onClick={() => setCreating(true)}
+          >
+            <Icon name="plus" size={16} /> Buat Squad Kamu
+          </button>
+        </div>
       </div>
 
       <h2 className="sq-section">Daftar Squad Saya</h2>
@@ -111,6 +145,14 @@ function MySquads() {
         />
       )}
 
+      {inboxOpen && (
+        <InviteInboxModal
+          invites={invites}
+          onChange={setInvites}
+          onAccepted={handleAccepted}
+          onClose={() => setInboxOpen(false)}
+        />
+      )}
       {creating && (
         <CreateSquadModal
           onClose={() => setCreating(false)}

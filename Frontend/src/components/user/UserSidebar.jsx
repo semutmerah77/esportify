@@ -155,9 +155,16 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
-                  `admin-nav-item ${isActive ? "active" : ""}`
-                }
+                className={`admin-nav-item ${
+                  item.to === "/squad/cari"
+                    ? pathname === "/squad/cari"
+                      ? "active"
+                      : ""
+                    : pathname.startsWith("/squad") &&
+                        pathname !== "/squad/cari"
+                      ? "active"
+                      : ""
+                }`}
                 onClick={onNavigate}
               >
                 <Icon name={item.icon} size={15} /> {item.label}

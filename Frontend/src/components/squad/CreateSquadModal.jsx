@@ -47,8 +47,13 @@ function CreateSquadModal({ onClose, onCreated }) {
   const submit = async (e) => {
     e.preventDefault();
     if (saving) return;
-    if (!name.trim()) {
-      setErrors({ name: "Nama squad wajib diisi." });
+    // Nama, deskripsi, dan logo wajib (sesuai kontrak BE)
+    const required = {};
+    if (!name.trim()) required.name = "Nama Squad wajib diisi.";
+    if (!desc.trim()) required.description = "Deskripsi Squad wajib diisi.";
+    if (!logo) required.logo = "Logo Squad wajib diunggah.";
+    if (Object.keys(required).length) {
+      setErrors(required);
       return;
     }
     setSaving(true);
@@ -61,9 +66,7 @@ function CreateSquadModal({ onClose, onCreated }) {
       });
       onCreated(squad);
     } catch (err) {
-      setErrors({
-        [err.field || "form"]: err.message || "Gagal membuat squad.",
-      });
+      setErrors(err.errors ?? { form: err.message || "Gagal membuat squad." });
       setSaving(false);
     }
   };
@@ -156,12 +159,13 @@ function CreateSquadModal({ onClose, onCreated }) {
         </div>
         <textarea
           id="sq-desc"
-          className="sq-input sq-textarea"
+          className={`sq-input sq-textarea ${errors.description ? "err" : ""}`}
           placeholder="Ceritakan tentang squad kamu..."
           maxLength={DESC_MAX}
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
         />
+        {errors.description && <p className="sq-err">{errors.description}</p>}
 
         {errors.form && <p className="sq-err">{errors.form}</p>}
 
