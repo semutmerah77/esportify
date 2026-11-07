@@ -22,6 +22,8 @@ import AdminSubmissionDetail from "./pages/admin/AdminSubmissionDetail";
 import SubmissionDetail from "./pages/tournament/SubmissionDetail";
 import TournamentDetail from "./pages/tournament/TournamentDetail";
 import ManagedTournamentDetail from "./pages/tournament/ManagedTournamentDetail";
+import SearchSquad from "./pages/squad/SearchSquad";
+import MySquads from "./pages/squad/MySquads";
 
 function App() {
   return (
@@ -57,6 +59,8 @@ function App() {
               path="/turnamen/status-pengajuan"
               element={<SubmissionStatus />}
             />
+            <Route path="/squad/cari" element={<SearchSquad />} />
+            <Route path="/squad/saya" element={<MySquads />} />
           </Route>
         </Route>
 
