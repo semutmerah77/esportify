@@ -50,6 +50,16 @@ import {
   Zap,
   Clock,
   ArrowLeft,
+  ShieldCheck,
+  Swords,
+  Moon,
+  Star,
+  Globe,
+  Smartphone,
+  SlidersVertical,
+  Sparkles,
+  Image,
+  Shield,
 } from "lucide-react";
 
 // Untuk menambah ikon: import di atas, lalu tambah satu baris di objek icons.
@@ -108,6 +118,16 @@ const icons = {
   zap: Zap,
   clock: Clock,
   "arrow-left": ArrowLeft,
+  "shield-check": ShieldCheck,
+  swords: Swords,
+  moon: Moon,
+  star: Star,
+  globe: Globe,
+  smartphone: Smartphone,
+  sliders: SlidersVertical,
+  sparkles: Sparkles,
+  image: Image,
+  shield: Shield,
 };
 
 function Icon({ name, size = 16 }) {

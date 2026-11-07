@@ -31,10 +31,16 @@ const tournamentItems = [
   },
 ];
 
+const squadItems = [
+  { label: "Cari Squad", to: "/squad/cari", icon: "search", locked: true },
+  { label: "Squad Saya", to: "/squad/saya", icon: "swords", locked: true },
+];
+
 function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
   const { pathname, search } = useLocation();
 
   const [menuOpen, setMenuOpen] = useState(pathname.startsWith("/turnamen"));
+  const [squadOpen, setSquadOpen] = useState(pathname.startsWith("/squad"));
   const [showGate, setShowGate] = useState(false);
 
   const returnTo = `${pathname}${search}`;
@@ -106,6 +112,52 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
                 to={item.to}
                 end={item.to === "/turnamen/cari"}
                 className={`admin-nav-item ${active ? "active" : ""}`}
+                onClick={onNavigate}
+              >
+                <Icon name={item.icon} size={15} /> {item.label}
+              </NavLink>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Menu squad */}
+      <button
+        type="button"
+        className="admin-nav-item admin-nav-toggle"
+        onClick={() => setSquadOpen((previous) => !previous)}
+        aria-expanded={squadOpen}
+      >
+        <Icon name="shield" size={16} /> Squad
+        <Icon name={squadOpen ? "chevron-up" : "chevron-down"} size={14} />
+      </button>
+
+      {squadOpen && (
+        <div className="admin-submenu">
+          {squadItems.map((item) => {
+            if (guest && item.locked) {
+              return (
+                <button
+                  key={item.to}
+                  type="button"
+                  className="admin-nav-item guest-locked-item"
+                  onClick={handleLockedClick}
+                  title="Masuk untuk menggunakan fitur ini"
+                  aria-label={`${item.label}, perlu login`}
+                >
+                  <Icon name={item.icon} size={15} /> {item.label}
+                  <Icon name="lock" size={13} />
+                </button>
+              );
+            }
+
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `admin-nav-item ${isActive ? "active" : ""}`
+                }
                 onClick={onNavigate}
               >
                 <Icon name={item.icon} size={15} /> {item.label}
