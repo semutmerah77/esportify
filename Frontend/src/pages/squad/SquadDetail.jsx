@@ -145,7 +145,7 @@ function SquadDetail() {
         </div>
 
         <div className="sqd-hero-side">
-          <code className="sqd-id">ID: #{squad.id}</code>
+          <code className="sqd-id">ID: {squad.id}</code>
           {role === "guest" && (
             <button
               type="button"
