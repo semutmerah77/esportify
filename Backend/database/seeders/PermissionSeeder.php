@@ -60,6 +60,11 @@ class PermissionSeeder extends Seeder
             'setujui_pengajuan_turnamen',
             'tolak_pengajuan_turnamen',
             'berikan_revisi_pengajuan_turnamen',
+
+            // Modul 3: Squad
+            'lihat_squad',
+            'buat_squad',
+            'ubah_squad',
         ];
 
         foreach ($permissions as $permission) {

@@ -14,6 +14,7 @@ use App\Http\Controllers\Auth\LoginController;
 // ==========================================
 use App\Http\Controllers\Player\ProfileController;
 use App\Http\Controllers\Player\PengajuanTurnamenController;
+use App\Http\Controllers\Player\SquadController;
 use App\Http\Controllers\Api\Player\GameController as PlayerGameController;
 
 // ==========================================
@@ -209,6 +210,39 @@ Route::middleware('auth:sanctum')->group(function () {
             ]);
 
         });
+        
+        // ==========================================
+        // MODUL 3: SQUAD (PB-01)
+        // ==========================================
+
+        Route::middleware('permission:lihat_squad')->group(function () {
+
+            // Daftar Squad yang diikuti Player login
+            Route::get('/squad-saya', [
+                SquadController::class,
+                'mySquads'
+            ]);
+
+            // Detail Squad
+            Route::get('/squad/{id}', [
+                SquadController::class,
+                'show'
+            ])->whereNumber('id');
+
+        });
+
+        // Membuat Squad (multipart: nama_squad, logo_squad, deskripsi)
+        Route::post('/squad', [
+            SquadController::class,
+            'store'
+        ])->middleware('permission:buat_squad');
+
+        // Mengubah informasi Squad (khusus Leader, dicek di controller)
+        // FE: POST multipart + _method=PUT
+        Route::put('/squad/{id}', [
+            SquadController::class,
+            'update'
+        ])->whereNumber('id')->middleware('permission:ubah_squad');
 
 
         // Mengubah pengajuan ketika mendapatkan kesempatan revisi
