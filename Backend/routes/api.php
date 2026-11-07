@@ -244,6 +244,23 @@ Route::middleware('auth:sanctum')->group(function () {
             'update'
         ])->middleware('permission:ubah_squad');
 
+        
+        // ==========================================
+        // MODUL 3: KEANGGOTAAN SQUAD (PB-02)
+        // ==========================================
+
+        // Keluar dari Squad (anggota aktif, termasuk Leader)
+        Route::post('/squad/{id}/keluar', [
+            SquadController::class,
+            'keluar'
+        ])->middleware('permission:keluar_squad');
+
+        // Mengeluarkan anggota (khusus Leader, dicek di controller)
+        Route::delete('/squad/{id}/anggota/{idPlayer}', [
+            SquadController::class,
+            'keluarkanAnggota'
+        ])->whereNumber('idPlayer')->middleware('permission:keluarkan_anggota_squad');
+
 
         // Mengubah pengajuan ketika mendapatkan kesempatan revisi
         Route::middleware('permission:ubah_pengajuan_turnamen')->group(function () {

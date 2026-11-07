@@ -64,6 +64,19 @@ class Squad extends Model
             && $this->anggotaAktif()->where('id_player', $player->id_player)->exists();
     }
 
+        /**
+     * R2.01–R2.05: roster terkunci selama Squad terdaftar pada turnamen
+     * yang belum selesai.
+     *
+     * TODO PB-06/PB-09: isi pengecekan ke tabel pendaftaran_turnamen
+     * setelah fitur pendaftaran turnamen dibuat. Untuk sekarang roster
+     * selalu dianggap tidak terkunci.
+     */
+    public function isRosterLocked(): bool
+    {
+        return false;
+    }
+
     /**
      * Membuat Squad ID unik, contoh: SQD-7K2M9Q
      */

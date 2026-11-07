@@ -65,6 +65,8 @@ class PermissionSeeder extends Seeder
             'lihat_squad',
             'buat_squad',
             'ubah_squad',
+            'keluar_squad',
+            'keluarkan_anggota_squad',
         ];
 
         foreach ($permissions as $permission) {
