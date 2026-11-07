@@ -92,22 +92,13 @@ export async function searchSquads(query = "") {
 // ===== Detail squad =====
 const roleOf = (peran) => (peran === "leader" ? "leader" : "member");
 
-// GET /api/squad/:id (id = kode_squad atau id_squad). 404 -> null.
+// Objek detail BE -> bentuk yang dipakai halaman detail.
 // viewerRole: "leader" | "member" | "guest" (bukan anggota).
-export async function getSquadDetail(id) {
-  let res;
-  try {
-    res = await apiRequest(`/squad/${encodeURIComponent(id)}`);
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 404) return null;
-    throw err;
-  }
-  const d = res.data;
-
+function mapDetail(d) {
   return {
     ...mapSquad(d),
     viewerRole: d.is_leader ? "leader" : d.is_anggota ? "member" : "guest",
-    locked: false, // status roster terkunci belum ada di kontrak PB-01
+    locked: false, // flag roster terkunci belum ada di data; diisi dari error 422 (PB-06)
     pendingRequests: 0, // permintaan bergabung: menunggu PB-04
     members: (d.anggota ?? []).map((a) => ({
       id: a.id_anggota_squad,
@@ -124,8 +115,19 @@ export async function getSquadDetail(id) {
   };
 }
 
+// GET /api/squad/:id (id = kode_squad atau id_squad). 404 -> null.
+export async function getSquadDetail(id) {
+  let res;
+  try {
+    res = await apiRequest(`/squad/${encodeURIComponent(id)}`);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+  return mapDetail(res.data);
+}
+
 // POST /api/squad/:id + _method=PUT (hanya Leader). Kirim field yang berubah saja.
-// Belum dipakai di UI (menunggu desain Edit Squad).
 export async function updateSquad(id, { name, description, logoFile } = {}) {
   const form = new FormData();
   form.append("_method", "PUT");
@@ -143,13 +145,41 @@ export async function updateSquad(id, { name, description, logoFile } = {}) {
   }
 }
 
-// Belum ada endpoint di kontrak PB-01 (permintaan bergabung: PB-04, keluar squad: sprint berikutnya).
+// Belum ada endpoint (permintaan bergabung: PB-04).
 // Sengaja melempar error supaya tidak terlihat berhasil padahal tidak tersimpan.
 export async function requestJoin() {
   throw new Error("Fitur gabung squad belum tersedia di backend.");
 }
-export async function leaveSquad() {
-  throw new Error("Fitur keluar squad belum tersedia di backend.");
+
+// ===== Keanggotaan (PB-02) =====
+// 422 "Squad Sedang Mengikuti Turnamen, Roster Terkunci." (aktif setelah PB-06)
+export function isRosterLocked(err) {
+  return (
+    err instanceof ApiError &&
+    err.status === 422 &&
+    /roster terkunci/i.test(err.message || "")
+  );
+}
+
+// POST /api/squad/:id/keluar. Leader keluar -> leader baru otomatis; anggota terakhir -> squad arsip.
+export async function leaveSquad(id) {
+  const res = await apiRequest(`/squad/${encodeURIComponent(id)}/keluar`, {
+    method: "POST",
+  });
+  return {
+    message: res.message,
+    status: res.data?.status_squad, // "aktif" | "arsip"
+    newLeader: res.data?.leader_baru ?? null, // null | { id_player, username }
+  };
+}
+
+// DELETE /api/squad/:id/anggota/:playerId (hanya Leader). Mengembalikan detail squad terbaru.
+export async function kickMember(id, playerId) {
+  const res = await apiRequest(
+    `/squad/${encodeURIComponent(id)}/anggota/${encodeURIComponent(playerId)}`,
+    { method: "DELETE" },
+  );
+  return { message: res.message, squad: mapDetail(res.data) };
 }
 
 // ===== Undangan squad (inbox) =====
