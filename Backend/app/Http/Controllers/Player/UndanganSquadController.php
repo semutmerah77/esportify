@@ -84,7 +84,7 @@ class UndanganSquadController extends Controller
 
         $undangan = UndanganSquad::create([
             'id_squad' => $squad->id_squad,
-            'id_leader_squad' => $squad->id_leader_squad,
+            'id_leader_squad' => $squad->leader?->id_leader_squad,
             'id_player' => $target->id_player,
             'status_undangan' => 'menunggu',
         ]);

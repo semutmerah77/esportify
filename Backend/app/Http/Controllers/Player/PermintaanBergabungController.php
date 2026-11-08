@@ -66,7 +66,7 @@ class PermintaanBergabungController extends Controller
 
             'id_squad' => $squad->id_squad,
             'id_player' => $player->id_player,
-            'id_leader_squad' => $squad->id_leader_squad,
+            'id_leader_squad' => $squad->leader?->id_leader_squad,
             'status_permintaan' => 'menunggu',
         ]);
 

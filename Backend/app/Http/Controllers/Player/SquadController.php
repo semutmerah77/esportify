@@ -101,19 +101,22 @@ class SquadController extends Controller
         $logoPath = $request->file('logo_squad')->store('squad-logos', 'public');
 
         try {
-            $squad = DB::transaction(function () use ($validated, $player, $logoPath) {
-                $leader = LeaderSquad::firstOrCreate([
-                    'id_player' => $player->id_player,
-                ]);
-
+                $squad = DB::transaction(function () use ($validated, $player, $logoPath) {
                 $squad = Squad::create([
-                    'id_leader_squad' => $leader->id_leader_squad,
+                    'id_player_pembuat' => $player->id_player,
                     'kode_squad' => Squad::generateKode(),
                     'logo_squad' => $logoPath,
                     'nama_squad' => $validated['nama_squad'],
                     'deskripsi' => $validated['deskripsi'],
                     'maks_anggota' => 7,
                     'status_squad' => 'aktif',
+                ]);
+
+                // R1.01: pembuat otomatis menjadi Leader
+                LeaderSquad::create([
+                    'id_player' => $player->id_player,
+                    'id_squad' => $squad->id_squad,
+                    'tanggal_pengangkatan' => now(),
                 ]);
 
                 // Leader juga tercatat sebagai anggota aktif
@@ -278,8 +281,11 @@ class SquadController extends Controller
             $leaderBaru = null;
 
             if ($sisa->isEmpty()) {
-                // R1.16: tidak ada anggota lagi → arsip
-                $squad->update(['status_squad' => 'arsip']);
+                // R1.16: tidak ada anggota lagi → Squad dinonaktifkan
+                $squad->update(['status_squad' => 'disable']);
+
+                // Masa jabatan Leader terakhir ikut berakhir
+                $squad->gantiLeader(null);
             } elseif ($wasLeader) {
                 // R1.13–R1.15: anggota aktif dengan tanggal bergabung paling awal
                 $awal = $sisa->min('tanggal_bergabung');
@@ -288,11 +294,7 @@ class SquadController extends Controller
                     ->filter(fn (AnggotaSquad $a) => $a->tanggal_bergabung->equalTo($awal))
                     ->random();
 
-                $leaderRow = LeaderSquad::firstOrCreate([
-                    'id_player' => $leaderBaru->id_player,
-                ]);
-
-                $squad->update(['id_leader_squad' => $leaderRow->id_leader_squad]);
+                $squad->gantiLeader($leaderBaru->id_player);
             }
 
             return [
@@ -305,8 +307,8 @@ class SquadController extends Controller
         $squad = $hasil['squad'];
         $leaderBaru = $hasil['leader_baru'];
 
-        if ($squad->status_squad === 'arsip') {
-            $message = 'Berhasil keluar sebagai anggota Squad. Squad diarsipkan karena tidak memiliki anggota lagi.';
+        if ($squad->status_squad === 'disable') {
+            $message = 'Berhasil keluar sebagai anggota Squad. Squad dinonaktifkan karena tidak memiliki anggota lagi.';
         } elseif ($leaderBaru) {
             $message = 'Berhasil keluar sebagai anggota Squad. Kepemimpinan dialihkan kepada '
                 . $leaderBaru->player?->user?->username . '.';
@@ -439,14 +441,10 @@ class SquadController extends Controller
         }
 
         DB::transaction(function () use ($squad, $calon) {
-            $leaderRow = LeaderSquad::firstOrCreate([
-                'id_player' => $calon->id_player,
-            ]);
-
             Squad::whereKey($squad->id_squad)
-                ->lockForUpdate()
-                ->first()
-                ->update(['id_leader_squad' => $leaderRow->id_leader_squad]);
+            ->lockForUpdate()
+            ->first()
+            ->gantiLeader($calon->id_player);
         });
 
         return response()->json([
