@@ -1,5 +1,4 @@
 import { apiRequest, ApiError } from "./httpClient";
-import { mockSquads } from "./mock/squadMock";
 
 export const SQUAD_CAPACITY = 7; // R1.04
 export const SEARCH_PAGE_SIZE = 8;
@@ -67,26 +66,31 @@ export async function createSquad({ name, description, logoFile }) {
   }
 }
 
-// ----- Masih data tiruan -----
-const squads = mockSquads.map((s) => ({ ...s, capacity: SQUAD_CAPACITY }));
-const isFull = (s) => s.members >= s.capacity;
-const normalize = (v) =>
-  String(v ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/^#/, "");
-
-// Pencarian: menunggu endpoint PB-03 (usulan GET /squad?q=). Squad arsip tidak tampil (R1.17).
+// ===== Pencarian (PB-03) =====
+// GET /api/squad?q= (q kosong = semua squad aktif, urut nama A-Z; squad arsip tidak tampil).
+// q boleh nama squad atau kode squad, boleh diawali "#". Pagination diatur FE.
 export async function searchSquads(query = "") {
-  const q = normalize(query);
-  return squads
-    .filter(
-      (s) =>
-        !q ||
-        s.id.toLowerCase().includes(q) ||
-        s.name.toLowerCase().includes(q),
-    )
-    .map((s) => ({ ...s, full: isFull(s) }));
+  const q = String(query).trim();
+  const path = q ? `/squad?q=${encodeURIComponent(q)}` : "/squad";
+  const res = await apiRequest(path);
+  return {
+    items: (res?.data ?? []).map(mapSquad),
+    message: res?.message || "", // "Hasil tidak ditemukan." saat kosong
+  };
+}
+
+export async function searchPlayers(query = "") {
+  const q = String(query).trim();
+  if (!q) return { items: [], message: "" };
+  const res = await apiRequest(`/players?q=${encodeURIComponent(q)}`);
+  return {
+    items: (res?.data ?? []).map((p) => ({
+      id: p.id_player,
+      username: p.username,
+      avatar: p.avatar_url,
+    })),
+    message: res?.message || "",
+  };
 }
 
 // ===== Detail squad =====
@@ -149,6 +153,11 @@ export async function updateSquad(id, { name, description, logoFile } = {}) {
 // Sengaja melempar error supaya tidak terlihat berhasil padahal tidak tersimpan.
 export async function requestJoin() {
   throw new Error("Fitur gabung squad belum tersedia di backend.");
+}
+
+// Belum ada endpoint (undang player: PB-04). Sengaja melempar error supaya tidak terlihat terkirim.
+export async function invitePlayer() {
+  throw new Error("Fitur undang player belum tersedia di backend.");
 }
 
 // ===== Keanggotaan (PB-02) =====

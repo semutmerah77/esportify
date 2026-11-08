@@ -8,6 +8,7 @@ import SquadMembers from "../../components/squad/SquadMembers";
 import LeaveSquadDialog from "../../components/squad/LeaveSquadDialog";
 import EditSquadModal from "../../components/squad/EditSquadModal";
 import KickMemberDialog from "../../components/squad/KickMemberDialog";
+import InvitePlayerModal from "../../components/squad/InvitePlayerModal";
 import {
   getSquadDetail,
   isRosterLocked,
@@ -37,6 +38,7 @@ function SquadDetail() {
   const [editing, setEditing] = useState(false);
   const [kicking, setKicking] = useState(null);
   const [kickError, setKickError] = useState("");
+  const [inviting, setInviting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
@@ -209,6 +211,7 @@ function SquadDetail() {
         squad={view}
         onLeave={() => setLeaving(true)}
         onKick={setKicking}
+        onInvite={() => setInviting(true)}
       />
       {editing && (
         <EditSquadModal
@@ -216,6 +219,10 @@ function SquadDetail() {
           onClose={() => setEditing(false)}
           onSaved={handleSaved}
         />
+      )}
+
+      {inviting && (
+        <InvitePlayerModal squad={squad} onClose={() => setInviting(false)} />
       )}
 
       {kicking && (

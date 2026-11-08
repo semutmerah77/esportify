@@ -11,17 +11,25 @@ function SearchSquad() {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [error, setError] = useState("");
+  const [emptyText, setEmptyText] = useState("");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let off = false;
     searchSquads(query)
-      .then((data) => !off && (setItems(data), setError(""), setReady(true)))
-      .catch(
-        (err) =>
-          !off &&
-          (setError(err.message || "Gagal memuat squad."), setReady(true)),
-      );
+      .then((res) => {
+        if (off) return;
+        setItems(res.items);
+        setEmptyText(res.message);
+        setError("");
+        setReady(true);
+      })
+      .catch((err) => {
+        if (off) return;
+        setItems([]);
+        setError(err.message || "Gagal memuat squad.");
+        setReady(true);
+      });
     return () => {
       off = true;
     };
@@ -70,7 +78,7 @@ function SearchSquad() {
       )}
 
       {ready && !error && items.length === 0 && (
-        <p className="admin-message">Squad tidak ditemukan.</p>
+        <p className="admin-message">{emptyText || "Hasil tidak ditemukan."}</p>
       )}
 
       {items.length > SEARCH_PAGE_SIZE && (

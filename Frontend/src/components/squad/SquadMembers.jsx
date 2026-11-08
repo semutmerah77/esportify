@@ -4,7 +4,7 @@ import Icon from "../icon";
 // leader  : undang, permintaan bergabung, keluar, keluarkan anggota (tombol di kartu anggota)
 // anggota : keluar
 // bukan anggota : tidak ada tombol
-function SquadMembers({ squad, onLeave, onKick }) {
+function SquadMembers({ squad, onLeave, onKick, onInvite }) {
   const isLeader = squad.viewerRole === "leader";
   const isMember = squad.viewerRole === "member" || isLeader;
 
@@ -27,6 +27,7 @@ function SquadMembers({ squad, onLeave, onKick }) {
                   className="sqd-iconbtn primary"
                   title="Undang player"
                   aria-label="Undang player"
+                  onClick={onInvite}
                 >
                   <Icon name="user-plus" size={16} />
                 </button>
