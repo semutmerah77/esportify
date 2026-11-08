@@ -65,6 +65,8 @@ import {
   PawPrint,
   UploadCloud,
   UserMinus,
+  UserCheck,
+  UserStar,
 } from "lucide-react";
 
 // Untuk menambah ikon: import di atas, lalu tambah satu baris di objek icons.
@@ -138,6 +140,8 @@ const icons = {
   "paw-print": PawPrint,
   "upload-cloud": UploadCloud,
   "user-minus": UserMinus,
+  "user-check": UserCheck,
+  "user-star": UserStar,
 };
 
 function Icon({ name, size = 16 }) {

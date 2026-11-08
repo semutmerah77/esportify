@@ -1286,6 +1286,194 @@
   color: #cbd5e1;
 }
 
+/* ===== Tambah Anggota (Cari Player) ===== */
+.sqp-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 576px;
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
+  border: 1px solid #1e3a6e;
+  border-radius: 16px;
+  background: #0d1627;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+.sqp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid #1a2a47;
+  background: #0f1b30;
+}
+.sqp-head h2 {
+  font-size: 16px;
+  color: var(--white);
+}
+.sqp-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #243b66;
+  border-radius: 7px;
+  background: #13213b;
+  color: #cbd5e1;
+  cursor: pointer;
+}
+.sqp-close:hover {
+  background: #1b2d4f;
+}
+.sqp-body {
+  flex: 1;
+  min-height: 400px;
+  overflow-y: auto;
+  padding: 24px;
+}
+.sqp-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #1a2a47;
+}
+.sqp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+}
+.sqp-tab.active {
+  background: #2563eb;
+  color: #fff;
+}
+.sqp-search {
+  height: 38px;
+  border-color: #1e2d49;
+  background: #0a1120;
+}
+.sqp-search input {
+  font-size: 13px;
+}
+.sqp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 56px;
+  text-align: center;
+}
+.sqp-empty-ic {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 1px solid #1e2d49;
+  border-radius: 14px;
+  background: #0a1120;
+  color: #3b82f6;
+}
+.sqp-empty b {
+  margin-top: 14px;
+  font-size: 15px;
+  color: var(--white);
+}
+.sqp-empty p {
+  max-width: 320px;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #94a3b8;
+}
+.sqp-note {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+}
+.sqp-result-title {
+  margin: 20px 0 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #cbd5e1;
+}
+.sqp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sqp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #1a2a47;
+  border-radius: 10px;
+  background: #0f1a2e;
+}
+.sqp-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #334155;
+  border-radius: 50%;
+  background: #1e293b;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+.sqp-row b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--white);
+}
+.sqp-invite {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  background: #2563eb;
+}
+.sqp-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #2a3547;
+  border-radius: 8px;
+  background: #1e293b;
+  font-size: 12.5px;
+  color: #94a3b8;
+}
+.sqp-state .icon {
+  color: #22c55e;
+}
+.sqp-foot {
+  height: 24px;
+  border-top: 1px solid #1a2a47;
+  background: #0b1424;
+}
+
 /* Responsif */
 @media (max-width: 1100px) {
   .sq-grid {
@@ -1342,5 +1530,8 @@
   .sqi-actions {
     width: 100%;
     justify-content: flex-end;
+  }
+  .sqp-body {
+    padding: 16px;
   }
 }
