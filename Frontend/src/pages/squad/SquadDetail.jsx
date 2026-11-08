@@ -8,9 +8,11 @@ import SquadMembers from "../../components/squad/SquadMembers";
 import LeaveSquadDialog from "../../components/squad/LeaveSquadDialog";
 import EditSquadModal from "../../components/squad/EditSquadModal";
 import KickMemberDialog from "../../components/squad/KickMemberDialog";
+import TransferLeaderDialog from "../../components/squad/TransferLeaderDialog";
 import InvitePlayerModal from "../../components/squad/InvitePlayerModal";
 import JoinRequestsModal from "../../components/squad/JoinRequestsModal";
 import JoinSquadDialog from "../../components/squad/JoinSquadDialog";
+import SuccessDialog from "../../components/squad/SuccessDialog";
 import {
   getSquadDetail,
   isRosterLocked,
@@ -18,6 +20,7 @@ import {
   leaveSquad,
   requestJoin,
   respondInvitation,
+  transferLeader,
 } from "../../services/squadApi";
 import "../../styles/squad.css";
 
@@ -45,9 +48,19 @@ function SquadDetail() {
   const [inviting, setInviting] = useState(false);
   const [kicking, setKicking] = useState(null); // anggota yang akan dikeluarkan
   const [kickError, setKickError] = useState("");
+  const [promoting, setPromoting] = useState(null); // anggota yang akan dijadikan Leader
+  const [promoteError, setPromoteError] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [toast, setToast] = useState(location.state?.toast || "");
+  const [toast, setToast] = useState(""); // pesan gagal
+  // Popup berhasil. Bisa dibawa dari halaman lain lewat navigate(..., { state: { notice } })
+  const [notice, setNotice] = useState(location.state?.notice || "");
+
+  // Hapus state navigasi supaya popup tidak muncul lagi saat halaman dimuat ulang
+  useEffect(() => {
+    if (location.state?.notice)
+      navigate(location.pathname, { replace: true, state: null });
+  }, []);
 
   useEffect(() => {
     let off = false;
@@ -56,7 +69,10 @@ function SquadDetail() {
     setLoadError("");
     getSquadDetail(id)
       .then((data) => !off && (data ? setSquad(data) : setMissing(true)))
-      .catch((err) => !off && setLoadError(err.message || "Gagal memuat detail squad."));
+      .catch(
+        (err) =>
+          !off && setLoadError(err.message || "Gagal memuat detail squad."),
+      );
     return () => {
       off = true;
     };
@@ -111,8 +127,8 @@ function SquadDetail() {
     try {
       const res = await requestJoin(apiId);
       setJoining(false);
-      setToast(res.message || "Permintaan bergabung berhasil dikirim.");
-      await reload(); // permintaan_saya terisi -> tombol "Permintaan Terkirim"
+      setNotice(res.message || "Permintaan bergabung berhasil dikirim.");
+      await reload();
     } catch (err) {
       if (isRosterLocked(err)) setSquad((s) => ({ ...s, locked: true }));
       else if (err.status === 422) reload(); // status berubah (mis. sudah diundang / sudah mengajukan)
@@ -128,8 +144,8 @@ function SquadDetail() {
     setBusy(true);
     try {
       const res = await respondInvitation(squad.myInvite.id, accept);
-      setToast(res.message);
-      await reload(); // diterima -> tampilan berubah menjadi anggota
+      setNotice(res.message);
+      await reload();
     } catch (err) {
       setToast(err.message || "Gagal menanggapi undangan.");
       if (err.removed || err.status === 422) reload();
@@ -144,7 +160,7 @@ function SquadDetail() {
     try {
       const fresh = await getSquadDetail(id);
       if (fresh) setSquad(fresh);
-      setToast("Perubahan squad berhasil disimpan.");
+      setNotice("Perubahan squad berhasil disimpan.");
     } catch (err) {
       setToast(err.message || "Tersimpan, tetapi gagal memuat ulang data.");
     }
@@ -155,8 +171,10 @@ function SquadDetail() {
     setError("");
     try {
       const res = await leaveSquad(apiId);
-      // Pesan dari BE ditampilkan apa adanya di Squad Saya
-      navigate("/squad/saya", { replace: true, state: { toast: res.message } });
+      navigate("/squad/saya", {
+        replace: true,
+        state: { notice: res.message },
+      });
     } catch (err) {
       if (isRosterLocked(err)) setSquad((s) => ({ ...s, locked: true }));
       setError(err.message || "Gagal keluar dari squad.");
@@ -177,10 +195,33 @@ function SquadDetail() {
       const res = await kickMember(apiId, kicking.playerId);
       setSquad(res.squad); // detail terbaru dari BE (anggota & jumlah sudah ter-update)
       closeKick();
-      setToast(res.message || "Anggota berhasil dikeluarkan.");
+      setNotice(res.message || "Anggota berhasil dikeluarkan.");
     } catch (err) {
       if (isRosterLocked(err)) setSquad((s) => ({ ...s, locked: true }));
       setKickError(err.message || "Gagal mengeluarkan anggota.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const closePromote = () => {
+    setPromoting(null);
+    setPromoteError("");
+  };
+
+  // Alihkan kepemimpinan: Leader lama menjadi anggota biasa, tampilan dirender ulang dari data BE
+  const handlePromote = async () => {
+    if (!promoting) return;
+    setBusy(true);
+    setPromoteError("");
+    try {
+      const res = await transferLeader(apiId, promoting.playerId);
+      setSquad(res.squad); // is_leader sudah false -> tombol Leader hilang
+      closePromote();
+      setNotice(res.message || "Anggota berhasil dijadikan Leader.");
+    } catch (err) {
+      setPromoteError(err.message || "Gagal mengalihkan kepemimpinan.");
+      if (err.status === 404 || err.status === 403) reload();
     } finally {
       setBusy(false);
     }
@@ -190,7 +231,10 @@ function SquadDetail() {
   // Tandai anggota yang sedang login (dicocokkan lewat username)
   const view = {
     ...squad,
-    members: squad.members.map((m) => ({ ...m, isMe: Boolean(user?.username) && m.username === user.username })),
+    members: squad.members.map((m) => ({
+      ...m,
+      isMe: Boolean(user?.username) && m.username === user.username,
+    })),
   };
 
   return (
@@ -202,7 +246,10 @@ function SquadDetail() {
         <div className="sqd-hero-main">
           <h1>{squad.name}</h1>
           {squad.description && <p>{squad.description}</p>}
-          <small><Icon name="calendar" size={12} /> Dibuat: {createdText(squad.createdAt)}</small>
+          <small>
+            <Icon name="calendar" size={12} /> Dibuat:{" "}
+            {createdText(squad.createdAt)}
+          </small>
         </div>
 
         <div className="sqd-hero-side">
@@ -211,10 +258,20 @@ function SquadDetail() {
             <div className="sqd-invite-box">
               <span>Kamu diundang</span>
               <div className="sqd-invite-actions">
-                <button type="button" className="sqi-btn reject" disabled={busy} onClick={() => handleInviteAnswer(false)}>
+                <button
+                  type="button"
+                  className="sqi-btn reject"
+                  disabled={busy}
+                  onClick={() => handleInviteAnswer(false)}
+                >
                   Tolak
                 </button>
-                <button type="button" className="sqi-btn accept" disabled={busy} onClick={() => handleInviteAnswer(true)}>
+                <button
+                  type="button"
+                  className="sqi-btn accept"
+                  disabled={busy}
+                  onClick={() => handleInviteAnswer(true)}
+                >
                   Terima
                 </button>
               </div>
@@ -230,7 +287,11 @@ function SquadDetail() {
               }}
               disabled={busy || Boolean(squad.myRequest) || squad.full}
             >
-              {squad.myRequest ? "Permintaan Terkirim" : squad.full ? "Squad Penuh" : "Gabung Squad"}
+              {squad.myRequest
+                ? "Permintaan Terkirim"
+                : squad.full
+                  ? "Squad Penuh"
+                  : "Gabung Squad"}
             </button>
           )}
           {role === "leader" && (
@@ -252,18 +313,29 @@ function SquadDetail() {
         squad={view}
         onLeave={() => setLeaving(true)}
         onKick={setKicking}
+        onPromote={setPromoting}
         onInvite={() => setInviting(true)}
         onRequests={() => setRequestsOpen(true)}
       />
 
       {editing && (
-        <EditSquadModal squad={squad} onClose={() => setEditing(false)} onSaved={handleSaved} />
+        <EditSquadModal
+          squad={squad}
+          onClose={() => setEditing(false)}
+          onSaved={handleSaved}
+        />
       )}
 
-      {inviting && <InvitePlayerModal squad={squad} onClose={() => setInviting(false)} />}
+      {inviting && (
+        <InvitePlayerModal squad={squad} onClose={() => setInviting(false)} />
+      )}
 
       {requestsOpen && (
-        <JoinRequestsModal squad={squad} onClose={() => setRequestsOpen(false)} onChanged={reload} />
+        <JoinRequestsModal
+          squad={squad}
+          onClose={() => setRequestsOpen(false)}
+          onChanged={reload}
+        />
       )}
 
       {joining && (
@@ -273,6 +345,16 @@ function SquadDetail() {
           error={joinError}
           onConfirm={handleJoin}
           onClose={() => setJoining(false)}
+        />
+      )}
+
+      {promoting && (
+        <TransferLeaderDialog
+          member={promoting}
+          loading={busy}
+          error={promoteError}
+          onConfirm={handlePromote}
+          onClose={closePromote}
         />
       )}
 
@@ -300,7 +382,15 @@ function SquadDetail() {
           }}
         />
       )}
-      {toast && <div className="sq-toast" role="status">{toast}</div>}
+      {toast && (
+        <div className="sq-toast" role="status">
+          {toast}
+        </div>
+      )}
+
+      {notice && (
+        <SuccessDialog message={notice} onClose={() => setNotice("")} />
+      )}
     </div>
   );
 }

@@ -32,12 +32,24 @@ const tournamentItems = [
 ];
 
 const squadItems = [
-  { label: "Cari Squad", to: "/squad/cari", icon: "search", locked: true },
-  { label: "Squad Saya", to: "/squad/saya", icon: "swords", locked: true },
+  {
+    label: "Cari Squad",
+    to: "/squad/cari",
+    icon: "search",
+    locked: true,
+    detailFrom: "cari",
+  },
+  {
+    label: "Squad Saya",
+    to: "/squad/saya",
+    icon: "swords",
+    locked: true,
+    detailFrom: "saya",
+  },
 ];
 
 function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
-  const { pathname, search } = useLocation();
+  const { pathname, search, state } = useLocation();
 
   const [menuOpen, setMenuOpen] = useState(pathname.startsWith("/turnamen"));
   const [squadOpen, setSquadOpen] = useState(pathname.startsWith("/squad"));
@@ -53,9 +65,41 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
     onNavigate?.();
   };
 
-  const isItemActive = (item) =>
-    pathname === item.to ||
-    (item.also ?? []).some((path) => pathname.startsWith(path));
+  // Ingat halaman daftar squad terakhir yang dibuka (Cari Squad / Squad Saya)
+  const squadList =
+    pathname === "/squad/cari"
+      ? "cari"
+      : pathname === "/squad/saya"
+        ? "saya"
+        : null;
+  useEffect(() => {
+    if (!squadList) return;
+    try {
+      sessionStorage.setItem("squad-list-from", squadList);
+    } catch {
+      /* penyimpanan tidak tersedia: pakai default */
+    }
+  }, [squadList]);
+
+  const squadFrom = () => {
+    if (state?.from) return state.from;
+    try {
+      return sessionStorage.getItem("squad-list-from") || "saya";
+    } catch {
+      return "saya";
+    }
+  };
+
+  const isItemActive = (item) => {
+    // Detail squad (/squad/:id): menu yang aktif mengikuti asal halaman (Cari Squad atau Squad Saya)
+    const isSquadDetail = /^\/squad\/(?!cari$|saya$)[^/]+$/.test(pathname);
+    if (isSquadDetail && item.detailFrom)
+      return squadFrom() === item.detailFrom; // <- baris yang berubah
+    return (
+      pathname === item.to ||
+      (item.also ?? []).some((path) => pathname.startsWith(path))
+    );
+  };
 
   // Tutup modal dengan tombol Escape
   useEffect(() => {
@@ -155,16 +199,7 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={`admin-nav-item ${
-                  item.to === "/squad/cari"
-                    ? pathname === "/squad/cari"
-                      ? "active"
-                      : ""
-                    : pathname.startsWith("/squad") &&
-                        pathname !== "/squad/cari"
-                      ? "active"
-                      : ""
-                }`}
+                className={`admin-nav-item ${isItemActive(item) ? "active" : ""}`}
                 onClick={onNavigate}
               >
                 <Icon name={item.icon} size={15} /> {item.label}

@@ -5,6 +5,7 @@ import Pagination from "../../components/admin/Pagination";
 import SquadRow from "../../components/squad/SquadRow";
 import CreateSquadModal from "../../components/squad/CreateSquadModal";
 import InviteInboxModal from "../../components/squad/InviteInboxModal";
+import SuccessDialog from "../../components/squad/SuccessDialog";
 import {
   MY_PAGE_SIZE,
   getInvitations,
@@ -21,10 +22,15 @@ function MySquads() {
   const [creating, setCreating] = useState(false);
   const [invites, setInvites] = useState([]);
   const [inboxOpen, setInboxOpen] = useState(false);
-  const location = useLocation();
   const navigate = useNavigate();
-  // Pesan dari halaman lain (mis. setelah keluar squad) dibawa lewat navigate(..., { state: { toast } })
-  const [toast, setToast] = useState(location.state?.toast || "");
+  const location = useLocation();
+  const [notice, setNotice] = useState(location.state?.notice || "");
+
+  // Hapus state navigasi supaya popup tidak muncul lagi saat halaman dimuat ulang
+  useEffect(() => {
+    if (location.state?.notice)
+      navigate(location.pathname, { replace: true, state: null });
+  }, []);
 
   useEffect(() => {
     let off = false;
@@ -50,12 +56,6 @@ function MySquads() {
     loadInvites();
   }, []);
 
-  useEffect(() => {
-    if (!toast) return undefined;
-    const t = setTimeout(() => setToast(""), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return items.filter(
@@ -76,13 +76,12 @@ function MySquads() {
     setSearch("");
     setPage(1);
     setCreating(false);
-    setToast(`Squad "${squad.name}" berhasil dibuat. Kamu menjadi Leader.`);
+    setNotice(`Squad "${squad.name}" berhasil dibuat. Kamu menjadi Leader.`);
   };
 
-  // Setelah menerima undangan: arahkan ke detail squad
   const handleAccepted = (squad, message) => {
     navigate(`/squad/${squad.squadId ?? squad.id}`, {
-      state: { toast: message || `Kamu bergabung ke squad "${squad.name}".` },
+      state: { notice: message || `Kamu bergabung ke squad "${squad.name}".` },
     });
   };
 
@@ -159,6 +158,7 @@ function MySquads() {
           invites={invites}
           onChange={setInvites}
           onAccepted={handleAccepted}
+          onNotice={setNotice}
           onClose={() => setInboxOpen(false)}
         />
       )}
@@ -168,10 +168,8 @@ function MySquads() {
           onCreated={handleCreated}
         />
       )}
-      {toast && (
-        <div className="sq-toast" role="status">
-          {toast}
-        </div>
+      {notice && (
+        <SuccessDialog message={notice} onClose={() => setNotice("")} />
       )}
     </div>
   );

@@ -41,6 +41,7 @@ function SquadCard({ squad }) {
 
       <Link
         to={`/squad/${squad.squadId ?? squad.id}`}
+        state={{ from: "cari" }}
         className="sq-detail-btn"
       >
         Lihat Detail <Icon name="chevron-right" size={14} />

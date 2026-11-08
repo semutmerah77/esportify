@@ -253,6 +253,18 @@ export async function kickMember(id, playerId) {
   return { message: res.message, squad: mapDetail(res.data) };
 }
 
+// POST /api/squad/:id/leader (hanya Leader). Leader lama tetap menjadi anggota biasa.
+// Boleh walau roster terkunci. Mengembalikan detail squad terbaru (is_leader pemanggil sudah false).
+export async function transferLeader(id, playerId) {
+  const form = new FormData();
+  form.append("id_player", playerId);
+  const res = await apiRequest(`/squad/${encodeURIComponent(id)}/leader`, {
+    method: "POST",
+    body: form,
+  });
+  return { message: res.message, squad: mapDetail(res.data) };
+}
+
 // ===== Inbox undangan (player) =====
 // GET /api/undangan-saya -> bentuk yang dipakai InviteInboxModal.
 // Jumlah undangan menunggu = items.length (sama dengan meta.jumlah_menunggu).
