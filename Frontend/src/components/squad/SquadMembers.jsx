@@ -4,7 +4,14 @@ import Icon from "../icon";
 // leader  : undang, permintaan bergabung, keluar, keluarkan anggota (tombol di kartu anggota)
 // anggota : keluar
 // bukan anggota : tidak ada tombol
-function SquadMembers({ squad, onLeave, onKick, onInvite, onRequests }) {
+function SquadMembers({
+  squad,
+  onLeave,
+  onKick,
+  onPromote,
+  onInvite,
+  onRequests,
+}) {
   const isLeader = squad.viewerRole === "leader";
   const isMember = squad.viewerRole === "member" || isLeader;
 
@@ -81,15 +88,26 @@ function SquadMembers({ squad, onLeave, onKick, onInvite, onRequests }) {
               </em>
             </div>
             {isLeader && m.role !== "leader" && (
-              <button
-                type="button"
-                className="sqd-kick-btn"
-                title="Keluarkan anggota"
-                aria-label={`Keluarkan ${m.username}`}
-                onClick={() => onKick(m)}
-              >
-                <Icon name="user-minus" size={14} />
-              </button>
+              <div className="sqd-member-actions">
+                <button
+                  type="button"
+                  className="sqd-promote-btn"
+                  title="Jadikan Leader"
+                  aria-label={`Jadikan ${m.username} Leader`}
+                  onClick={() => onPromote(m)}
+                >
+                  <Icon name="crown" size={14} />
+                </button>
+                <button
+                  type="button"
+                  className="sqd-kick-btn"
+                  title="Keluarkan anggota"
+                  aria-label={`Keluarkan ${m.username}`}
+                  onClick={() => onKick(m)}
+                >
+                  <Icon name="user-minus" size={14} />
+                </button>
+              </div>
             )}
           </div>
         ))}

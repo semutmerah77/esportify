@@ -4,7 +4,13 @@ import SquadLogo from "./SquadLogo";
 import { respondInvitation } from "../../services/squadApi";
 
 // Inbox undangan squad: Terima atau Tolak.
-function InviteInboxModal({ invites, onClose, onChange, onAccepted }) {
+function InviteInboxModal({
+  invites,
+  onClose,
+  onChange,
+  onAccepted,
+  onNotice,
+}) {
   const [busyId, setBusyId] = useState(null);
   const [message, setMessage] = useState({ text: "", type: "" });
 
@@ -22,10 +28,7 @@ function InviteInboxModal({ invites, onClose, onChange, onAccepted }) {
       onChange((list) => list.filter((i) => i.id !== invite.id));
       if (accept) onAccepted(res.squad, res.message);
       else
-        setMessage({
-          text: res.message || `Undangan dari ${invite.squad.name} ditolak.`,
-          type: "",
-        });
+        onNotice(res.message || `Undangan dari ${invite.squad.name} ditolak.`);
     } catch (err) {
       if (err.removed)
         onChange((list) => list.filter((i) => i.id !== invite.id));

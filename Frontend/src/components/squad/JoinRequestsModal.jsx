@@ -10,7 +10,6 @@ import {
 function JoinRequestsModal({ squad, onClose, onChanged }) {
   const apiId = squad.squadId ?? squad.id;
   const [items, setItems] = useState([]);
-  const [emptyText, setEmptyText] = useState("");
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [busyId, setBusyId] = useState(null);
@@ -22,7 +21,6 @@ function JoinRequestsModal({ squad, onClose, onChanged }) {
       .then((res) => {
         if (off) return;
         setItems(res.items);
-        setEmptyText(res.message);
         setReady(true);
       })
       .catch((err) => {
@@ -89,10 +87,8 @@ function JoinRequestsModal({ squad, onClose, onChanged }) {
         </div>
 
         {loadError && <p className="sq-err">{loadError}</p>}
-        {ready && !loadError && items.length === 0 && (
-          <p className="sqr-empty">
-            {emptyText || "Belum ada permintaan bergabung."}
-          </p>
+        {ready && !loadError && items.length === 0 && !message.text && (
+          <p className="sqr-empty">Belum ada permintaan bergabung.</p>
         )}
 
         <ul className="sqr-list">
@@ -133,7 +129,9 @@ function JoinRequestsModal({ squad, onClose, onChanged }) {
         </ul>
 
         {message.text && (
-          <p className={`sqr-msg ${message.type === "error" ? "error" : ""}`}>
+          <p
+            className={`sqr-msg ${message.type === "error" ? "error" : ""} ${items.length === 0 ? "center" : ""}`}
+          >
             {message.text}
           </p>
         )}
