@@ -385,6 +385,77 @@ class SquadController extends Controller
         ], 200);
     }
 
+        /**
+     * F2-US10 — Mengalihkan Kepemimpinan Squad (khusus Leader)
+     * POST /squad/{id}/leader   body: id_player
+     * R1.11: Leader dapat mengalihkan jabatan kepada anggota aktif.
+     * Leader lama tetap menjadi anggota biasa.
+     */
+    public function jadikanLeader(Request $request, $id)
+    {
+        $player = $request->user()->player;
+
+        if (!$player) {
+            return $this->playerNotFound();
+        }
+
+        $squad = $this->findSquad($id);
+
+        if (!$squad || $squad->status_squad !== 'aktif') {
+            return $this->squadNotFound();
+        }
+
+        if (!$squad->isLeader($player)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya Leader yang dapat mengalihkan kepemimpinan Squad.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'id_player' => ['required', 'integer'],
+        ], [
+            'id_player.required' => 'Anggota yang akan dijadikan Leader wajib dipilih.',
+            'id_player.integer' => 'Anggota yang dipilih tidak valid.',
+        ]);
+
+        if ((int) $validated['id_player'] === (int) $player->id_player) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu sudah menjadi Leader Squad ini.',
+            ], 422);
+        }
+
+        $calon = $squad->anggotaAktif()
+            ->where('id_player', $validated['id_player'])
+            ->with('player.user')
+            ->first();
+
+        if (!$calon) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anggota tidak ditemukan di Squad ini.',
+            ], 404);
+        }
+
+        DB::transaction(function () use ($squad, $calon) {
+            $leaderRow = LeaderSquad::firstOrCreate([
+                'id_player' => $calon->id_player,
+            ]);
+
+            Squad::whereKey($squad->id_squad)
+                ->lockForUpdate()
+                ->first()
+                ->update(['id_leader_squad' => $leaderRow->id_leader_squad]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Anggota berhasil dijadikan Leader.',
+            'data' => $this->formatSquadDetail($squad->fresh(), $player),
+        ], 200);
+    }
+
     // ==========================================
     // HELPER
     // ==========================================
