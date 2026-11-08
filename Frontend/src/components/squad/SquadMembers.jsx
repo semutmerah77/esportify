@@ -4,7 +4,7 @@ import Icon from "../icon";
 // leader  : undang, permintaan bergabung, keluar, keluarkan anggota (tombol di kartu anggota)
 // anggota : keluar
 // bukan anggota : tidak ada tombol
-function SquadMembers({ squad, onLeave, onKick, onInvite }) {
+function SquadMembers({ squad, onLeave, onKick, onInvite, onRequests }) {
   const isLeader = squad.viewerRole === "leader";
   const isMember = squad.viewerRole === "member" || isLeader;
 
@@ -36,6 +36,7 @@ function SquadMembers({ squad, onLeave, onKick, onInvite }) {
                   className="sqd-iconbtn"
                   title="Permintaan bergabung"
                   aria-label="Permintaan bergabung"
+                  onClick={onRequests}
                 >
                   <Icon name="inbox" size={16} />
                   {squad.pendingRequests > 0 && <i className="sqd-badge-dot" />}

@@ -18,12 +18,12 @@ function InviteInboxModal({ invites, onClose, onChange, onAccepted }) {
     setBusyId(invite.id);
     setMessage({ text: "", type: "" });
     try {
-      const squad = await respondInvitation(invite.id, accept);
+      const res = await respondInvitation(invite.id, accept);
       onChange((list) => list.filter((i) => i.id !== invite.id));
-      if (accept) onAccepted(squad);
+      if (accept) onAccepted(res.squad, res.message);
       else
         setMessage({
-          text: `Undangan dari ${invite.squad.name} ditolak.`,
+          text: res.message || `Undangan dari ${invite.squad.name} ditolak.`,
           type: "",
         });
     } catch (err) {
