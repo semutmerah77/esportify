@@ -74,6 +74,11 @@ class Squad extends Model
         return $this->hasMany(UndanganSquad::class, 'id_squad', 'id_squad');
     }
 
+    public function pendaftaranTurnamen(): HasMany
+    {
+        return $this->hasMany(PendaftaranTurnamen::class, 'id_squad', 'id_squad');
+    }
+
     public function scopeAktif(Builder $query): Builder
     {
         return $query->where('status_squad', 'aktif');
@@ -134,16 +139,16 @@ class Squad extends Model
     }
 
     /**
-     * R2.01–R2.05: roster terkunci selama Squad terdaftar pada turnamen
-     * yang belum selesai.
-     *
-     * TODO PB-06/PB-09: isi pengecekan ke tabel pendaftaran_turnamen
-     * setelah fitur pendaftaran turnamen dibuat. Untuk sekarang roster
-     * selalu dianggap tidak terkunci.
+     * R2.01–R2.05: roster terkunci sejak Squad mendaftar turnamen
+     * (menunggu atau diterima) sampai roster dibuka kembali
+     * (pendaftaran ditolak / turnamen selesai, PB-09 & PB-10).
      */
     public function isRosterLocked(): bool
     {
-        return false;
+        return $this->pendaftaranTurnamen()
+            ->aktif()
+            ->where('status_roster', 'terkunci')
+            ->exists();
     }
 
     /**

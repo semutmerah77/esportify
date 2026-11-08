@@ -44,6 +44,7 @@ use App\Http\Controllers\Api\Admin\KategoriController;
 // ==========================================
 use App\Http\Controllers\Api\LokasiController;
 use App\Http\Controllers\Api\TurnamenController;
+use App\Http\Controllers\Player\PendaftaranTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
 // ==========================================
@@ -356,6 +357,45 @@ Route::middleware('auth:sanctum')->group(function () {
                 UndanganSquadController::class,
                 'tolak'
             ])->whereNumber('idUndangan');
+
+        });
+
+        // ==========================================
+        // MODUL 3: PENDAFTARAN TURNAMEN (PB-06, PB-07, PB-08)
+        // ==========================================
+
+        // Memilih Squad dan mendaftarkan Squad ke turnamen
+        Route::middleware('permission:daftar_turnamen')->group(function () {
+
+            Route::get('/turnamen/{id}/squad-saya', [
+                PendaftaranTurnamenController::class,
+                'squadSaya'
+            ])->whereNumber('id');
+
+            Route::post('/turnamen/{id}/daftar', [
+                PendaftaranTurnamenController::class,
+                'daftar'
+            ])->whereNumber('id');
+
+        });
+
+        // Melihat detail, status, dan bukti pembayaran pendaftaran
+        Route::middleware('permission:lihat_pendaftaran_turnamen')->group(function () {
+
+            Route::get('/pendaftaran-turnamen/{id}', [
+                PendaftaranTurnamenController::class,
+                'show'
+            ])->whereNumber('id');
+
+            Route::get('/pendaftaran-turnamen/{id}/bukti-pembayaran', [
+                PendaftaranTurnamenController::class,
+                'lihatBukti'
+            ])->whereNumber('id');
+
+            Route::get('/squad/{id}/pendaftaran-turnamen', [
+                PendaftaranTurnamenController::class,
+                'indexSquad'
+            ]);
 
         });
 

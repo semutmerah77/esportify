@@ -73,6 +73,8 @@ class PermissionSeeder extends Seeder
             'undang_player_squad',
             'tanggapi_undangan_squad',
             'alihkan_leader_squad',
+            'daftar_turnamen',
+            'lihat_pendaftaran_turnamen',
         ];
 
         foreach ($permissions as $permission) {
