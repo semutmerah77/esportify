@@ -270,6 +270,13 @@ Route::middleware('auth:sanctum')->group(function () {
         ])->whereNumber('idPlayer')->middleware('permission:keluarkan_anggota_squad');
 
         
+        // Mengalihkan kepemimpinan Squad (PB-05, khusus Leader, dicek di controller)
+        Route::post('/squad/{id}/leader', [
+            SquadController::class,
+            'jadikanLeader'
+        ])->middleware('permission:alihkan_leader_squad');
+
+        
         // ==========================================
         // MODUL 3: PENCARIAN PLAYER (PB-03)
         // ==========================================
