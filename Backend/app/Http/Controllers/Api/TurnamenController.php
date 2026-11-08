@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Turnamen;
+use App\Models\PendaftaranTurnamen;
 use App\Models\Player;
 use App\Models\Penyelenggara;
 use Illuminate\Http\Request;
@@ -214,7 +215,7 @@ class TurnamenController extends Controller
      * Menampilkan detail turnamen berdasarkan ID.
      * Digunakan oleh Player maupun Penyelenggara.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $turnamen = Turnamen::with([
             'pengajuan.game.kategoris:id_kategori,nama_kategori',
@@ -243,6 +244,11 @@ class TurnamenController extends Controller
 
         // Status dihitung dengan aturan yang sama seperti list.
         $status = $this->hitungStatus($pengajuan->jadwal_main);
+        
+        // US27: slot terisi = pendaftaran menunggu + diterima.
+        // Pendaftaran ditolak tidak dihitung (slot kembali).
+        $slotTerisi = $turnamen->slotTerisi();
+        $sisaSlot = max(0, (int) $pengajuan->slot - $slotTerisi);
 
         return response()->json([
             'success' => true,
@@ -262,6 +268,9 @@ class TurnamenController extends Controller
                     'poster' => $pengajuan->poster,
                     'tipe_turnamen' => $pengajuan->tipe_turnamen,
                     'slot' => $pengajuan->slot,
+                    'slot_terisi' => $slotTerisi,
+                    'sisa_slot' => $sisaSlot,
+                    'slot_penuh' => $sisaSlot <= 0,
                     'total_hadiah' => $pengajuan->total_hadiah,
                     'jadwal_pendaftaran_tutup' => $pengajuan->jadwal_pendaftaran_tutup,
                     'jadwal_main' => $pengajuan->jadwal_main,
@@ -306,7 +315,49 @@ class TurnamenController extends Controller
                         ]
                         : null,
                 ],
+                // Pendaftaran aktif yang memuat Player login (null kalau belum).
+                'pendaftaran_saya' => $this->pendaftaranSaya($request, $turnamen->id_turnamen),
             ],
         ]);
+    }
+
+
+     /**
+     * Pendaftaran terakhir yang roster-nya memuat Player login,
+     * dipakai FE untuk tombol Daftar / Lihat Pendaftaran (US23, US24).
+     */
+    private function pendaftaranSaya(Request $request, int $idTurnamen): ?array
+    {
+        $player = $request->user()?->player;
+
+        if (!$player) {
+            return null;
+        }
+
+        $pendaftaran = PendaftaranTurnamen::with(['squad', 'pendaftar.user'])
+            ->where('id_turnamen', $idTurnamen)
+            ->whereHas('anggota', fn ($q) => $q->where('id_player', $player->id_player))
+            ->orderByRaw("CASE WHEN status_pendaftaran IN ('menunggu', 'diterima') THEN 0 ELSE 1 END")
+            ->latest('tanggal_daftar')
+            ->first();
+
+        if (!$pendaftaran) {
+            return null;
+        }
+
+        return [
+            'id_pendaftaran' => $pendaftaran->id_pendaftaran,
+            'status_pendaftaran' => $pendaftaran->status_pendaftaran,
+            'alasan_penolakan' => $pendaftaran->alasan_penolakan,
+            'squad' => [
+                'id_squad' => $pendaftaran->id_squad,
+                'nama_squad' => $pendaftaran->squad?->nama_squad,
+            ],
+            'pendaftar' => [
+                'id_player' => $pendaftaran->id_player,
+                'username' => $pendaftaran->pendaftar?->user?->username,
+            ],
+            'didaftarkan_oleh_saya' => (int) $pendaftaran->id_player === (int) $player->id_player,
+        ];
     }
 }

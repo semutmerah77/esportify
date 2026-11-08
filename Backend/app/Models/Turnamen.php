@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Turnamen extends Model
 {
@@ -33,6 +34,23 @@ class Turnamen extends Model
             'id_penyelenggara',
             'id_penyelenggara'
         );
+    }
+
+    public function pendaftaran(): HasMany
+    {
+        return $this->hasMany(
+            PendaftaranTurnamen::class,
+            'id_turnamen',
+            'id_turnamen'
+        );
+    }
+
+    /**
+     * Jumlah slot yang terisi (pendaftaran menunggu + diterima).
+     */
+    public function slotTerisi(): int
+    {
+        return $this->pendaftaran()->aktif()->count();
     }
 }
 ?>
