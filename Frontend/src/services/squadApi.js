@@ -79,6 +79,8 @@ export async function searchSquads(query = "") {
   };
 }
 
+// GET /api/players?q=<username> (q wajib; maks. 20 hasil, urut A-Z; pemain yang login tidak ikut).
+// message: "Hasil tidak ditemukan." / "Masukkan username untuk mencari Player."
 export async function searchPlayers(query = "") {
   const q = String(query).trim();
   if (!q) return { items: [], message: "" };
@@ -103,7 +105,19 @@ function mapDetail(d) {
     ...mapSquad(d),
     viewerRole: d.is_leader ? "leader" : d.is_anggota ? "member" : "guest",
     locked: false, // flag roster terkunci belum ada di data; diisi dari error 422 (PB-06)
-    pendingRequests: 0, // permintaan bergabung: menunggu PB-04
+    pendingRequests: d.jumlah_permintaan_menunggu ?? 0, // angka untuk Leader (null bila bukan Leader)
+    myRequest: d.permintaan_saya
+      ? {
+          id: d.permintaan_saya.id_permintaan,
+          status: d.permintaan_saya.status_permintaan,
+        }
+      : null,
+    myInvite: d.undangan_saya
+      ? {
+          id: d.undangan_saya.id_undangan,
+          status: d.undangan_saya.status_undangan,
+        }
+      : null,
     members: (d.anggota ?? []).map((a) => ({
       id: a.id_anggota_squad,
       playerId: a.id_player,
@@ -149,15 +163,63 @@ export async function updateSquad(id, { name, description, logoFile } = {}) {
   }
 }
 
-// Belum ada endpoint (permintaan bergabung: PB-04).
-// Sengaja melempar error supaya tidak terlihat berhasil padahal tidak tersimpan.
-export async function requestJoin() {
-  throw new Error("Fitur gabung squad belum tersedia di backend.");
+// ===== Permintaan bergabung & undangan (PB-04) =====
+// Format tanggal BE: "YYYY-MM-DD HH:mm:ss"
+
+// POST /api/squad/:id/permintaan (player bukan anggota). 201.
+export async function requestJoin(id) {
+  const res = await apiRequest(`/squad/${encodeURIComponent(id)}/permintaan`, {
+    method: "POST",
+  });
+  return { message: res.message, requestId: res.data?.id_permintaan };
 }
 
-// Belum ada endpoint (undang player: PB-04). Sengaja melempar error supaya tidak terlihat terkirim.
-export async function invitePlayer() {
-  throw new Error("Fitur undang player belum tersedia di backend.");
+// GET /api/squad/:id/permintaan (Leader). Urut dari yang paling lama mengajukan.
+export async function getJoinRequests(id) {
+  const res = await apiRequest(`/squad/${encodeURIComponent(id)}/permintaan`);
+  return {
+    items: (res?.data ?? []).map((r) => ({
+      id: r.id_permintaan,
+      playerId: r.id_player,
+      username: r.username,
+      avatar: r.avatar_url || null,
+      createdAt: r.created_at,
+    })),
+    message: res?.message || "", // "Belum ada permintaan bergabung." saat kosong
+  };
+}
+
+// POST /api/squad/:id/permintaan/:requestId/terima | /tolak (Leader)
+export async function acceptJoinRequest(id, requestId) {
+  const res = await apiRequest(
+    `/squad/${encodeURIComponent(id)}/permintaan/${encodeURIComponent(requestId)}/terima`,
+    { method: "POST" },
+  );
+  return { message: res.message };
+}
+export async function rejectJoinRequest(id, requestId) {
+  const res = await apiRequest(
+    `/squad/${encodeURIComponent(id)}/permintaan/${encodeURIComponent(requestId)}/tolak`,
+    { method: "POST" },
+  );
+  return { message: res.message };
+}
+
+// POST /api/squad/:id/undangan (Leader). Body: id_player (diambil dari hasil searchPlayers).
+export async function invitePlayer(id, playerId) {
+  const form = new FormData();
+  form.append("id_player", playerId);
+  const res = await apiRequest(`/squad/${encodeURIComponent(id)}/undangan`, {
+    method: "POST",
+    body: form,
+  });
+  return { message: res.message };
+}
+
+// GET /api/squad/:id/undangan (Leader): id player yang undangannya masih menunggu.
+export async function getSentInvitations(id) {
+  const res = await apiRequest(`/squad/${encodeURIComponent(id)}/undangan`);
+  return (res?.data ?? []).map((i) => i.id_player);
 }
 
 // ===== Keanggotaan (PB-02) =====
@@ -191,74 +253,39 @@ export async function kickMember(id, playerId) {
   return { message: res.message, squad: mapDetail(res.data) };
 }
 
-// ===== Undangan squad (inbox) =====
-// Data tiruan, menunggu kontrak PB-04. Undangan tidak punya masa kedaluwarsa (R1.09).
-let invitations = [
-  {
-    id: 1,
-    invitedBy: "Captain_Rex",
-    squad: {
-      id: "SQD-5128AX",
-      name: "Apex Predators",
-      icon: "crown",
-      tone: "amber",
-      logo: null,
-      members: 4,
-      capacity: SQUAD_CAPACITY,
-    },
-  },
-  {
-    id: 2,
-    invitedBy: "ShadowWalker",
-    squad: {
-      id: "SQD-3382BX",
-      name: "Phantom Legion",
-      icon: "paw-print",
-      tone: "purple",
-      logo: null,
-      members: 5,
-      capacity: SQUAD_CAPACITY,
-    },
-  },
-  {
-    id: 3,
-    invitedBy: "ValkyrieLeader",
-    squad: {
-      id: "SQD-8819CX",
-      name: "Valkyrie Esports",
-      icon: "shield",
-      tone: "blue",
-      logo: null,
-      members: 6,
-      capacity: SQUAD_CAPACITY,
-    },
-  },
-];
-
-// GET undangan yang diterima player
+// ===== Inbox undangan (player) =====
+// GET /api/undangan-saya -> bentuk yang dipakai InviteInboxModal.
+// Jumlah undangan menunggu = items.length (sama dengan meta.jumlah_menunggu).
 export async function getInvitations() {
-  return invitations.map((i) => ({ ...i, squad: { ...i.squad } }));
+  const res = await apiRequest("/undangan-saya");
+  return (res?.data ?? []).map((i) => ({
+    id: i.id_undangan,
+    invitedBy: i.diundang_oleh,
+    createdAt: i.created_at,
+    squad: mapSquad(i.squad),
+  }));
 }
 
-// Terima / tolak undangan. Terima -> mengembalikan squad untuk ditambahkan ke Squad Saya.
-// Squad penuh saat diterima: undangan dihapus dan error.removed = true (R1.10).
+// POST /api/undangan/:id/terima | /tolak
+// Error "Undangan dihapus" (squad penuh / tidak aktif) dan 404 -> err.removed = true (kartu dihapus dari Inbox).
 export async function respondInvitation(id, accept) {
-  const invite = invitations.find((i) => i.id === id);
-  if (!invite) throw new Error("Undangan tidak ditemukan.");
-
-  invitations = invitations.filter((i) => i.id !== id);
-  if (!accept) return null;
-
-  if (invite.squad.members >= invite.squad.capacity) {
-    const err = new Error("Squad sudah penuh. Undangan dihapus.");
-    err.removed = true;
+  const path = `/undangan/${encodeURIComponent(id)}/${accept ? "terima" : "tolak"}`;
+  try {
+    const res = await apiRequest(path, { method: "POST" });
+    const d = res.data ?? {};
+    return {
+      message: res.message,
+      squad: accept
+        ? { id: d.kode_squad, squadId: d.id_squad, name: d.nama_squad }
+        : null,
+    };
+  } catch (err) {
+    if (
+      err instanceof ApiError &&
+      (err.status === 404 || /undangan dihapus/i.test(err.message || ""))
+    ) {
+      err.removed = true;
+    }
     throw err;
   }
-  const members = invite.squad.members + 1;
-  return {
-    ...invite.squad,
-    members,
-    full: members >= invite.squad.capacity,
-    role: "member",
-  };
 }

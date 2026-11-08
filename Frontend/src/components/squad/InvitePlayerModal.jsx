@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
 import Icon from "../icon";
-import { invitePlayer, searchPlayers } from "../../services/squadApi";
-
-// "NightFury" -> "NF", "Putra Ananda" -> "PA", "rex" -> "RE"
-function initials(name = "") {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length > 1) return (words[0][0] + words[1][0]).toUpperCase();
-  const caps = name.match(/[A-Z]/g);
-  if (caps && caps.length >= 2) return caps[0] + caps[1];
-  return name.slice(0, 2).toUpperCase();
-}
+import initials from "./initials";
+import {
+  getSentInvitations,
+  invitePlayer,
+  searchPlayers,
+} from "../../services/squadApi";
 
 const DEBOUNCE_MS = 400;
 
@@ -26,6 +22,17 @@ function InvitePlayerModal({ squad, onClose }) {
 
   // Id player yang sudah menjadi anggota squad ini
   const memberIds = new Set(squad.members.map((m) => m.playerId));
+
+  // Tandai player yang undangannya masih menunggu sebagai "Terkirim"
+  useEffect(() => {
+    let off = false;
+    getSentInvitations(squad.squadId ?? squad.id)
+      .then((ids) => !off && setSent(new Set(ids)))
+      .catch(() => {}); // gagal dimuat: tombol Undang tetap bisa dipakai
+    return () => {
+      off = true;
+    };
+  }, [squad.squadId, squad.id]);
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
@@ -72,7 +79,12 @@ function InvitePlayerModal({ squad, onClose }) {
       await invitePlayer(squad.squadId ?? squad.id, player.id);
       setSent((prev) => new Set(prev).add(player.id));
     } catch (err) {
-      setActionError(err.message || "Gagal mengirim undangan.");
+      // Sudah pernah diundang: anggap terkirim, tanpa pesan error
+      if (/sudah diundang/i.test(err.message || "")) {
+        setSent((prev) => new Set(prev).add(player.id));
+      } else {
+        setActionError(err.message || "Gagal mengirim undangan.");
+      }
     } finally {
       setSending(null);
     }
@@ -115,14 +127,14 @@ function InvitePlayerModal({ squad, onClose }) {
               className={`sqp-tab ${tab === "teman" ? "active" : ""}`}
               onClick={() => setTab("teman")}
             >
-              <Icon name="user-star" size={15} /> Teman Saya
+              <Icon name="users" size={15} /> Teman Saya
             </button>
           </div>
 
           {tab === "teman" && (
             <div className="sqp-empty">
               <span className="sqp-empty-ic">
-                <Icon name="user-star" size={26} />
+                <Icon name="users" size={26} />
               </span>
               <b>Belum ada teman</b>
               <p>

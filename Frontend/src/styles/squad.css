@@ -1474,6 +1474,150 @@
   background: #0b1424;
 }
 
+/* ===== Permintaan bergabung & undangan ===== */
+.sqd-invite-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.sqd-invite-box > span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #93bbff;
+}
+.sqd-invite-actions {
+  display: flex;
+  gap: 8px;
+}
+.sqd-confirm-text b {
+  font-weight: 600;
+  color: var(--white);
+}
+
+/* ===== Permintaan Bergabung (Leader) ===== */
+.sqr-modal {
+  max-width: 512px;
+}
+.sqr-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.sqr-head h2 {
+  font-size: 18px;
+  color: var(--white);
+}
+.sqr-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #2c3a52;
+  border-radius: 8px;
+  background: #1a2336;
+  color: #cbd5e1;
+  cursor: pointer;
+}
+.sqr-close:hover {
+  background: #222d44;
+}
+.sqr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sqr-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #243044;
+  border-radius: 10px;
+  background: #151c2c;
+}
+.sqr-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid #334155;
+  border-radius: 50%;
+  background: #1e293b;
+  color: #94a3b8;
+}
+.sqr-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sqr-item b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  color: var(--white);
+}
+.sqr-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.sqr-btn {
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.sqr-btn.reject {
+  border-color: #7f1d3a;
+  background: rgba(159, 18, 57, 0.2);
+  color: #fb7185;
+}
+.sqr-btn.reject:hover:not(:disabled) {
+  background: rgba(159, 18, 57, 0.4);
+}
+.sqr-btn.accept {
+  background: #059669;
+  color: #fff;
+}
+.sqr-btn.accept:hover:not(:disabled) {
+  background: #047857;
+}
+.sqr-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.sqr-empty {
+  padding: 24px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+}
+.sqr-msg {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: #34d399;
+}
+.sqr-msg.error {
+  color: #f87171;
+}
+
 /* Responsif */
 @media (max-width: 1100px) {
   .sq-grid {

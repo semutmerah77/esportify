@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Icon from "../../components/icon";
 import Pagination from "../../components/admin/Pagination";
 import SquadRow from "../../components/squad/SquadRow";
 import CreateSquadModal from "../../components/squad/CreateSquadModal";
 import InviteInboxModal from "../../components/squad/InviteInboxModal";
-import { useLocation } from "react-router-dom";
 import {
   MY_PAGE_SIZE,
   getInvitations,
@@ -22,6 +22,8 @@ function MySquads() {
   const [invites, setInvites] = useState([]);
   const [inboxOpen, setInboxOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  // Pesan dari halaman lain (mis. setelah keluar squad) dibawa lewat navigate(..., { state: { toast } })
   const [toast, setToast] = useState(location.state?.toast || "");
 
   useEffect(() => {
@@ -38,14 +40,14 @@ function MySquads() {
     };
   }, []);
 
-  useEffect(() => {
-    let off = false;
+  // Muat undangan (badge Inbox). Dipanggil saat halaman dibuka dan setiap Inbox dibuka.
+  const loadInvites = () =>
     getInvitations()
-      .then((data) => !off && setInvites(data))
-      .catch(() => {}); // inbox gagal dimuat: tombol tetap tampil tanpa angka
-    return () => {
-      off = true;
-    };
+      .then(setInvites)
+      .catch(() => {}); // gagal dimuat: tombol tetap tampil tanpa angka
+
+  useEffect(() => {
+    loadInvites();
   }, []);
 
   useEffect(() => {
@@ -77,9 +79,11 @@ function MySquads() {
     setToast(`Squad "${squad.name}" berhasil dibuat. Kamu menjadi Leader.`);
   };
 
-  const handleAccepted = (squad) => {
-    setItems((prev) => [squad, ...prev]);
-    setToast(`Kamu bergabung ke squad "${squad.name}".`);
+  // Setelah menerima undangan: arahkan ke detail squad
+  const handleAccepted = (squad, message) => {
+    navigate(`/squad/${squad.squadId ?? squad.id}`, {
+      state: { toast: message || `Kamu bergabung ke squad "${squad.name}".` },
+    });
   };
 
   return (
@@ -103,7 +107,10 @@ function MySquads() {
           <button
             type="button"
             className="sq-btn outline inbox"
-            onClick={() => setInboxOpen(true)}
+            onClick={() => {
+              setInboxOpen(true);
+              loadInvites();
+            }}
           >
             <Icon name="mail" size={16} /> Inbox Undangan
             {invites.length > 0 && (
