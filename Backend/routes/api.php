@@ -16,6 +16,8 @@ use App\Http\Controllers\Player\ProfileController;
 use App\Http\Controllers\Player\PengajuanTurnamenController;
 use App\Http\Controllers\Player\SquadController;
 use App\Http\Controllers\Player\PlayerSearchController;
+use App\Http\Controllers\Player\PermintaanBergabungController;
+use App\Http\Controllers\Player\UndanganSquadController;
 use App\Http\Controllers\Api\Player\GameController as PlayerGameController;
 
 // ==========================================
@@ -277,6 +279,78 @@ Route::middleware('auth:sanctum')->group(function () {
             PlayerSearchController::class,
             'index'
         ])->middleware('permission:cari_player');
+
+
+        // ==========================================
+        // MODUL 3: PERMINTAAN BERGABUNG (PB-04)
+        // ==========================================
+
+        // Player mengajukan permintaan bergabung
+        Route::post('/squad/{id}/permintaan', [
+            PermintaanBergabungController::class,
+            'ajukan'
+        ])->middleware('permission:ajukan_permintaan_squad');
+
+        // Leader melihat, menerima, dan menolak permintaan
+        Route::middleware('permission:kelola_permintaan_squad')->group(function () {
+
+            Route::get('/squad/{id}/permintaan', [
+                PermintaanBergabungController::class,
+                'index'
+            ]);
+
+            Route::post('/squad/{id}/permintaan/{idPermintaan}/terima', [
+                PermintaanBergabungController::class,
+                'terima'
+            ])->whereNumber('idPermintaan');
+
+            Route::post('/squad/{id}/permintaan/{idPermintaan}/tolak', [
+                PermintaanBergabungController::class,
+                'tolak'
+            ])->whereNumber('idPermintaan');
+
+        });
+
+
+        // ==========================================
+        // MODUL 3: UNDANGAN SQUAD (PB-04)
+        // ==========================================
+
+        // Leader mengundang Player dan melihat undangan terkirim
+        Route::middleware('permission:undang_player_squad')->group(function () {
+
+            Route::post('/squad/{id}/undangan', [
+                UndanganSquadController::class,
+                'kirim'
+            ]);
+
+            Route::get('/squad/{id}/undangan', [
+                UndanganSquadController::class,
+                'terkirim'
+            ]);
+
+        });
+
+        // Player melihat inbox dan menanggapi undangan
+        Route::middleware('permission:tanggapi_undangan_squad')->group(function () {
+
+            Route::get('/undangan-saya', [
+                UndanganSquadController::class,
+                'saya'
+            ]);
+
+            Route::post('/undangan/{idUndangan}/terima', [
+                UndanganSquadController::class,
+                'terima'
+            ])->whereNumber('idUndangan');
+
+
+            Route::post('/undangan/{idUndangan}/tolak', [
+                UndanganSquadController::class,
+                'tolak'
+            ])->whereNumber('idUndangan');
+
+        });
 
 
         // Mengubah pengajuan ketika mendapatkan kesempatan revisi
