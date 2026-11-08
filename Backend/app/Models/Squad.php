@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class Squad extends Model
@@ -15,7 +16,7 @@ class Squad extends Model
     protected $primaryKey = 'id_squad';
 
     protected $fillable = [
-        'id_leader_squad',
+        'id_player_pembuat',
         'kode_squad',
         'logo_squad',
         'nama_squad',
@@ -28,9 +29,26 @@ class Squad extends Model
         'maks_anggota' => 'integer',
     ];
 
-    public function leader(): BelongsTo
+    /**
+     * Leader yang sedang menjabat (tanggal_berakhir NULL).
+     */
+    public function leader(): HasOne
     {
-        return $this->belongsTo(LeaderSquad::class, 'id_leader_squad', 'id_leader_squad');
+        return $this->hasOne(LeaderSquad::class, 'id_squad', 'id_squad')
+            ->whereNull('tanggal_berakhir');
+    }
+
+    /**
+     * Seluruh riwayat kepemimpinan Squad.
+     */
+    public function riwayatLeader(): HasMany
+    {
+        return $this->hasMany(LeaderSquad::class, 'id_squad', 'id_squad');
+    }
+
+    public function pembuat(): BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'id_player_pembuat', 'id_player');
     }
 
     /**
@@ -74,7 +92,31 @@ class Squad extends Model
             && $this->anggotaAktif()->where('id_player', $player->id_player)->exists();
     }
 
-        public function isFull(): bool
+    /**
+     * Mengakhiri masa jabatan Leader saat ini dan (opsional) mengangkat Leader baru.
+     * Panggil di dalam DB::transaction.
+     */
+    public function gantiLeader(?int $idPlayerBaru): ?LeaderSquad
+    {
+        $this->riwayatLeader()
+            ->whereNull('tanggal_berakhir')
+            ->update(['tanggal_berakhir' => now()]);
+
+        $leaderBaru = null;
+
+        if ($idPlayerBaru !== null) {
+            $leaderBaru = $this->riwayatLeader()->create([
+                'id_player' => $idPlayerBaru,
+                'tanggal_pengangkatan' => now(),
+            ]);
+        }
+
+        $this->unsetRelation('leader');
+
+        return $leaderBaru;
+    }
+
+    public function isFull(): bool
     {
         return $this->anggotaAktif()->count() >= $this->maks_anggota;
     }
@@ -91,7 +133,7 @@ class Squad extends Model
             : $query->where('kode_squad', strtoupper(ltrim((string) $key, '#')))->first();
     }
 
-        /**
+    /**
      * R2.01–R2.05: roster terkunci selama Squad terdaftar pada turnamen
      * yang belum selesai.
      *
