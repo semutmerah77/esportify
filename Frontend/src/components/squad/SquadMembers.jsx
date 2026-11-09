@@ -1,7 +1,9 @@
+import { useState } from "react";
 import Icon from "../icon";
+import MemberProfileModal from "./MemberProfileModal";
 
 // Daftar anggota. Tombol aksi menyesuaikan peran pengguna:
-// leader  : undang, permintaan bergabung, keluar, keluarkan anggota (tombol di kartu anggota)
+// leader  : undang, permintaan bergabung, keluar; jadikan leader & keluarkan anggota lewat profil anggota
 // anggota : keluar
 // bukan anggota : tidak ada tombol
 function SquadMembers({
@@ -14,6 +16,7 @@ function SquadMembers({
 }) {
   const isLeader = squad.viewerRole === "leader";
   const isMember = squad.viewerRole === "member" || isLeader;
+  const [selected, setSelected] = useState(null); // anggota yang profilnya dibuka
 
   return (
     <section>
@@ -69,49 +72,60 @@ function SquadMembers({
       </div>
 
       <div className="sqd-members">
-        {squad.members.map((m) => (
-          <div key={m.id} className={`sqd-member ${m.isMe ? "me" : ""}`}>
-            <span className="sqd-avatar">
-              <Icon name="user" size={18} />
-              {m.avatar && (
-                <img
-                  src={m.avatar}
-                  alt=""
-                  onError={(e) => (e.currentTarget.style.display = "none")}
-                />
-              )}
-            </span>
-            <div>
-              <b>{m.username}</b>
-              <em className={m.role}>
-                {m.role === "leader" ? "Leader" : "Anggota"}
-              </em>
-            </div>
-            {isLeader && m.role !== "leader" && (
-              <div className="sqd-member-actions">
-                <button
-                  type="button"
-                  className="sqd-promote-btn"
-                  title="Jadikan Leader"
-                  aria-label={`Jadikan ${m.username} Leader`}
-                  onClick={() => onPromote(m)}
-                >
-                  <Icon name="crown" size={14} />
-                </button>
-                <button
-                  type="button"
-                  className="sqd-kick-btn"
-                  title="Keluarkan anggota"
-                  aria-label={`Keluarkan ${m.username}`}
-                  onClick={() => onKick(m)}
-                >
-                  <Icon name="user-minus" size={14} />
-                </button>
+        {squad.members.map((m) => {
+          // Klik kartu anggota lain untuk membuka profil + aksi (kartu sendiri tidak punya aksi)
+          const clickable = isMember && !m.isMe;
+          return (
+            <div
+              key={m.id}
+              className={`sqd-member ${m.isMe ? "me" : ""} ${clickable ? "clickable" : ""}`}
+              {...(clickable
+                ? {
+                    role: "button",
+                    tabIndex: 0,
+                    onClick: () => setSelected(m),
+                    onKeyDown: (e) =>
+                      (e.key === "Enter" || e.key === " ") &&
+                      (e.preventDefault(), setSelected(m)),
+                  }
+                : {})}
+            >
+              <span className="sqd-avatar">
+                <Icon name="user" size={18} />
+                {m.avatar && (
+                  <img
+                    src={m.avatar}
+                    alt=""
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                  />
+                )}
+              </span>
+              <div>
+                <b>{m.username}</b>
+                <em className={m.role}>
+                  {m.role === "leader" ? "Leader" : "Anggota"}
+                </em>
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
+
+      {selected && (
+        <MemberProfileModal
+          member={selected}
+          canManage={isLeader}
+          onClose={() => setSelected(null)}
+          onPromote={(m) => {
+            setSelected(null);
+            onPromote(m);
+          }}
+          onKick={(m) => {
+            setSelected(null);
+            onKick(m);
+          }}
+        />
+      )}
     </section>
   );
 }
