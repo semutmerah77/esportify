@@ -25,6 +25,9 @@ import ManagedTournamentDetail from "./pages/tournament/ManagedTournamentDetail"
 import SearchSquad from "./pages/squad/SearchSquad";
 import MySquads from "./pages/squad/MySquads";
 import SquadDetail from "./pages/squad/SquadDetail";
+import DaftarTurnamen from "./pages/registration/DaftarTurnamen";
+import PendaftaranDetail from "./pages/registration/PendaftaranDetail";
+import TurnamenSaya from "./pages/registration/TurnamenSaya";
 
 function App() {
   return (
@@ -60,6 +63,9 @@ function App() {
               path="/turnamen/status-pengajuan"
               element={<SubmissionStatus />}
             />
+            <Route path="/turnamen/saya" element={<TurnamenSaya />} />
+            <Route path="/turnamen/:id/daftar" element={<DaftarTurnamen />} />
+            <Route path="/pendaftaran/:id" element={<PendaftaranDetail />} />
             <Route path="/squad/cari" element={<SearchSquad />} />
             <Route path="/squad/saya" element={<MySquads />} />
             <Route path="/squad/:id" element={<SquadDetail />} />
