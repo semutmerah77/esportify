@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Icon from "../../components/icon";
 import TournamentInfo from "../../components/tournament/TournamentInfo";
 import { getTournamentDetail } from "../../services/tournamentApi";
+import { getRegistrationInfo } from "../../services/tournamentRegApi";
+import "../../styles/turnamen-daftar.css";
 
 function TournamentDetail() {
   const { id } = useParams();
@@ -13,12 +15,14 @@ function TournamentDetail() {
     data: null,
     message: "",
   });
+  const [reg, setReg] = useState(null); // keadaan tombol Daftar (PB-06)
 
   const here = `${location.pathname}${location.search}`;
 
   useEffect(() => {
     let off = false;
     setState({ status: "loading", data: null, message: "" });
+    setReg(null);
     getTournamentDetail(id)
       .then((data) => {
         if (!off) setState({ status: "ok", data, message: "" });
@@ -39,10 +43,64 @@ function TournamentDetail() {
               : err.message || "Terjadi kesalahan.",
         });
       });
+    // Status pendaftaran: gagal dimuat tidak menghalangi halaman detail
+    getRegistrationInfo(id)
+      .then((r) => !off && setReg(r))
+      .catch(() => {});
     return () => {
       off = true;
     };
   }, [id, here, navigate]);
+
+  const registerAction = () => {
+    // Status belum termuat: tombol nonaktif sementara
+    if (!reg) {
+      return (
+        <button type="button" className="td-register" disabled>
+          <Icon name="user-plus" size={18} /> Daftar Sekarang
+        </button>
+      );
+    }
+
+    // Menunggu / diterima: tampilkan status + "Lihat Pendaftaran"
+    if (reg.state === "status") {
+      const accepted = reg.reg.status_pendaftaran === "diterima";
+      return (
+        <div className="tr-detail-action">
+          <span className={`tr-pill ${accepted ? "ok" : "wait"}`}>
+            <i /> {accepted ? "Diterima" : "Menunggu Verifikasi"}
+          </span>
+          {reg.note && <small className="tr-muted">{reg.note}</small>}
+          <Link
+            className="td-register"
+            to={`/pendaftaran/${reg.reg.id_pendaftaran}`}
+          >
+            Lihat Pendaftaran
+          </Link>
+        </div>
+      );
+    }
+
+    // Belum terdaftar / pernah ditolak / ditutup / slot penuh
+    return (
+      <div className="tr-detail-action">
+        {reg.reg?.alasan_penolakan && (
+          <p className="tr-warn">
+            Pendaftaran sebelumnya ditolak: {reg.reg.alasan_penolakan}
+          </p>
+        )}
+        <button
+          type="button"
+          className="td-register"
+          disabled={reg.state !== "daftar"}
+          onClick={() => navigate(`/turnamen/${id}/daftar`)}
+        >
+          <Icon name="user-plus" size={18} /> Daftar Sekarang
+        </button>
+        {reg.note && <small className="tr-muted">{reg.note}</small>}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -51,7 +109,6 @@ function TournamentDetail() {
       </button>
       <h1 className="admin-title">Detail Turnamen</h1>
 
-      {state.status === "loading" && <p className="admin-message">Memuat...</p>}
       {state.status === "error" && (
         <p className="admin-message error" role="alert">
           {state.message}
@@ -60,12 +117,8 @@ function TournamentDetail() {
       {state.status === "ok" && (
         <TournamentInfo
           d={state.data}
-          action={
-            // Belum ada fungsi pendaftaran
-            <button type="button" className="td-register">
-              <Icon name="user-plus" size={18} /> Daftar Sekarang
-            </button>
-          }
+          registered={reg?.filled}
+          action={registerAction()}
         />
       )}
     </>

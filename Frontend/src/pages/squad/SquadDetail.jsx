@@ -13,6 +13,7 @@ import InvitePlayerModal from "../../components/squad/InvitePlayerModal";
 import JoinRequestsModal from "../../components/squad/JoinRequestsModal";
 import JoinSquadDialog from "../../components/squad/JoinSquadDialog";
 import SuccessDialog from "../../components/squad/SuccessDialog";
+import { getRegistrationState } from "../../services/tournamentRegApi";
 import {
   getSquadDetail,
   isRosterLocked,
@@ -68,7 +69,20 @@ function SquadDetail() {
     setMissing(false);
     setLoadError("");
     getSquadDetail(id)
-      .then((data) => !off && (data ? setSquad(data) : setMissing(true)))
+      .then(async (data) => {
+        if (off) return;
+        if (!data) return setMissing(true);
+        // Anggota squad: cek pendaftaran turnamen untuk status roster terkunci
+        if (data.viewerRole !== "guest") {
+          try {
+            const regs = await getSquadRegistrations(data.squadId ?? data.id);
+            data.locked = regs.some((r) => r.rosterLocked);
+          } catch {
+            /* biarkan, tetap bisa terdeteksi dari error 422 */
+          }
+        }
+        if (!off) setSquad(data);
+      })
       .catch(
         (err) =>
           !off && setLoadError(err.message || "Gagal memuat detail squad."),
@@ -254,6 +268,11 @@ function SquadDetail() {
 
         <div className="sqd-hero-side">
           <code className="sqd-id">ID: #{squad.id}</code>
+          {squad.locked && (
+            <span className="tr-lock">
+              <Icon name="lock" size={12} /> Roster Terkunci
+            </span>
+          )}
           {role === "guest" && squad.myInvite && (
             <div className="sqd-invite-box">
               <span>Kamu diundang</span>

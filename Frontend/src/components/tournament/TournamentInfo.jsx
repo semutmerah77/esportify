@@ -2,10 +2,6 @@ import { useState } from "react";
 import Icon from "../icon";
 import { longDate } from "../../utils/date";
 
-// Belum ada fitur pendaftaran: jumlah terdaftar berupa teks tetap.
-// Hapus saat backend menyediakan jumlah peserta.
-const REGISTERED_PLACEHOLDER = 32;
-
 const STATUS_LABEL = {
   pendaftaran: "Pendaftaran",
   berlangsung: "Berlangsung",
@@ -43,7 +39,7 @@ function InfoCard({ title, icon, children, sub }) {
 }
 
 // d = hasil getTournamentDetail. action = tombol opsional di kartu ringkasan.
-function TournamentInfo({ d, action }) {
+function TournamentInfo({ d, action, registered = null }) {
   const [expanded, setExpanded] = useState(false);
 
   const offline = d.type === "offline";
@@ -51,7 +47,7 @@ function TournamentInfo({ d, action }) {
     ? [d.city, d.province].filter(Boolean).join(", ")
     : "Online";
   const percent = d.slot
-    ? Math.min(100, Math.round((REGISTERED_PLACEHOLDER / Number(d.slot)) * 100))
+    ? Math.min(100, Math.round(((registered ?? 0) / Number(d.slot)) * 100))
     : 0;
   const payments = PAYMENT_ITEMS[d.paymentMethod] ?? [];
   const longText = d.description.length > 280;
@@ -99,7 +95,7 @@ function TournamentInfo({ d, action }) {
                 <Icon name="users" size={13} /> Slot
               </small>
               <b>
-                {REGISTERED_PLACEHOLDER} / {d.slot ?? "-"}
+                {registered ?? "-"} / {d.slot ?? "-"}
               </b>
               <div className="td-bar">
                 <i style={{ width: `${percent}%` }}></i>

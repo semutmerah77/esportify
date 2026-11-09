@@ -51,7 +51,9 @@ const squadItems = [
 function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
   const { pathname, search, state } = useLocation();
 
-  const [menuOpen, setMenuOpen] = useState(pathname.startsWith("/turnamen"));
+  const [menuOpen, setMenuOpen] = useState(
+    pathname.startsWith("/turnamen") || pathname.startsWith("/pendaftaran"),
+  );
   const [squadOpen, setSquadOpen] = useState(pathname.startsWith("/squad"));
   const [showGate, setShowGate] = useState(false);
 
@@ -90,11 +92,49 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
     }
   };
 
+  // Ingat halaman daftar turnamen terakhir yang dibuka (Cari Turnamen / Turnamen Saya).
+  // Hanya halaman daftarnya, bukan detail, supaya detail mengikuti asalnya.
+  const tournamentArea =
+    pathname === "/turnamen/saya"
+      ? "saya"
+      : pathname === "/turnamen/cari"
+        ? "cari"
+        : null;
+  useEffect(() => {
+    if (!tournamentArea) return;
+    try {
+      sessionStorage.setItem("turnamen-from", tournamentArea);
+    } catch {
+      /* penyimpanan tidak tersedia: pakai default */
+    }
+  }, [tournamentArea]);
+
+  const tournamentFrom = () => {
+    try {
+      return sessionStorage.getItem("turnamen-from") || "cari";
+    } catch {
+      return "cari";
+    }
+  };
+
   const isItemActive = (item) => {
     // Detail squad (/squad/:id): menu yang aktif mengikuti asal halaman (Cari Squad atau Squad Saya)
     const isSquadDetail = /^\/squad\/(?!cari$|saya$)[^/]+$/.test(pathname);
     if (isSquadDetail && item.detailFrom)
-      return squadFrom() === item.detailFrom; // <- baris yang berubah
+      return squadFrom() === item.detailFrom;
+
+    // Halaman turunan turnamen (detail, form daftar, detail pendaftaran):
+    // menu yang aktif mengikuti asal (Cari Turnamen atau Turnamen Saya)
+    const followsList =
+      /^\/turnamen\/cari\/[^/]+$/.test(pathname) ||
+      /^\/turnamen\/[^/]+\/daftar$/.test(pathname) ||
+      pathname.startsWith("/pendaftaran/");
+    if (followsList)
+      return (
+        item.to ===
+        (tournamentFrom() === "saya" ? "/turnamen/saya" : "/turnamen/cari")
+      );
+
     return (
       pathname === item.to ||
       (item.also ?? []).some((path) => pathname.startsWith(path))
