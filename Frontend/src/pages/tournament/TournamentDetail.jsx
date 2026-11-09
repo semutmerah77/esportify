@@ -62,14 +62,9 @@ function TournamentDetail() {
       );
     }
 
-    // Menunggu / diterima: tampilkan status + "Lihat Pendaftaran"
     if (reg.state === "status") {
-      const accepted = reg.reg.status_pendaftaran === "diterima";
       return (
         <div className="tr-detail-action">
-          <span className={`tr-pill ${accepted ? "ok" : "wait"}`}>
-            <i /> {accepted ? "Diterima" : "Menunggu Verifikasi"}
-          </span>
           {reg.note && <small className="tr-muted">{reg.note}</small>}
           <Link
             className="td-register"

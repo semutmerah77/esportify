@@ -675,15 +675,164 @@ a.td-register {
   min-height: 280px;
 }
 
-.tr-done-actions .sq-btn {
-  height: 44px;
-  padding: 0 20px;
+.tr-done-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 22px;
+  border: 1px solid #2a3547;
+  border-radius: 8px;
+  background: transparent;
+  font-family: inherit;
   font-size: 14px;
+  font-weight: 600;
   line-height: 1;
+  color: #fff;
+  cursor: pointer;
+}
+.tr-done-btn:hover {
+  background: #1a2336;
+}
+.tr-done-btn.primary {
+  border-color: #3b82f6;
+  background: #3b82f6;
+}
+.tr-done-btn.primary:hover {
+  background: #2563eb;
+}
+
+/* Tab Turnamen Saya: bentuk sama dengan Kelola Turnamen, di tengah */
+.tr-tabs {
+  display: flex;
+  width: fit-content;
+  gap: 2px;
+  margin: 0 auto 28px;
+  padding: 4px;
+  border: 1px solid #1f2a3d;
+  border-radius: 10px;
+  background: #0f1524;
+}
+.tr-tabs button {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+}
+.tr-tabs button:hover:not(.on) {
+  color: #fff;
+}
+.tr-tabs button.on {
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Unggah bukti pembayaran: tombol Upload + baris file (sama dengan pengajuan turnamen) */
+.tr-upframe {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 22px 16px;
+  border: 1px solid #2c3a52;
+  border-radius: 8px;
+}
+.tr-upbtn {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 22px;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.1);
+  color: #6aa3ff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.tr-upbtn:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+.tr-uphint {
+  margin: 0;
+  font-size: 11px;
+  text-align: center;
+  color: #7b8798;
+}
+.tr-filerow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border: 1px solid #3a4558;
+  border-radius: 10px;
+  background: #181d29;
+}
+.tr-fileicon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  color: #4f6bed;
+}
+.tr-fileicon b {
+  margin-top: -4px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+.tr-filename {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  color: #fff;
+}
+.tr-fileactions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.tr-pillbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 18px;
+  border: 1px solid #fff;
+  border-radius: 999px;
+  background: none;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  cursor: pointer;
+}
+.tr-pillbtn:hover:not(:disabled) {
+  background: #1f2535;
+}
+.tr-pillbtn.danger {
+  border-color: #7f1d1d;
+  color: #f87171;
+}
+.tr-pillbtn.danger:hover {
+  background: #451a1a;
+}
+@media (max-width: 640px) {
+  .tr-filerow {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 640px) {

@@ -5,6 +5,7 @@ import Icon from "../../components/icon";
 import SquadLogo from "../../components/squad/SquadLogo";
 import initials from "../../components/squad/initials";
 import { MemberGrid, StatusPill } from "../../components/registration/RegParts";
+import ProofUpload from "../../components/registration/ProofUpload";
 import { getSquadDetail } from "../../services/squadApi";
 import { getTournamentDetail } from "../../services/tournamentApi";
 import {
@@ -217,10 +218,7 @@ function DaftarTurnamen() {
       .catch(() => {});
   };
 
-  const pickFile = (e) => {
-    const f = e.target.files?.[0];
-    e.target.value = "";
-    if (!f) return;
+  const pickFile = (f) => {
     if (!ALLOWED.includes(f.type))
       return setError(
         "Bukti pembayaran harus berformat JPG, JPEG, PNG, atau PDF.",
@@ -398,25 +396,16 @@ function DaftarTurnamen() {
               <p className="tr-muted">
                 Unggah screenshot atau foto bukti transaksi yang berhasil.
               </p>
-              <label className="tr-upload">
-                <input
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.pdf"
-                  onChange={pickFile}
-                  hidden
-                />
-                <Icon name="upload-cloud" size={44} />
-                <b>{file ? file.name : "Unggah Bukti Pembayaran"}</b>
-                <small>
-                  <Icon name="info" size={12} /> FORMAT JPG, PNG, PDF • MAKS 2
-                  MB
-                </small>
-              </label>
+              <ProofUpload
+                file={file}
+                onSelect={pickFile}
+                onRemove={() => setFile(null)}
+              />
 
               <div className="tr-notice">
                 <b>
-                  <Icon name="alert-triangle" size={14} /> Perhatian sebelum
-                  mengirim pendaftaran
+                  <Icon name="alert" size={14} /> Perhatian sebelum mengirim
+                  pendaftaran
                 </b>
                 <ul>
                   <li>
@@ -493,7 +482,7 @@ function DaftarTurnamen() {
             <div className="tr-done-actions">
               <button
                 type="button"
-                className="sq-btn outline"
+                className="tr-done-btn"
                 onClick={() =>
                   navigate(`/turnamen/cari/${id}`, { replace: true })
                 }
@@ -502,7 +491,7 @@ function DaftarTurnamen() {
               </button>
               <button
                 type="button"
-                className="sq-btn primary"
+                className="tr-done-btn primary"
                 onClick={() =>
                   navigate(`/pendaftaran/${done.registration.id}`, {
                     replace: true,
