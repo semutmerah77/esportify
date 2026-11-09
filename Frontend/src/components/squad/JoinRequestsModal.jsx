@@ -48,7 +48,13 @@ function JoinRequestsModal({ squad, onClose, onChanged }) {
         req.id,
       );
       setItems((list) => list.filter((r) => r.id !== req.id));
-      setMessage({ text: res.message, type: "" });
+      // Diterima: sebut username player. Ditolak: tetap pesan dari BE.
+      setMessage({
+        text: accept
+          ? `${req.username} berhasil menjadi anggota squad.`
+          : res.message,
+        type: "",
+      });
       onChanged(); // muat ulang detail squad (jumlah anggota & badge permintaan)
     } catch (err) {
       // 404 = sudah diproses: kartunya dihapus dari daftar

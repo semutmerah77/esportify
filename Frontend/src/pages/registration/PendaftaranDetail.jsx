@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Icon from "../../components/icon";
 import initials from "../../components/squad/initials";
-import { getTournamentDetail } from "../../services/tournamentApi";
 import { MemberGrid, StatusPill } from "../../components/registration/RegParts";
-import {
-  getProofBlob,
-  getRegistration,
-  rupiah,
-} from "../../services/tournamentRegApi";
+import { getTournamentDetail } from "../../services/tournamentApi";
+import { getRegistration, rupiah } from "../../services/tournamentRegApi";
 import "../../styles/turnamen-daftar.css";
 
 function PendaftaranDetail() {
@@ -19,8 +15,6 @@ function PendaftaranDetail() {
   const [reg, setReg] = useState(null);
   const [missing, setMissing] = useState(false);
   const [error, setError] = useState("");
-  const [proof, setProof] = useState(null); // { url, type }
-  const [proofError, setProofError] = useState("");
   const [game, setGame] = useState("");
 
   useEffect(() => {
@@ -44,24 +38,6 @@ function PendaftaranDetail() {
       .catch(() => {});
     return () => {
       off = true;
-    };
-  }, [reg]);
-
-  // Bukti pembayaran: ambil sebagai blob (butuh token), bebaskan saat unmount
-  useEffect(() => {
-    if (!reg?.hasProof || !reg.proofUrl) return undefined;
-    let off = false;
-    let objectUrl = null;
-    getProofBlob(reg.proofUrl)
-      .then((p) => {
-        objectUrl = p.url;
-        if (off) URL.revokeObjectURL(p.url);
-        else setProof(p);
-      })
-      .catch((err) => !off && setProofError(err.message));
-    return () => {
-      off = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [reg]);
 
@@ -134,32 +110,6 @@ function PendaftaranDetail() {
 
         <b className="tr-label">Daftar Anggota (saat mendaftar):</b>
         <MemberGrid members={reg.members} meName={user?.username} />
-
-        {reg.hasProof && (
-          <>
-            <b className="tr-label">Bukti Pembayaran:</b>
-            {proofError && <p className="sq-err">{proofError}</p>}
-            {proof?.type === "application/pdf" && (
-              <a
-                className="sq-btn outline tr-link"
-                href={proof.url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Buka Bukti Pembayaran (PDF)
-              </a>
-            )}
-            {proof && proof.type !== "application/pdf" && (
-              <a href={proof.url} target="_blank" rel="noreferrer">
-                <img
-                  className="tr-proof"
-                  src={proof.url}
-                  alt="Bukti pembayaran"
-                />
-              </a>
-            )}
-          </>
-        )}
       </section>
     </div>
   );
