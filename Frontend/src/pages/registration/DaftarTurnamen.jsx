@@ -125,6 +125,32 @@ function DaftarTurnamen() {
     </div>
   );
 
+    // Penyelenggara tidak bisa mendaftar di turnamennya sendiri
+  if (t.state === "penyelenggara" || choices.organizer) {
+    return (
+      <div className="sq-page tr-page">
+        {back}
+        {titleRow}
+        {head}
+        <section className="tr-card tr-info">
+          <div className="tr-info-head">
+            <span className="tr-info-ic">
+              <Icon name="lock" size={18} />
+            </span>
+            <h3>Kamu adalah penyelenggara turnamen ini</h3>
+          </div>
+          <p>
+            Penyelenggara tidak dapat mendaftar pada turnamen yang
+            diselenggarakannya.
+          </p>
+          <Link className="sq-btn outline tr-link" to="/turnamen/kelola">
+            Kelola Turnamen
+          </Link>
+        </section>
+      </div>
+    );
+  }
+
   // Sudah terdaftar (menunggu / diterima)
   if (t.state === "status") {
     const r = t.reg;

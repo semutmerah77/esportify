@@ -10,6 +10,9 @@ const STATUS_LABEL = {
 const TYPE_LABEL = { online: "Online", offline: "Offline" };
 
 function ManagedTournamentCard({ tournament: t }) {
+  const filled = t.filled ?? null; // peserta terdaftar (slot_terisi)
+  const pending = t.pendingVerify ?? null; // pendaftar menunggu verifikasi
+
   return (
     <article className="t-card">
       <div className="t-card-head">
@@ -22,7 +25,7 @@ function ManagedTournamentCard({ tournament: t }) {
         </span>
       </div>
 
-      <dl className="t-stats">
+      <dl className="t-stats t-stats-5">
         <div>
           <dt>Jadwal pendaftaran ditutup</dt>
           <dd>{longDate(t.registrationCloses)}</dd>
@@ -36,8 +39,14 @@ function ManagedTournamentCard({ tournament: t }) {
           <dd>{TYPE_LABEL[t.type] ?? "-"}</dd>
         </div>
         <div>
-          <dt>Kuota</dt>
-          <dd>{t.capacity ?? "-"} tim</dd>
+          <dt>Peserta terdaftar</dt>
+          <dd>
+            {filled ?? "-"}/{t.capacity ?? "-"} tim
+          </dd>
+        </div>
+        <div>
+          <dt>Perlu diverifikasi</dt>
+          <dd>{pending === null ? "-" : `${pending} Pendaftar`}</dd>
         </div>
       </dl>
 

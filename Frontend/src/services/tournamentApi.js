@@ -30,6 +30,8 @@ export async function getManagedTournaments() {
       matchDate: p.jadwal_main ?? "",
       type: String(p.tipe_turnamen ?? "").toLowerCase(),
       capacity: p.slot ?? null,
+      filled: t.slot_terisi ?? p.slot_terisi ?? null,
+      pendingVerify: t.jumlah_perlu_verifikasi ?? null,
     };
   });
 }

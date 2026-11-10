@@ -2297,3 +2297,23 @@
 .guest-gate-primary:hover {
   background: var(--blue-hover);
 }
+
+/* Kartu Kelola Turnamen: 5 kolom + tombol biru terang */
+.t-stats.t-stats-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+.t-card .t-btn-primary {
+  background: var(--blue);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+.t-card .t-btn-primary:hover {
+  background: var(--blue-hover);
+}
+@media (max-width: 900px) {
+  .t-stats.t-stats-5 {
+    grid-template-columns: repeat(2, 1fr);
+    text-align: left;
+  }
+}

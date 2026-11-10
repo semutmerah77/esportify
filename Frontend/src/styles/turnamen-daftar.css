@@ -829,6 +829,25 @@ a.td-register {
 .tr-pillbtn.danger:hover {
   background: #451a1a;
 }
+
+.tr-organizer-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 16px;
+  border: 1px solid #2a3547;
+  border-radius: 10px;
+  background: #0f1524;
+  box-shadow: 0 8px 20px -6px rgba(59, 130, 246, 0.45);
+  font-size: 17px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
 @media (max-width: 640px) {
   .tr-filerow {
     flex-wrap: wrap;
