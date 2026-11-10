@@ -62,6 +62,15 @@ function TournamentDetail() {
       );
     }
 
+    // Penyelenggara: tombol daftar diganti keterangan
+    if (reg.state === "penyelenggara") {
+      return (
+        <div className="tr-organizer-box">
+          <Icon name="lock" size={18} /> {reg.note}
+        </div>
+      );
+    }
+
     if (reg.state === "status") {
       return (
         <div className="tr-detail-action">

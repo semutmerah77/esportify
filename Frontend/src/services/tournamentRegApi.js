@@ -12,6 +12,14 @@ export const STATUS = {
 // { state: "daftar" | "status" | "ditutup" | "penuh", reg, note }
 export function getRegistrationState(d) {
   const p = d?.pengajuan ?? {};
+  // Penyelenggara tidak boleh mendaftar di turnamennya sendiri
+  if (d?.is_penyelenggara === true) {
+    return {
+      state: "penyelenggara",
+      reg: null,
+      note: "Anda adalah penyelenggara turnamen ini",
+    };
+  }
   const reg = d?.pendaftaran_saya ?? null;
   const open = (d?.pendaftaran_terbuka ?? p.pendaftaran_terbuka) !== false;
   const full = p.slot_penuh === true;
@@ -90,6 +98,7 @@ export async function getSquadChoices(id) {
     })),
     paid: res?.meta?.jenis_biaya === "berbayar",
     message: res?.message || "",
+    organizer: res?.meta?.is_penyelenggara === true,
   };
 }
 
