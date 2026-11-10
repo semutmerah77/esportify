@@ -82,6 +82,8 @@ class RolePermissionSeeder extends Seeder
             'alihkan_leader_squad',
             'daftar_turnamen',
             'lihat_pendaftaran_turnamen',
+            'kelola_pendaftaran_turnamen',
+            'selesaikan_turnamen',
         ];
 
         $admin = Role::findByName('admin', 'web');

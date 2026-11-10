@@ -45,6 +45,7 @@ use App\Http\Controllers\Api\Admin\KategoriController;
 use App\Http\Controllers\Api\LokasiController;
 use App\Http\Controllers\Api\TurnamenController;
 use App\Http\Controllers\Player\PendaftaranTurnamenController;
+use App\Http\Controllers\Player\KelolaPendaftaranTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
 // ==========================================
@@ -398,6 +399,51 @@ Route::middleware('auth:sanctum')->group(function () {
             ]);
 
         });
+
+        // ==========================================
+        // MODUL 3: VERIFIKASI PENDAFTARAN (PB-10)
+        // & SELESAIKAN TURNAMEN / BUKA ROSTER (PB-09)
+        // Hanya penyelenggara turnamen tersebut (dicek di controller)
+        // ==========================================
+
+        Route::middleware('permission:kelola_pendaftaran_turnamen')->group(function () {
+
+            Route::get('/turnamen-kelolaan/{id}/pendaftaran', [
+                KelolaPendaftaranTurnamenController::class,
+                'index'
+            ])->whereNumber('id');
+
+            Route::get('/turnamen-kelolaan/{id}/pendaftaran/{idPendaftaran}', [
+                KelolaPendaftaranTurnamenController::class,
+                'show'
+            ])->whereNumber(['id', 'idPendaftaran']);
+
+            Route::get('/turnamen-kelolaan/{id}/pendaftaran/{idPendaftaran}/bukti-pembayaran', [
+                KelolaPendaftaranTurnamenController::class,
+                'lihatBukti'
+            ])->whereNumber(['id', 'idPendaftaran']);
+
+            Route::post('/turnamen-kelolaan/{id}/pendaftaran/{idPendaftaran}/terima', [
+                KelolaPendaftaranTurnamenController::class,
+                'terima'
+            ])->whereNumber(['id', 'idPendaftaran']);
+
+            Route::post('/turnamen-kelolaan/{id}/pendaftaran/{idPendaftaran}/tolak', [
+                KelolaPendaftaranTurnamenController::class,
+                'tolak'
+            ])->whereNumber(['id', 'idPendaftaran']);
+
+            Route::get('/turnamen-kelolaan/{id}/peserta', [
+                KelolaPendaftaranTurnamenController::class,
+                'peserta'
+            ])->whereNumber('id');
+
+        });
+
+        Route::post('/turnamen-kelolaan/{id}/selesaikan', [
+            KelolaPendaftaranTurnamenController::class,
+            'selesaikan'
+        ])->whereNumber('id')->middleware('permission:selesaikan_turnamen');
 
 
         // Mengubah pengajuan ketika mendapatkan kesempatan revisi

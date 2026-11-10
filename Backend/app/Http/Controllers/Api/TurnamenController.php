@@ -17,8 +17,14 @@ class TurnamenController extends Controller
     /**
      * Satu aturan status untuk list dan detail.
      */
-    private function hitungStatus($jadwalMain): string
+    private function hitungStatus($jadwalMain, ?string $statusTersimpan = null): string
     {
+        // PB-09: turnamen yang sudah diselesaikan penyelenggara
+        // selalu berstatus "selesai".
+        if ($statusTersimpan === 'selesai') {
+            return 'selesai';
+        }
+
         if (!$jadwalMain) {
             return 'pendaftaran';
         }
@@ -62,7 +68,7 @@ class TurnamenController extends Controller
 
                 return [
                     'id_turnamen' => $item->id_turnamen,
-                    'status' => $this->hitungStatus($pengajuan->jadwal_main),
+                    'status' => $this->hitungStatus($pengajuan->jadwal_main, $item->status),
                     'created_at' => $item->created_at,
 
                     'pengajuan' => [
@@ -107,7 +113,7 @@ class TurnamenController extends Controller
                             ]
                             : null,
 
-                        'pendanaan' => $pendanaan
+                            'pendanaan' => $pendanaan
                             ? [
                                 'jenis_biaya' => $pendanaan->jenis_biaya,
                                 'biaya_pendaftaran' => $pendanaan->biaya_pendaftaran,
@@ -244,7 +250,7 @@ class TurnamenController extends Controller
         }
 
         // Status dihitung dengan aturan yang sama seperti list.
-        $status = $this->hitungStatus($pengajuan->jadwal_main);
+        $status = $this->hitungStatus($pengajuan->jadwal_main, $turnamen->status);
         
         // US27: slot terisi = pendaftaran menunggu + diterima.
         // Pendaftaran ditolak tidak dihitung (slot kembali).
