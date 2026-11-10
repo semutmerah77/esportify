@@ -7,6 +7,7 @@ use App\Models\Turnamen;
 use App\Models\PendaftaranTurnamen;
 use App\Models\Player;
 use App\Models\Penyelenggara;
+use App\Services\PendaftaranTurnamenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
@@ -315,6 +316,11 @@ class TurnamenController extends Controller
                         ]
                         : null,
                 ],
+                // true = user login adalah penyelenggara turnamen ini,
+                // FE menyembunyikan form/tombol daftar.
+                'is_penyelenggara' => app(PendaftaranTurnamenService::class)
+                    ->isPenyelenggara($turnamen, $request->user()?->player),
+
                 // Pendaftaran aktif yang memuat Player login (null kalau belum).
                 'pendaftaran_saya' => $this->pendaftaranSaya($request, $turnamen->id_turnamen),
             ],

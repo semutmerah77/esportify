@@ -7,7 +7,7 @@ use App\Models\AnggotaPendaftaranTurnamen;
 use App\Models\PendaftaranTurnamen;
 use App\Models\Squad;
 use App\Models\Turnamen;
-use Carbon\Carbon;
+use App\Services\PendaftaranTurnamenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\Validator;
 
 class PendaftaranTurnamenController extends Controller
 {
+    public function __construct(
+        private PendaftaranTurnamenService $service
+    ) {
+    }
+
     /**
      * GET /turnamen/{id}/squad-saya
      * Daftar Squad milik Player yang bisa dipilih untuk mendaftar (US20).
@@ -37,22 +42,11 @@ class PendaftaranTurnamenController extends Controller
             ->orderBy('nama_squad')
             ->get();
 
-        $alasanTurnamen = $this->alasanTurnamenTertutup($turnamen);
-        $sudahTerdaftar = $this->pendaftaranAktifPlayer($turnamen->id_turnamen, $player->id_player);
-        $min = $this->minAnggota();
+        $min = $this->service->minAnggota();
 
-        $data = $squads->map(function (Squad $squad) use ($turnamen, $player, $alasanTurnamen, $sudahTerdaftar, $min) {
-            $jumlah = $squad->anggotaAktif->count();
-
-            $pendaftaranSquad = PendaftaranTurnamen::aktif()
-                ->where('id_turnamen', $turnamen->id_turnamen)
-                ->where('id_squad', $squad->id_squad)
-                ->first();
-
-            $alasan = ($pendaftaranSquad ? 'Squad sudah terdaftar pada turnamen ini.' : null)
-                ?? $alasanTurnamen
-                ?? ($sudahTerdaftar ? 'Anda sudah terdaftar pada turnamen ini melalui Squad lain.' : null)
-                ?? ($jumlah < $min ? "Jumlah anggota Squad belum memenuhi syarat minimal {$min} anggota." : null);
+        $data = $squads->map(function (Squad $squad) use ($turnamen, $player, $min) {
+            $alasan = $this->service->alasanSquadTidakBisaDaftar($turnamen, $squad, $player);
+            $pendaftaranSquad = $this->service->pendaftaranAktifSquad($turnamen, $squad);
 
             return [
                 'id_squad' => $squad->id_squad,
@@ -61,7 +55,7 @@ class PendaftaranTurnamenController extends Controller
                 'logo_squad' => $squad->logo_squad,
                 'logo_url' => $this->fileUrl($squad->logo_squad),
                 'is_leader' => $squad->isLeader($player),
-                'jumlah_anggota' => $jumlah,
+                'jumlah_anggota' => $squad->anggotaAktif->count(),
                 'min_anggota' => $min,
                 'id_pendaftaran' => $pendaftaranSquad?->id_pendaftaran,
                 'bisa_daftar' => $alasan === null,
@@ -78,6 +72,7 @@ class PendaftaranTurnamenController extends Controller
             'meta' => [
                 'min_anggota' => $min,
                 'jenis_biaya' => $turnamen->pengajuan->pendanaan?->jenis_biaya ?? 'gratis',
+                'is_penyelenggara' => $this->service->isPenyelenggara($turnamen, $player),
             ],
         ]);
     }
@@ -98,17 +93,18 @@ class PendaftaranTurnamenController extends Controller
             return $this->turnamenNotFound();
         }
 
-        // Cek turnamen masih buka sebelum validasi form, supaya user
-        // tidak diminta upload bukti untuk turnamen yang sudah tutup.
+        // Dicek sebelum validasi form supaya user tidak diminta upload
+        // bukti untuk turnamen yang tidak bisa ia daftari.
         // Tetap dicek ulang di dalam transaksi.
-        if ($alasan = $this->alasanTurnamenTertutup($turnamen)) {
-            return response()->json([
-                'success' => false,
-                'message' => $alasan,
-            ], 422);
+        if ($this->service->isPenyelenggara($turnamen, $player)) {
+            return $this->gagal('Penyelenggara tidak dapat mendaftar pada turnamen yang diselenggarakannya.');
         }
 
-        $berbayar = $this->isBerbayar($turnamen);
+        if ($alasan = $this->service->alasanTurnamenTertutup($turnamen)) {
+            return $this->gagal($alasan);
+        }
+
+        $berbayar = $this->service->isBerbayar($turnamen);
 
         $rules = ['id_squad' => ['required']];
         if ($berbayar) {
@@ -148,7 +144,7 @@ class PendaftaranTurnamenController extends Controller
                 // tidak bisa sama-sama mengambil slot terakhir.
                 Turnamen::whereKey($turnamen->id_turnamen)->lockForUpdate()->first();
 
-                $error = $this->validasiPendaftaran($turnamen, $squad, $player);
+                $error = $this->service->validasiPendaftaran($turnamen, $squad, $player);
                 if ($error) {
                     return ['error' => $error];
                 }
@@ -189,10 +185,7 @@ class PendaftaranTurnamenController extends Controller
                 Storage::disk('local')->delete($pathBukti);
             }
 
-            return response()->json([
-                'success' => false,
-                'message' => $hasil['error'],
-            ], 422);
+            return $this->gagal($hasil['error']);
         }
 
         $pendaftaran = $hasil['pendaftaran'];
@@ -321,105 +314,6 @@ class PendaftaranTurnamenController extends Controller
     }
 
     // ==========================================
-    // VALIDASI
-    // ==========================================
-
-    /**
-     * Mengembalikan pesan error pertama, atau null kalau lolos.
-     * Dipanggil di dalam transaksi setelah baris turnamen dikunci.
-     */
-    private function validasiPendaftaran(Turnamen $turnamen, Squad $squad, $player): ?string
-    {
-        if ($squad->status_squad !== 'aktif') {
-            return 'Squad tidak aktif.';
-        }
-
-        if (!$squad->isAnggotaAktif($player)) {
-            return 'Gabung ke squad terlebih dahulu untuk melanjutkan proses pendaftaran';
-        }
-
-        // US25: Squad yang sama tidak boleh mendaftar dua kali
-        // (termasuk lewat anggota yang berbeda).
-        $squadSudahDaftar = PendaftaranTurnamen::aktif()
-            ->where('id_turnamen', $turnamen->id_turnamen)
-            ->where('id_squad', $squad->id_squad)
-            ->exists();
-
-        if ($squadSudahDaftar) {
-            return 'Squad sudah terdaftar pada turnamen ini.';
-        }
-
-        if ($alasan = $this->alasanTurnamenTertutup($turnamen)) {
-            return $alasan;
-        }
-
-        // Pendaftar sendiri sudah ada di roster pendaftaran lain.
-        if ($this->pendaftaranAktifPlayer($turnamen->id_turnamen, $player->id_player)) {
-            return 'Anda sudah terdaftar pada turnamen ini melalui Squad lain.';
-        }
-
-        $roster = $squad->anggotaAktif()->pluck('id_player');
-
-        $min = $this->minAnggota();
-        if ($roster->count() < $min) {
-            return "Jumlah anggota Squad belum memenuhi syarat minimal {$min} anggota.";
-        }
-
-        // US26: tidak ada anggota roster yang sudah terdaftar lewat Squad lain.
-        $bentrok = AnggotaPendaftaranTurnamen::with('player.user')
-            ->whereIn('id_player', $roster)
-            ->whereHas('pendaftaran', fn ($q) => $q->aktif()->where('id_turnamen', $turnamen->id_turnamen))
-            ->get();
-
-        if ($bentrok->isNotEmpty()) {
-            $nama = $bentrok->map(fn ($a) => $a->player?->user?->username)->filter()->unique()->implode(', ');
-
-            return "Pendaftaran ditolak. Anggota berikut sudah terdaftar pada turnamen ini melalui Squad lain: {$nama}.";
-        }
-
-        return null;
-    }
-
-    /**
-     * Alasan turnamen tidak menerima pendaftaran, atau null kalau masih buka.
-     */
-    private function alasanTurnamenTertutup(Turnamen $turnamen): ?string
-    {
-        $pengajuan = $turnamen->pengajuan;
-
-        if ($pengajuan->jadwal_main && now()->gte(Carbon::parse($pengajuan->jadwal_main))) {
-            return 'Turnamen tidak sedang membuka pendaftaran.';
-        }
-
-        if ($pengajuan->jadwal_pendaftaran_tutup && now()->gte(Carbon::parse($pengajuan->jadwal_pendaftaran_tutup))) {
-            return 'Pendaftaran turnamen sudah ditutup.';
-        }
-
-        if ($this->sisaSlot($turnamen) <= 0) {
-            return 'Slot turnamen sudah penuh.';
-        }
-
-        return null;
-    }
-
-    // US27: slot dihitung dari pendaftaran menunggu + diterima.
-    private function sisaSlot(Turnamen $turnamen): int
-    {
-        return max(0, (int) $turnamen->pengajuan->slot - $turnamen->slotTerisi());
-    }
-
-    /**
-     * Pendaftaran aktif (menunggu/diterima) yang roster-nya memuat Player ini.
-     */
-    private function pendaftaranAktifPlayer(int $idTurnamen, int $idPlayer): ?PendaftaranTurnamen
-    {
-        return PendaftaranTurnamen::aktif()
-            ->where('id_turnamen', $idTurnamen)
-            ->whereHas('anggota', fn ($q) => $q->where('id_player', $idPlayer))
-            ->first();
-    }
-
-    // ==========================================
     // HELPER
     // ==========================================
 
@@ -494,14 +388,12 @@ class PendaftaranTurnamenController extends Controller
         ];
     }
 
-    private function isBerbayar(Turnamen $turnamen): bool
+    private function gagal(string $pesan)
     {
-        return $turnamen->pengajuan?->pendanaan?->jenis_biaya === 'berbayar';
-    }
-
-    private function minAnggota(): int
-    {
-        return (int) config('esportify.min_anggota_turnamen', 5);
+        return response()->json([
+            'success' => false,
+            'message' => $pesan,
+        ], 422);
     }
 
     private function fileUrl(?string $path): ?string
@@ -541,4 +433,3 @@ class PendaftaranTurnamenController extends Controller
         ], 404);
     }
 }
-?>
