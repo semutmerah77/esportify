@@ -848,6 +848,362 @@ a.td-register {
   cursor: not-allowed;
 }
 
+/* ===== Turnamen Saya: kartu, tabel, nomor halaman — prefix mytour- ===== */
+.mytour-title {
+  margin: 0 0 16px;
+  font-size: 24px;
+  color: #fff;
+}
+.mytour-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.mytour-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(360px, 100%);
+  padding: 0 14px;
+  height: 42px;
+  border: 1px solid #1f2a3d;
+  border-radius: 8px;
+  background: #0f1524;
+  color: #94a3b8;
+}
+.mytour-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+}
+.mytour-search input::placeholder {
+  color: #7b8798;
+}
+.mytour-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mytour-filter {
+  padding: 6px 16px;
+  border: 1px solid #2a3547;
+  border-radius: 999px;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.mytour-filter:hover:not(.on) {
+  background: #1a2336;
+}
+.mytour-filter.on {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+}
+
+.mytour-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mytour-card {
+  display: block;
+  padding: 20px 22px;
+  border: 1px solid #1f2a3d;
+  border-radius: 12px;
+  background: #111827;
+  color: inherit;
+  text-decoration: none;
+}
+.mytour-card:hover {
+  border-color: #2f4468;
+}
+.mytour-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mytour-card-top h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+}
+.mytour-card-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.mytour-chevron {
+  display: inline-flex;
+  color: #94a3b8;
+  transform: rotate(180deg);
+}
+.mytour-card-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #7b8798;
+}
+.mytour-card-sub i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #475569;
+}
+.mytour-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #1f2a3d;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.mytour-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mytour-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.mytour-pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.mytour-pill.green {
+  color: #4ade80;
+  border-color: #14532d;
+  background: rgba(22, 101, 52, 0.25);
+}
+.mytour-pill.yellow {
+  color: #fbbf24;
+  border-color: #5b4511;
+  background: rgba(146, 64, 14, 0.25);
+}
+.mytour-pill.red {
+  color: #f87171;
+  border-color: #5b1a1a;
+  background: rgba(127, 29, 29, 0.3);
+}
+.mytour-pill.gray {
+  color: #94a3b8;
+  border-color: #334155;
+  background: rgba(71, 85, 105, 0.25);
+}
+
+.mytour-squad {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #fff;
+}
+.mytour-squad-ic {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #1e2a4a;
+  color: #7aa2ff;
+}
+
+/* Tabel Status Pendaftaran */
+.mytour-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #1f2a3d;
+  border-radius: 14px;
+  background: #0f1524;
+}
+.mytour-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+.mytour-table th {
+  padding: 16px 24px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #8b95a7;
+}
+.mytour-table td {
+  padding: 14px 24px;
+  border-top: 1px solid #1f2a3d;
+  vertical-align: middle;
+}
+.mytour-table td b {
+  display: block;
+  font-size: 14px;
+  color: #fff;
+}
+.mytour-table td small {
+  font-size: 12px;
+  color: #7b8798;
+}
+.mytour-action {
+  text-align: right;
+}
+.mytour-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #2a3547;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.mytour-view-btn:hover {
+  background: #1a2336;
+}
+
+/* Nomor halaman */
+.mytour-pager {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 32px 0 8px;
+}
+.mytour-page {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 52px;
+  border: 1px solid #1f2a3d;
+  border-radius: 6px;
+  background: #1a2336;
+  color: #fff;
+  font-size: 18px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.mytour-page:hover:not(.on):not(:disabled) {
+  background: #222d45;
+}
+.mytour-page.on {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  font-weight: 600;
+}
+.mytour-page.arrow {
+  background: transparent;
+  border-color: #2a3547;
+}
+.mytour-page.arrow.next svg {
+  transform: rotate(180deg);
+}
+.mytour-page:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Kartu kosong Turnamen Saya */
+.mytour-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 456px;
+  padding: 32px 20px;
+  border: 1px solid #1f2a3d;
+  border-radius: 20px;
+  background: #0f192b;
+  text-align: center;
+}
+.mytour-empty-ic {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: #16213a;
+  color: #3b82f6;
+}
+.mytour-empty b {
+  font-size: 16px;
+  color: #fff;
+}
+.mytour-empty p {
+  max-width: 300px;
+  margin: 8px 0 20px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #7b8798;
+}
+.mytour-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+.mytour-empty-btn:hover {
+  background: #1d4ed8;
+}
+
+/* Versi ringkas: "Turnamen tidak ditemukan" */
+.mytour-empty.compact {
+  min-height: 0;
+  padding: 36px 20px;
+}
+.mytour-empty.compact .mytour-empty-ic {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+}
+.mytour-empty.compact p {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .mytour-page {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+}
+
 @media (max-width: 640px) {
   .tr-filerow {
     flex-wrap: wrap;

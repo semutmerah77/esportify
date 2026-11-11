@@ -3,17 +3,21 @@ import Icon from "../icon";
 import {
   acceptJoinRequest,
   getJoinRequests,
+  isRosterLocked,
   rejectJoinRequest,
 } from "../../services/squadApi";
+import RosterLockNotice from "./RosterLockNotice";
 
 // Daftar permintaan bergabung (khusus Leader): Terima atau Tolak.
-function JoinRequestsModal({ squad, onClose, onChanged }) {
+function JoinRequestsModal({ squad, locked = false, onClose, onChanged }) {
   const apiId = squad.squadId ?? squad.id;
   const [items, setItems] = useState([]);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [busyId, setBusyId] = useState(null);
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [lockedNow, setLockedNow] = useState(false);
+  const isLocked = locked || lockedNow;
 
   useEffect(() => {
     let off = false;
@@ -58,6 +62,7 @@ function JoinRequestsModal({ squad, onClose, onChanged }) {
       onChanged(); // muat ulang detail squad (jumlah anggota & badge permintaan)
     } catch (err) {
       // 404 = sudah diproses: kartunya dihapus dari daftar
+      if (isRosterLocked(err)) setLockedNow(true);
       if (err.status === 404)
         setItems((list) => list.filter((r) => r.id !== req.id));
       setMessage({
@@ -123,7 +128,7 @@ function JoinRequestsModal({ squad, onClose, onChanged }) {
                 <button
                   type="button"
                   className="sqr-btn accept"
-                  disabled={busyId === req.id || squad.full}
+                  disabled={busyId === req.id || squad.full || isLocked}
                   title={squad.full ? "Squad sudah penuh" : undefined}
                   onClick={() => answer(req, true)}
                 >
@@ -133,6 +138,7 @@ function JoinRequestsModal({ squad, onClose, onChanged }) {
             </li>
           ))}
         </ul>
+        {isLocked && <RosterLockNotice />}
 
         {message.text && (
           <p

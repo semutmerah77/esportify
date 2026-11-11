@@ -14,6 +14,7 @@ import JoinRequestsModal from "../../components/squad/JoinRequestsModal";
 import JoinSquadDialog from "../../components/squad/JoinSquadDialog";
 import SuccessDialog from "../../components/squad/SuccessDialog";
 import { getRegistrationState } from "../../services/tournamentRegApi";
+import { isSquadRosterLocked } from "../../services/tournamentManageApi";
 import {
   getSquadDetail,
   isRosterLocked,
@@ -54,6 +55,7 @@ function SquadDetail() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState(""); // pesan gagal
+  const [rosterLocked, setRosterLocked] = useState(false);
   // Popup berhasil. Bisa dibawa dari halaman lain lewat navigate(..., { state: { notice } })
   const [notice, setNotice] = useState(location.state?.notice || "");
 
@@ -97,6 +99,17 @@ function SquadDetail() {
     const t = setTimeout(() => setToast(""), 3000);
     return () => clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => {
+    if (!squad || squad.viewerRole !== "leader") return undefined;
+    let off = false;
+    isSquadRosterLocked(squad.squadId ?? squad.id)
+      .then((l) => !off && setRosterLocked(l))
+      .catch(() => {});
+    return () => {
+      off = true;
+    };
+  }, [squad?.squadId, squad?.id, squad?.viewerRole]);
 
   const back = (
     <button type="button" className="d-back" onClick={() => navigate(-1)}>
@@ -249,6 +262,7 @@ function SquadDetail() {
       ...m,
       isMe: Boolean(user?.username) && m.username === user.username,
     })),
+    locked: Boolean(squad.locked) || rosterLocked,
   };
 
   return (
@@ -346,12 +360,17 @@ function SquadDetail() {
       )}
 
       {inviting && (
-        <InvitePlayerModal squad={squad} onClose={() => setInviting(false)} />
+        <InvitePlayerModal
+          squad={squad}
+          locked={view.locked}
+          onClose={() => setInviting(false)}
+        />
       )}
 
       {requestsOpen && (
         <JoinRequestsModal
           squad={squad}
+          locked={view.locked}
           onClose={() => setRequestsOpen(false)}
           onChanged={reload}
         />
@@ -380,7 +399,7 @@ function SquadDetail() {
       {kicking && (
         <KickMemberDialog
           member={kicking}
-          locked={squad.locked}
+          locked={view.locked}
           loading={busy}
           error={kickError}
           onConfirm={handleKick}

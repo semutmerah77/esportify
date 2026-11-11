@@ -134,7 +134,11 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
         item.to ===
         (tournamentFrom() === "saya" ? "/turnamen/saya" : "/turnamen/cari")
       );
-
+    if (
+      item.to === "/turnamen/kelola" &&
+      /^\/turnamen\/[^/]+\/kelola/.test(pathname)
+    )
+      return true;
     return (
       pathname === item.to ||
       (item.also ?? []).some((path) => pathname.startsWith(path))

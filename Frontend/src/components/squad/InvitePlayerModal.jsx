@@ -6,10 +6,11 @@ import {
   invitePlayer,
   searchPlayers,
 } from "../../services/squadApi";
+import RosterLockNotice from "./RosterLockNotice";
 
 const DEBOUNCE_MS = 400;
 
-function InvitePlayerModal({ squad, onClose }) {
+function InvitePlayerModal({ squad, locked = false, onClose }) {
   const [tab, setTab] = useState("cari"); // "cari" | "teman"
   const [input, setInput] = useState("");
   const [items, setItems] = useState([]);
@@ -89,6 +90,33 @@ function InvitePlayerModal({ squad, onClose }) {
       setSending(null);
     }
   };
+
+  if (locked) {
+    return (
+      <div
+        className="sq-ov"
+        onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+      >
+        <div className="sqp-modal" role="dialog" aria-modal="true">
+          <div className="sqp-head">
+            <h2>Tambah Anggota</h2>
+            <button
+              type="button"
+              className="sqp-close"
+              aria-label="Tutup"
+              onClick={onClose}
+            >
+              <Icon name="x" size={16} />
+            </button>
+          </div>
+          <div className="sqp-body lock">
+            <RosterLockNotice />
+          </div>
+          <div className="sqp-foot" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

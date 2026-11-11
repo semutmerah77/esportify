@@ -2,6 +2,7 @@ import { apiRequest } from "./httpClient";
 import { toMediaUrl } from "../utils/media";
 import { newSponsor } from "../utils/sponsor";
 import { newRincian, newRincianRows } from "../utils/rincian";
+import { getRegistrationMeta } from "./tournamentManageApi";
 
 // Semua fungsi di file ini SELALU memakai backend (tanpa mock).
 // Respons player: { success, message, data }.
@@ -14,10 +15,9 @@ const listOf = (response) => {
 const FUNDING_IDS = { sponsor: 1, dana_pribadi: 2, biaya_peserta: 3 };
 
 // ----- Kelola Turnamen -----
-// GET /api/turnamen-kelolaan. Daftar kosong = 200 dengan data: [] (bukan error).
 export async function getManagedTournaments() {
   const response = await apiRequest("/turnamen-kelolaan");
-  return listOf(response).map((t) => {
+  const list = listOf(response).map((t) => {
     const p = t.pengajuan ?? {};
     return {
       id: Number(t.id_turnamen),
@@ -25,15 +25,21 @@ export async function getManagedTournaments() {
       game: p.game?.nama_game ?? "-",
       status: String(t.status ?? "")
         .trim()
-        .toLowerCase(), // pendaftaran | berlangsung | selesai
+        .toLowerCase(),
       registrationCloses: p.jadwal_pendaftaran_tutup ?? "",
       matchDate: p.jadwal_main ?? "",
       type: String(p.tipe_turnamen ?? "").toLowerCase(),
       capacity: p.slot ?? null,
-      filled: t.slot_terisi ?? p.slot_terisi ?? null,
-      pendingVerify: t.jumlah_perlu_verifikasi ?? null,
+      filled: null,
+      pendingVerify: null,
     };
   });
+  const metas = await Promise.all(list.map((t) => getRegistrationMeta(t.id)));
+  return list.map((t, i) => ({
+    ...t,
+    filled: metas[i]?.filled ?? null,
+    pendingVerify: metas[i]?.waiting ?? null,
+  }));
 }
 
 // ----- Status Pengajuan -----
