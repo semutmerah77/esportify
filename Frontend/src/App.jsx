@@ -28,6 +28,7 @@ import SquadDetail from "./pages/squad/SquadDetail";
 import DaftarTurnamen from "./pages/registration/DaftarTurnamen";
 import PendaftaranDetail from "./pages/registration/PendaftaranDetail";
 import TurnamenSaya from "./pages/registration/TurnamenSaya";
+import KelolaTurnamen from "./pages/kelola/KelolaTurnamen";
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
             <Route path="/turnamen/cari/:id" element={<TournamentDetail />} />
             <Route path="/turnamen/buat" element={<CreateTournament />} />
             <Route path="/turnamen/kelola" element={<ManageTournaments />} />
+            <Route path="/turnamen/:id/kelola" element={<KelolaTurnamen />} />
             <Route
               path="/turnamen/status-pengajuan"
               element={<SubmissionStatus />}
