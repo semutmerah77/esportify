@@ -15,4 +15,3 @@ return [
     'min_anggota_turnamen' => (int) env('ESPORTIFY_MIN_ANGGOTA_TURNAMEN', 5),
 
 ];
-?>

@@ -12,8 +12,9 @@ use Illuminate\Support\Collection;
 
 /**
  * Satu tempat untuk semua aturan pendaftaran Squad ke turnamen
- * (PB-06, PB-07, PB-08). Dipakai oleh PendaftaranTurnamenController
- * dan TurnamenController supaya aturannya tidak dobel.
+ * (PB-06 s/d PB-10). Dipakai oleh PendaftaranTurnamenController,
+ * KelolaPendaftaranTurnamenController, dan TurnamenController
+ * supaya aturannya tidak dobel.
  */
 class PendaftaranTurnamenService
 {
@@ -68,15 +69,8 @@ class PendaftaranTurnamenService
         }
 
         // US26: tidak ada anggota roster yang sudah terdaftar lewat Squad lain.
-        $bentrok = AnggotaPendaftaranTurnamen::with('player.user')
-            ->whereIn('id_player', $roster)
-            ->whereHas('pendaftaran', fn ($q) => $q->aktif()->where('id_turnamen', $turnamen->id_turnamen))
-            ->get();
-
-        if ($bentrok->isNotEmpty()) {
-            $nama = $bentrok->map(fn ($a) => $a->player?->user?->username)->filter()->unique()->implode(', ');
-
-            return "Pendaftaran ditolak. Anggota berikut sudah terdaftar pada turnamen ini melalui Squad lain: {$nama}.";
+        if ($alasan = $this->alasanAnggotaSudahTerdaftar($turnamen, $roster)) {
+            return $alasan;
         }
 
         return null;
@@ -106,12 +100,38 @@ class PendaftaranTurnamenService
             return 'Anda sudah terdaftar pada turnamen ini melalui Squad lain.';
         }
 
+        // AD Pilih Squad: squad langsung tidak bisa dipilih kalau ada
+        // anggota yang sudah terdaftar bersama Squad lain.
+        if ($alasan = $this->alasanAnggotaSudahTerdaftar($turnamen, $roster)) {
+            return $alasan;
+        }
+
         $min = $this->minAnggota();
         if ($roster->count() < $min) {
             return "Jumlah anggota Squad belum memenuhi syarat minimal {$min} anggota.";
         }
 
         return null;
+    }
+
+    /**
+     * US26 / AD Pilih Squad:
+     * "[Nama] sudah terdaftar di turnamen ini bersama squad lain".
+     */
+    public function alasanAnggotaSudahTerdaftar(Turnamen $turnamen, Collection $roster): ?string
+    {
+        $bentrok = AnggotaPendaftaranTurnamen::with('player.user')
+            ->whereIn('id_player', $roster)
+            ->whereHas('pendaftaran', fn ($q) => $q->aktif()->where('id_turnamen', $turnamen->id_turnamen))
+            ->get();
+
+        if ($bentrok->isEmpty()) {
+            return null;
+        }
+
+        $nama = $bentrok->map(fn ($a) => $a->player?->user?->username)->filter()->unique()->implode(', ');
+
+        return "{$nama} sudah terdaftar di turnamen ini bersama squad lain";
     }
 
     // ==========================================
@@ -167,6 +187,10 @@ class PendaftaranTurnamenService
     public function alasanTurnamenTertutup(Turnamen $turnamen): ?string
     {
         $pengajuan = $turnamen->pengajuan;
+
+        if ($turnamen->status === 'selesai') {
+            return 'Turnamen sudah selesai.';
+        }
 
         if ($pengajuan->jadwal_main && now()->gte(Carbon::parse($pengajuan->jadwal_main))) {
             return 'Turnamen tidak sedang membuka pendaftaran.';
@@ -226,4 +250,124 @@ class PendaftaranTurnamenService
     {
         return $squad->anggotaAktif()->pluck('id_player');
     }
+
+    // ==========================================
+    // VERIFIKASI PENDAFTARAN (PB-10)
+    // ==========================================
+
+    /**
+     * Alasan pendaftaran tidak bisa diterima/ditolak, atau null kalau bisa.
+     */
+    public function alasanTidakBisaDiverifikasi(Turnamen $turnamen, PendaftaranTurnamen $pendaftaran): ?string
+    {
+        if ($pendaftaran->status_pendaftaran !== 'menunggu') {
+            return 'Pendaftaran sudah diverifikasi sebelumnya.';
+        }
+
+        if ($turnamen->status === 'selesai') {
+            return 'Turnamen sudah selesai.';
+        }
+
+        $jadwalMain = $turnamen->pengajuan?->jadwal_main;
+        if ($jadwalMain && now()->gte(Carbon::parse($jadwalMain))) {
+            return 'Turnamen sudah dimulai, pendaftaran tidak dapat diverifikasi lagi.';
+        }
+
+        return null;
+    }
+
+    /**
+     * US32: Squad ditetapkan sebagai peserta. Roster tetap terkunci.
+     */
+    public function terima(PendaftaranTurnamen $pendaftaran): PendaftaranTurnamen
+    {
+        $pendaftaran->update([
+            'status_pendaftaran' => 'diterima',
+            'tanggal_verifikasi' => now(),
+        ]);
+
+        return $pendaftaran;
+    }
+
+    /**
+     * US33: pendaftaran ditolak, slot kembali (tidak dihitung lagi)
+     * dan roster langsung dibuka (US29 kondisi 1).
+     */
+    public function tolak(PendaftaranTurnamen $pendaftaran, string $alasan): PendaftaranTurnamen
+    {
+        $now = now();
+
+        $pendaftaran->update([
+            'status_pendaftaran' => 'ditolak',
+            'alasan_penolakan' => $alasan,
+            'tanggal_verifikasi' => $now,
+            'status_roster' => 'terbuka',
+            'roster_unlocked_at' => $now,
+        ]);
+
+        return $pendaftaran;
+    }
+
+    // ==========================================
+    // SELESAIKAN TURNAMEN (PB-09)
+    // ==========================================
+
+    /**
+     * Alasan turnamen belum bisa diselesaikan, atau null kalau bisa.
+     *
+     * TODO Modul 4: tambahkan validasi seluruh pertandingan sudah punya
+     * hasil final dan tidak ada laporan pertandingan yang menunggu.
+     */
+    public function alasanTidakBisaDiselesaikan(Turnamen $turnamen): ?string
+    {
+        if ($turnamen->status === 'selesai') {
+            return 'Turnamen sudah diselesaikan.';
+        }
+
+        $jadwalMain = $turnamen->pengajuan?->jadwal_main;
+        if ($jadwalMain && now()->lt(Carbon::parse($jadwalMain))) {
+            return 'Turnamen belum dimulai, sehingga belum dapat diselesaikan.';
+        }
+
+        return null;
+    }
+
+    /**
+     * US29 kondisi 2: status turnamen jadi "selesai" dan seluruh roster
+     * Squad pada turnamen ini dibuka kembali.
+     * Pendaftaran yang masih "menunggu" otomatis ditolak supaya
+     * roster Squad-nya tidak terkunci selamanya.
+     * Harus dipanggil di dalam DB::transaction.
+     *
+     * @return array{roster_dibuka:int, otomatis_ditolak:int}
+     */
+    public function selesaikanTurnamen(Turnamen $turnamen): array
+    {
+        $now = now();
+
+        $otomatisDitolak = PendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
+            ->where('status_pendaftaran', 'menunggu')
+            ->update([
+                'status_pendaftaran' => 'ditolak',
+                'alasan_penolakan' => 'Turnamen telah selesai sebelum pendaftaran diverifikasi.',
+                'tanggal_verifikasi' => $now,
+                'updated_at' => $now,
+            ]);
+
+        $rosterDibuka = PendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
+            ->where('status_roster', 'terkunci')
+            ->update([
+                'status_roster' => 'terbuka',
+                'roster_unlocked_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+        $turnamen->update(['status' => 'selesai']);
+
+        return [
+            'roster_dibuka' => $rosterDibuka,
+            'otomatis_ditolak' => $otomatisDitolak,
+        ];
+    }
 }
+?>
