@@ -23,6 +23,8 @@ class PendaftaranTurnamen extends Model
         'id_squad',
         'id_turnamen',
         'id_player',
+        'nickname_game',
+        'uid_game',
         'bukti_pembayaran',
         'status_pendaftaran',
         'status_roster',

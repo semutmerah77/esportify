@@ -26,7 +26,7 @@ class PendaftaranTurnamenService
      * Mengembalikan pesan error pertama, atau null kalau lolos.
      * Dipanggil di dalam transaksi setelah baris turnamen dikunci.
      */
-    public function validasiPendaftaran(Turnamen $turnamen, Squad $squad, Player $player): ?string
+    public function validasiPendaftaran(Turnamen $turnamen, Squad $squad, Player $player, ?string $uidGame = null): ?string
     {
         if ($squad->status_squad !== 'aktif') {
             return 'Squad tidak aktif.';
@@ -73,7 +73,24 @@ class PendaftaranTurnamenService
             return $alasan;
         }
 
+         // UID game tidak boleh dipakai pendaftaran lain di turnamen yang sama.
+        if ($uidGame !== null && $this->uidGameSudahDipakai($turnamen, $uidGame)) {
+            return 'UID game sudah digunakan oleh pendaftaran lain di turnamen ini.';
+        }
+
         return null;
+    }
+
+    /**
+     * UID game dipakai pendaftaran aktif (menunggu/diterima) di turnamen ini.
+     * Pendaftaran ditolak tidak dihitung, jadi UID bisa dipakai lagi.
+     */
+    public function uidGameSudahDipakai(Turnamen $turnamen, string $uidGame): bool
+    {
+        return PendaftaranTurnamen::aktif()
+            ->where('id_turnamen', $turnamen->id_turnamen)
+            ->whereRaw('LOWER(uid_game) = ?', [mb_strtolower(trim($uidGame))])
+            ->exists();
     }
 
     /**

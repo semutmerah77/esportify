@@ -106,7 +106,12 @@ class PendaftaranTurnamenController extends Controller
 
         $berbayar = $this->service->isBerbayar($turnamen);
 
-        $rules = ['id_squad' => ['required']];
+        $rules = [
+            'id_squad' => ['required'],
+            'nickname_game' => ['required', 'string', 'max:50'],
+            'uid_game' => ['required', 'string', 'max:50'],
+        ];
+        
         if ($berbayar) {
             $rules['bukti_pembayaran'] = ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'];
             $rules['setuju_ketentuan'] = ['accepted'];
@@ -114,6 +119,10 @@ class PendaftaranTurnamenController extends Controller
 
         $validator = Validator::make($request->all(), $rules, [
             'id_squad.required' => 'Pilih Squad yang akan didaftarkan.',
+            'nickname_game.required' => 'Nickname game wajib diisi.',
+            'nickname_game.max' => 'Nickname game maksimal 50 karakter.',
+            'uid_game.required' => 'UID game wajib diisi.',
+            'uid_game.max' => 'UID game maksimal 50 karakter.',
             'bukti_pembayaran.required' => 'Harap isi persyaratan yang diperlukan',
             'bukti_pembayaran.file' => 'Bukti pembayaran harus berupa file.',
             'bukti_pembayaran.mimes' => 'Bukti pembayaran harus berformat JPG, JPEG, PNG, atau PDF.',
@@ -133,18 +142,25 @@ class PendaftaranTurnamenController extends Controller
             return $this->squadNotFound();
         }
 
+        $nickname = trim((string) $request->input('nickname_game'));
+        $uidGame = trim((string) $request->input('uid_game'));
+
+        if ($nickname === '' || $uidGame === '') {
+            return $this->gagal('Harap isi persyaratan yang diperlukan');
+        }
+
         // File disimpan dulu di luar transaksi, dihapus lagi kalau gagal.
         $pathBukti = $berbayar
             ? $request->file('bukti_pembayaran')->store('bukti-pembayaran', 'local')
             : null;
 
         try {
-            $hasil = DB::transaction(function () use ($turnamen, $squad, $player, $berbayar, $pathBukti) {
+            $hasil = DB::transaction(function () use ($turnamen, $squad, $player, $berbayar, $pathBukti, $nickname, $uidGame) {
                 // Kunci baris turnamen agar dua pendaftaran bersamaan
                 // tidak bisa sama-sama mengambil slot terakhir.
                 Turnamen::whereKey($turnamen->id_turnamen)->lockForUpdate()->first();
 
-                $error = $this->service->validasiPendaftaran($turnamen, $squad, $player);
+                $error = $this->service->validasiPendaftaran($turnamen, $squad, $player, $uidGame);
                 if ($error) {
                     return ['error' => $error];
                 }
@@ -154,6 +170,8 @@ class PendaftaranTurnamenController extends Controller
                     'id_squad' => $squad->id_squad,
                     'id_turnamen' => $turnamen->id_turnamen,
                     'id_player' => $player->id_player,
+                    'nickname_game' => $nickname,
+                    'uid_game' => $uidGame,
                     'bukti_pembayaran' => $pathBukti,
                     // Gratis langsung diterima, berbayar menunggu verifikasi.
                     'status_pendaftaran' => $berbayar ? 'menunggu' : 'diterima',
@@ -168,6 +186,7 @@ class PendaftaranTurnamenController extends Controller
                     AnggotaPendaftaranTurnamen::create([
                         'id_pendaftaran' => $pendaftaran->id_pendaftaran,
                         'id_player' => $idPlayer,
+                        'id_turnamen' => $turnamen->id_turnamen,
                     ]);
                 }
 
@@ -372,6 +391,10 @@ class PendaftaranTurnamenController extends Controller
                 'avatar_url' => $this->fileUrl($p->pendaftar?->avatar),
             ],
             'didaftarkan_oleh_saya' => (int) $p->id_player === (int) $player->id_player,
+            
+            // Akun game perwakilan untuk turnamen ini
+            'nickname_game' => $p->nickname_game,
+            'uid_game' => $p->uid_game,
 
             'anggota' => $p->anggota->map(fn ($a) => [
                 'id_player' => $a->id_player,

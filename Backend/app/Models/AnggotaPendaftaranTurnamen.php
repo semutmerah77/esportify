@@ -16,11 +16,17 @@ class AnggotaPendaftaranTurnamen extends Model
     protected $fillable = [
         'id_pendaftaran',
         'id_player',
+        'id_turnamen',
     ];
 
     public function pendaftaran(): BelongsTo
     {
         return $this->belongsTo(PendaftaranTurnamen::class, 'id_pendaftaran', 'id_pendaftaran');
+    }
+
+        public function turnamen(): BelongsTo
+    {
+        return $this->belongsTo(Turnamen::class, 'id_turnamen', 'id_turnamen');
     }
 
     public function player(): BelongsTo
