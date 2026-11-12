@@ -5,7 +5,6 @@ import { RegistrantRow } from "../../components/kelola/KlParts";
 import ReviewDrawer from "../../components/kelola/ReviewDrawer";
 import { longDate } from "../../utils/date";
 import {
-  finishTournament,
   getManageHeader,
   getParticipants,
   getRegistrations,
@@ -35,9 +34,6 @@ function KelolaTurnamen() {
   const [part, setPart] = useState({ items: [], ready: false, error: "" });
 
   const [reviewing, setReviewing] = useState(null);
-  const [finishing, setFinishing] = useState(false);
-  const [finishBusy, setFinishBusy] = useState(false);
-  const [finishError, setFinishError] = useState("");
   const [toast, setToast] = useState("");
 
   const paid = head?.feeType === "berbayar";
@@ -154,21 +150,6 @@ function KelolaTurnamen() {
     await Promise.allSettled([loadRegs(), loadPart(), loadHead()]);
   };
 
-  const handleFinish = async () => {
-    setFinishBusy(true);
-    setFinishError("");
-    try {
-      const res = await finishTournament(id);
-      setFinishing(false);
-      setToast(res.message);
-      await Promise.allSettled([loadHead(), loadRegs(), loadPart()]);
-    } catch (err) {
-      setFinishError(err.message || "Gagal menyelesaikan turnamen.");
-    } finally {
-      setFinishBusy(false);
-    }
-  };
-
   return (
     <div className="kl-page">
       {back}
@@ -205,18 +186,6 @@ function KelolaTurnamen() {
             </span>
           </span>
           <div className="kl-head-actions">
-            {head.status === "berlangsung" && (
-              <button
-                type="button"
-                className="kl-finish"
-                onClick={() => {
-                  setFinishError("");
-                  setFinishing(true);
-                }}
-              >
-                Selesaikan Turnamen
-              </button>
-            )}
             <Link to={`/turnamen/detail/${head.id}`} className="kl-detail-btn">
               Detail
             </Link>
@@ -305,48 +274,6 @@ function KelolaTurnamen() {
             loadHead();
           }}
         />
-      )}
-
-      {finishing && (
-        <div
-          className="kl-ov"
-          onMouseDown={(e) =>
-            e.target === e.currentTarget && !finishBusy && setFinishing(false)
-          }
-        >
-          <div
-            className="kl-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="kl-finish-title"
-          >
-            <h2 id="kl-finish-title">Selesaikan turnamen?</h2>
-            <p>
-              Pendaftaran yang masih menunggu verifikasi akan otomatis ditolak,
-              dan roster seluruh squad peserta dibuka kembali. Tindakan ini
-              tidak dapat dibatalkan.
-            </p>
-            {finishError && <p className="kl-dr-err">{finishError}</p>}
-            <div className="kl-dr-actions">
-              <button
-                type="button"
-                className="kl-btn ghost"
-                disabled={finishBusy}
-                onClick={() => setFinishing(false)}
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                className="kl-btn accept"
-                disabled={finishBusy}
-                onClick={handleFinish}
-              >
-                {finishBusy ? "Memproses..." : "Selesaikan"}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {toast && (
