@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "../icon";
-import { KlAvatar, ProofPreview } from "./KlParts";
+import { CopyChip, KlAvatar, ProofPreview } from "./KlParts";
 import {
   acceptRegistration,
   getProofFile,
@@ -201,6 +201,18 @@ function ReviewDrawer({ tournamentId, row, onClose, onDone, onStale }) {
                       </li>
                     ))}
                   </ul>
+
+                  <h3 className="kl-dr-label">Akun In-Game Perwakilan</h3>
+                  <div className="kl-dr-ingame">
+                    <div>
+                      <small>Nickname in-game</small>
+                      <b>{detail.gameNickname || "-"}</b>
+                    </div>
+                    <div>
+                      <small>ID in-game</small>
+                      <CopyChip value={detail.gameUid} />
+                    </div>
+                  </div>
 
                   {detail.proofUrl && (
                     <>

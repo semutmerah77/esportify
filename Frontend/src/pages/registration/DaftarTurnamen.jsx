@@ -41,6 +41,8 @@ function DaftarTurnamen() {
   const [method, setMethod] = useState("");
   const [file, setFile] = useState(null);
   const [agree, setAgree] = useState(false);
+  const [nickname, setNickname] = useState("");
+  const [uid, setUid] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(null);
@@ -125,7 +127,7 @@ function DaftarTurnamen() {
     </div>
   );
 
-    // Penyelenggara tidak bisa mendaftar di turnamennya sendiri
+  // Penyelenggara tidak bisa mendaftar di turnamennya sendiri
   if (t.state === "penyelenggara" || choices.organizer) {
     return (
       <div className="sq-page tr-page">
@@ -256,6 +258,14 @@ function DaftarTurnamen() {
   };
 
   const submit = async () => {
+    if (!nickname.trim()) {
+      setError("Nickname game wajib diisi.");
+      return;
+    }
+    if (!uid.trim()) {
+      setError("UID game wajib diisi.");
+      return;
+    }
     if (t.paid && (!file || !agree)) {
       setError("Harap isi persyaratan yang diperlukan");
       return;
@@ -265,6 +275,8 @@ function DaftarTurnamen() {
     try {
       const res = await submitRegistration(id, {
         squadId: selected.id,
+        nickname: nickname.trim(),
+        uid: uid.trim(),
         file: t.paid ? file : null,
         agree: t.paid && agree,
       });
@@ -369,6 +381,44 @@ function DaftarTurnamen() {
           <div className="tr-card tr-members-panel">
             <MemberGrid members={members} meName={user?.username} />
           </div>
+
+          <h3 className="tr-h3">Akun in-game perwakilan</h3>
+          <section className="tr-card tr-ingame">
+            <p className="tr-ingame-note">
+              Dipakai penyelenggara untuk mencocokkan hasil pertandingan, dan
+              terlihat oleh peserta turnamen ini agar bisa mencari lawan.
+            </p>
+            <div className="tr-ingame-fields">
+              <label className="tr-field">
+                <span>
+                  Nickname in-game <em>*</em>
+                </span>
+                <input
+                  type="text"
+                  maxLength={50}
+                  placeholder="Contoh: Samuel ML"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                />
+              </label>
+              <label className="tr-field">
+                <span>
+                  ID in-game <em>*</em>
+                </span>
+                <input
+                  type="text"
+                  maxLength={50}
+                  placeholder="Contoh: 123456789 (1234)"
+                  value={uid}
+                  onChange={(e) => setUid(e.target.value)}
+                />
+                <small>
+                  Tulis persis seperti di game, termasuk Zone ID atau #TAG jika
+                  ada.
+                </small>
+              </label>
+            </div>
+          </section>
 
           {t.paid && (
             <>

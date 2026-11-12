@@ -1,14 +1,16 @@
 import { apiRequest } from "./httpClient";
 
 // Semua endpoint /turnamen-kelolaan/{id}/... hanya untuk penyelenggara turnamen tsb.
+// Respons: { success, message, data, meta }. Error 403/404/422: { success:false, message }.
 const rowsOf = (res) => (Array.isArray(res?.data) ? res.data : []);
 const num = (v) =>
   v === null || v === undefined || v === "" ? null : Number(v);
 
+// ----- Bentuk data -----
 export function mapRow(r) {
   return {
     id: Number(r.id_pendaftaran),
-    status: String(r.status_pendaftaran ?? "").toLowerCase(),
+    status: String(r.status_pendaftaran ?? "").toLowerCase(), // menunggu | diterima | ditolak
     registeredAt: r.tanggal_daftar ?? "",
     verifiedAt: r.tanggal_verifikasi ?? "",
     reason: r.alasan_penolakan ?? "",
@@ -31,20 +33,24 @@ export function mapRow(r) {
 function mapDetail(d) {
   return {
     ...mapRow(d),
-    rosterStatus: String(d.status_roster ?? "").toLowerCase(),
+    rosterStatus: String(d.status_roster ?? "").toLowerCase(), // terkunci | terbuka
     canVerify: d.bisa_diverifikasi === true,
     feeType: String(d.turnamen?.jenis_biaya ?? "").toLowerCase(),
     members: (d.anggota ?? []).map((m) => ({
       id: num(m.id_player),
       username: m.username ?? "-",
       avatar: m.avatar_url ?? "",
-      role: String(m.peran ?? "").toLowerCase(),
+      role: String(m.peran ?? "").toLowerCase(), // leader | anggota
     })),
     proofUrl: d.bukti_pembayaran_url ?? null,
+    // Akun in-game perwakilan (pendaftaran lama bisa kosong)
+    gameNickname: d.nickname_game ?? "",
+    gameUid: d.uid_game ?? "",
   };
 }
 
-// Header halaman Kelola (GET /turnamen/{id}). jenis_biaya menentukan tab.
+// ----- Header halaman Kelola (GET /turnamen/{id}) -----
+// jenis_biaya menentukan tab: berbayar -> ada tab Verifikasi Pendaftar.
 export async function getManageHeader(id) {
   const res = await apiRequest(`/turnamen/${id}`);
   const t = res?.data ?? res;
@@ -55,7 +61,7 @@ export async function getManageHeader(id) {
     game: p.game?.nama_game ?? "-",
     status: String(t.status ?? "")
       .trim()
-      .toLowerCase(),
+      .toLowerCase(), // pendaftaran | berlangsung | selesai
     closeDate: p.jadwal_pendaftaran_tutup ?? "",
     matchDate: p.jadwal_main ?? "",
     type: String(p.tipe_turnamen ?? "").toLowerCase(),
@@ -67,6 +73,7 @@ export async function getManageHeader(id) {
   };
 }
 
+// ----- Tab Pendaftaran -----
 // GET /turnamen-kelolaan/{id}/pendaftaran?status=&q=
 export async function getRegistrations(id, { status = "", q = "" } = {}) {
   const params = new URLSearchParams();
@@ -96,7 +103,7 @@ export async function getRegistrationReview(id, regId) {
   return mapDetail(res?.data ?? res);
 }
 
-// Bukti pembayaran: file + butuh token -> blob -> object URL.
+// Bukti pembayaran: file (gambar/pdf) + butuh token -> blob -> object URL.
 export async function getProofFile(url) {
   const token = sessionStorage.getItem("esportify_token");
   const res = await fetch(url, {
@@ -118,7 +125,7 @@ export async function getProofFile(url) {
   return { url: URL.createObjectURL(blob), type: blob.type, size: blob.size };
 }
 
-// POST .../terima
+// POST .../terima  -> data = detail terbaru
 export async function acceptRegistration(id, regId) {
   const res = await apiRequest(
     `/turnamen-kelolaan/${id}/pendaftaran/${regId}/terima`,
@@ -132,7 +139,7 @@ export async function acceptRegistration(id, regId) {
   };
 }
 
-// POST .../tolak  (alasan_penolakan wajib, maks 255)
+// POST .../tolak  body: alasan_penolakan (wajib, maks 255)
 export async function rejectRegistration(id, regId, reason) {
   const form = new FormData();
   form.append("alasan_penolakan", reason);
@@ -149,6 +156,7 @@ export async function rejectRegistration(id, regId, reason) {
   };
 }
 
+// ----- Tab Peserta -----
 // GET /turnamen-kelolaan/{id}/peserta
 export async function getParticipants(id) {
   const res = await apiRequest(`/turnamen-kelolaan/${id}/peserta`);
@@ -162,7 +170,27 @@ export async function getParticipants(id) {
   };
 }
 
-// POST /turnamen-kelolaan/{id}/selesaikan (PB-09)
+// Detail tiap peserta (anggota + akun in-game perwakilan).
+// List peserta belum membawa nickname/UID, jadi diambil dari detail pendaftaran (8 request sekaligus).
+// Kalau BE sudah menambahkan nickname_game/uid_game ke list peserta, fungsi ini bisa dihapus.
+export async function getParticipantAccounts(id, items) {
+  const map = {};
+  for (let i = 0; i < items.length; i += 8) {
+    await Promise.all(
+      items.slice(i, i + 8).map(async (it) => {
+        try {
+          map[it.id] = await getRegistrationReview(id, it.id);
+        } catch {
+          map[it.id] = null;
+        }
+      }),
+    );
+  }
+  return map;
+}
+
+// ----- Selesaikan turnamen (PB-09) -----
+// POST /turnamen-kelolaan/{id}/selesaikan
 export async function finishTournament(id) {
   const res = await apiRequest(`/turnamen-kelolaan/${id}/selesaikan`, {
     method: "POST",
@@ -174,7 +202,8 @@ export async function finishTournament(id) {
   };
 }
 
-// Kartu Kelola Turnamen: peserta terdaftar & yang perlu diverifikasi. Gagal -> null.
+// ----- Kartu Kelola Turnamen: jumlah peserta & yang perlu diverifikasi -----
+// Satu request per turnamen (meta dari tab Pendaftaran). Gagal -> null (kartu menampilkan "-").
 export async function getRegistrationMeta(id) {
   try {
     const res = await apiRequest(
@@ -190,7 +219,9 @@ export async function getRegistrationMeta(id) {
   }
 }
 
-// Roster Lock (sisi squad). ASSUMPTION: nama field status mengikuti kontrak PB-10.
+// ----- Roster Lock (sisi squad) -----
+// Squad terkunci kalau punya pendaftaran menunggu/diterima di turnamen yang belum selesai.
+// GET /squad/{id}/pendaftaran-turnamen. ASSUMPTION: nama field status mengikuti kontrak PB-10.
 export async function isSquadRosterLocked(squadId) {
   const res = await apiRequest(`/squad/${squadId}/pendaftaran-turnamen`);
   return rowsOf(res).some((r) => {

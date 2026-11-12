@@ -110,6 +110,18 @@ function PendaftaranDetail() {
 
         <b className="tr-label">Daftar Anggota (saat mendaftar):</b>
         <MemberGrid members={reg.members} meName={user?.username} />
+
+        <b className="tr-label">Akun in-game perwakilan:</b>
+        <div className="tr-ingame-view">
+          <div>
+            <small>Nickname in-game</small>
+            <b>{reg.gameNickname || "-"}</b>
+          </div>
+          <div>
+            <small>ID in-game</small>
+            <b>{reg.gameUid || "-"}</b>
+          </div>
+        </div>
       </section>
     </div>
   );

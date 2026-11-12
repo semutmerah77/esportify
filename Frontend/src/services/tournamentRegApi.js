@@ -133,16 +133,20 @@ export function mapRegistration(d) {
     })),
     hasProof: Boolean(d.ada_bukti_pembayaran),
     proofUrl: d.bukti_pembayaran_url || null,
+    gameNickname: d.nickname_game || "", // pendaftaran lama bisa kosong
+    gameUid: d.uid_game || "",
   };
 }
 
 // POST /api/turnamen/:id/daftar (multipart). 422 -> err.message sudah bahasa Indonesia.
 export async function submitRegistration(
   tournamentId,
-  { squadId, file, agree },
+  { squadId, nickname, uid, file, agree },
 ) {
   const form = new FormData();
   form.append("id_squad", squadId);
+  form.append("nickname_game", nickname);
+  form.append("uid_game", uid);
   if (file) form.append("bukti_pembayaran", file);
   if (agree) form.append("setuju_ketentuan", "1");
   const res = await apiRequest(
