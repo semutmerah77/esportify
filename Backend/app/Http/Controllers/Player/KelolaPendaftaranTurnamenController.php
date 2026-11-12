@@ -395,6 +395,11 @@ class KelolaPendaftaranTurnamenController extends Controller
 
         return array_merge($this->formatRingkas($p), [
             'status_roster' => $p->status_roster,
+            
+            // Akun game perwakilan untuk turnamen ini
+            'nickname_game' => $p->nickname_game,
+            'uid_game' => $p->uid_game,
+            
             'bisa_diverifikasi' => $this->service->alasanTidakBisaDiverifikasi($turnamen, $p) === null,
 
             'turnamen' => [
