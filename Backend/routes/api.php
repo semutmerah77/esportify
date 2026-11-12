@@ -440,10 +440,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
         });
 
-        Route::post('/turnamen-kelolaan/{id}/selesaikan', [
-            KelolaPendaftaranTurnamenController::class,
-            'selesaikan'
-        ])->whereNumber('id')->middleware('permission:selesaikan_turnamen');
+        // NONAKTIF SEMENTARA: status "selesai" ditetapkan saat bracket
+        // menemukan pemenang (Sprint 3), bukan lewat tombol.
+        // Kode KelolaPendaftaranTurnamenController@selesaikan dan
+        // PendaftaranTurnamenService::selesaikanTurnamen() tetap disimpan.
+        
+        // Route::post('/turnamen-kelolaan/{id}/selesaikan', [
+        //     KelolaPendaftaranTurnamenController::class,
+        //     'selesaikan'
+        // ])->whereNumber('id')->middleware('permission:selesaikan_turnamen');
 
 
         // Mengubah pengajuan ketika mendapatkan kesempatan revisi
