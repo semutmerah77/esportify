@@ -88,11 +88,6 @@ function TournamentDetail() {
     // Belum terdaftar / pernah ditolak / ditutup / slot penuh
     return (
       <div className="tr-detail-action">
-        {reg.reg?.alasan_penolakan && (
-          <p className="tr-warn">
-            Pendaftaran sebelumnya ditolak: {reg.reg.alasan_penolakan}
-          </p>
-        )}
         <button
           type="button"
           className="td-register"
