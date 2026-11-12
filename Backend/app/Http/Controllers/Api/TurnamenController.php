@@ -15,12 +15,15 @@ use Carbon\Carbon;
 class TurnamenController extends Controller
 {
     /**
-     * Satu aturan status untuk list dan detail.
+     * Satu aturan status untuk list, kelolaan, dan detail.
+     *
+     * Status "selesai" hanya ditetapkan saat bracket menemukan
+     * pemenang (Sprint 3), supaya status turnamen selalu sejalan
+     * dengan pembukaan roster. Sebelum itu, setelah jadwal_main
+     * statusnya "berlangsung".
      */
     private function hitungStatus($jadwalMain, ?string $statusTersimpan = null): string
     {
-        // PB-09: turnamen yang sudah diselesaikan penyelenggara
-        // selalu berstatus "selesai".
         if ($statusTersimpan === 'selesai') {
             return 'selesai';
         }
@@ -29,17 +32,9 @@ class TurnamenController extends Controller
             return 'pendaftaran';
         }
 
-        $jadwal = Carbon::parse($jadwalMain);
-
-        if (now()->lt($jadwal)) {
-            return 'pendaftaran';
-        }
-
-        if (now()->isSameDay($jadwal)) {
-            return 'berlangsung';
-        }
-
-        return 'selesai';
+        return now()->lt(Carbon::parse($jadwalMain))
+            ? 'pendaftaran'
+            : 'berlangsung';
     }
 
     /**
@@ -122,7 +117,21 @@ class TurnamenController extends Controller
                     ],
                 ];
             })
-            ->filter(fn ($t) => $t['status'] !== 'selesai')
+
+            // Daftar & pencarian publik: sembunyikan turnamen yang sudah
+            // selesai, atau yang hari mainnya sudah lewat (perilaku
+            // Modul 2). Status di detail tetap "berlangsung" sampai
+            // bracket menemukan pemenang (Sprint 3).
+            ->filter(function ($t) {
+                if ($t['status'] === 'selesai') {
+                    return false;
+                }
+
+                $jadwal = $t['pengajuan']['jadwal_main'];
+
+                return !$jadwal || now()->lt(Carbon::parse($jadwal)->endOfDay());
+            })
+            
             ->sortByDesc(fn ($t) => $t['pengajuan']['jadwal_main']?->timestamp ?? PHP_INT_MAX)
             ->values();
 
@@ -185,7 +194,7 @@ class TurnamenController extends Controller
 
                 return [
                     'id_turnamen' => $item->id_turnamen,
-                    'status' => $item->status,
+                    'status' => $this->hitungStatus($pengajuan->jadwal_main, $item->status),
                     'created_at' => $item->created_at,
 
                     'pengajuan' => [
