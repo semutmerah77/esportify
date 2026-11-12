@@ -67,6 +67,7 @@ import {
   UserMinus,
   UserCheck,
   UserStar,
+  Copy,
 } from "lucide-react";
 
 // Untuk menambah ikon: import di atas, lalu tambah satu baris di objek icons.
@@ -142,6 +143,7 @@ const icons = {
   "user-minus": UserMinus,
   "user-check": UserCheck,
   "user-star": UserStar,
+  copy: Copy,
 };
 
 function Icon({ name, size = 16 }) {

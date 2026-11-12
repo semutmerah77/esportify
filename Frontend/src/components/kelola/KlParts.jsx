@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Icon from "../icon";
 
 const COLORS = [
   ["#f59e0b", "#d97706"],
@@ -76,6 +77,78 @@ export function RegistrantRow({ item, repLabel = "Pendaftar", onReview }) {
       ) : (
         <span className="kl-row-spacer" />
       )}
+    </li>
+  );
+}
+
+// Teks yang bisa disalin dengan satu klik (ID in-game). Kosong -> "-".
+export function CopyChip({ value }) {
+  const [done, setDone] = useState(false);
+  if (!value) return <span className="kl-copy-empty">-</span>;
+  const copy = async (e) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(value);
+      setDone(true);
+      setTimeout(() => setDone(false), 1500);
+    } catch {
+      /* clipboard tidak tersedia */
+    }
+  };
+  return (
+    <button
+      type="button"
+      className={`kl-copy ${done ? "done" : ""}`}
+      onClick={copy}
+    >
+      {done ? (
+        <>
+          Tersalin <Icon name="check" size={13} />
+        </>
+      ) : (
+        <>
+          {value} <Icon name="copy" size={13} />
+        </>
+      )}
+    </button>
+  );
+}
+
+// Baris peserta (tab Peserta): squad, perwakilan, nickname & ID in-game, tombol Detail.
+// account = detail pendaftaran (boleh null kalau gagal dimuat).
+export function ParticipantRow({ item, account, onDetail }) {
+  return (
+    <li className="kl-row kl-prow">
+      <KlAvatar
+        name={item.squad.name}
+        src={item.squad.logo}
+        seed={item.squad.code || item.squad.name}
+        size={44}
+      />
+      <div className="kl-row-main">
+        <b>{item.squad.name}</b>
+        <small className="kl-prow-rep">
+          <Icon name="person" size={13} /> {item.rep.username}
+        </small>
+      </div>
+      <div className="kl-acc">
+        <small>Nickname in-game</small>
+        <b>{account?.gameNickname || "-"}</b>
+      </div>
+      <div className="kl-acc">
+        <small>ID in-game</small>
+        <CopyChip value={account?.gameUid} />
+      </div>
+      <div className="kl-prow-side">
+        {item.squad.code && <small>ID: {item.squad.code}</small>}
+        <button
+          type="button"
+          className="kl-prow-btn"
+          onClick={() => onDetail(item)}
+        >
+          Detail
+        </button>
+      </div>
     </li>
   );
 }

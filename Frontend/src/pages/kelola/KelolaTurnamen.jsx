@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Icon from "../../components/icon";
-import { RegistrantRow } from "../../components/kelola/KlParts";
+import { ParticipantRow, RegistrantRow } from "../../components/kelola/KlParts";
+import ParticipantDetailModal from "../../components/kelola/ParticipantDetailModal";
 import ReviewDrawer from "../../components/kelola/ReviewDrawer";
 import { longDate } from "../../utils/date";
 import {
   getManageHeader,
+  getParticipantAccounts,
   getParticipants,
   getRegistrations,
 } from "../../services/tournamentManageApi";
@@ -31,7 +33,14 @@ function KelolaTurnamen() {
     ready: false,
     error: "",
   });
-  const [part, setPart] = useState({ items: [], ready: false, error: "" });
+  const [part, setPart] = useState({
+    items: [],
+    accounts: {},
+    ready: false,
+    error: "",
+  });
+  const [partQ, setPartQ] = useState("");
+  const [detailOf, setDetailOf] = useState(null);
 
   const [reviewing, setReviewing] = useState(null);
   const [toast, setToast] = useState("");
@@ -64,7 +73,11 @@ function KelolaTurnamen() {
   const loadPart = useCallback(
     () =>
       getParticipants(id)
-        .then((res) => setPart({ items: res.items, ready: true, error: "" }))
+        .then(async (res) => {
+          // Nickname & ID in-game belum ada di list peserta: ambil dari detail, tampil bersamaan
+          const accounts = await getParticipantAccounts(id, res.items);
+          setPart({ items: res.items, accounts, ready: true, error: "" });
+        })
         .catch((err) =>
           setPart((p) => ({
             ...p,
@@ -142,6 +155,14 @@ function KelolaTurnamen() {
     { key: "bracket", label: "Bracket" },
     { key: "pengumuman", label: "Pengumuman" },
   ];
+
+  const partKeyword = partQ.trim().toLowerCase().replace(/^#/, "");
+  const partShown = part.items.filter(
+    (it) =>
+      !partKeyword ||
+      it.squad.name.toLowerCase().includes(partKeyword) ||
+      String(it.squad.code).toLowerCase().includes(partKeyword),
+  );
 
   // Setelah Terima / Tolak: segarkan daftar, peserta, dan slot di header
   const afterVerify = async (message) => {
@@ -235,20 +256,32 @@ function KelolaTurnamen() {
 
         {tab === "peserta" && (
           <>
-            <div className="kl-panel-head">
-              {part.items.length} peserta
-              {head.slot ? ` dari ${head.slot} slot` : ""}
+            <div className="kl-panel-head kl-panel-bar">
+              <span>{part.items.length} squad peserta</span>
+              <label className="kl-search">
+                <Icon name="search" size={16} />
+                <input
+                  type="text"
+                  placeholder="Cari Nama Squad atau ID Squad"
+                  value={partQ}
+                  onChange={(e) => setPartQ(e.target.value)}
+                />
+              </label>
             </div>
             {part.error && <p className="admin-message error">{part.error}</p>}
             {part.ready && !part.error && part.items.length === 0 && (
               <p className="kl-empty">Belum ada peserta.</p>
             )}
+            {part.items.length > 0 && partShown.length === 0 && (
+              <p className="kl-empty">Squad tidak ditemukan.</p>
+            )}
             <ul className="kl-list">
-              {part.items.map((item) => (
-                <RegistrantRow
+              {partShown.map((item) => (
+                <ParticipantRow
                   key={item.id}
                   item={item}
-                  repLabel="Perwakilan"
+                  account={part.accounts[item.id]}
+                  onDetail={setDetailOf}
                 />
               ))}
             </ul>
@@ -262,6 +295,14 @@ function KelolaTurnamen() {
           </p>
         )}
       </section>
+
+      {detailOf && (
+        <ParticipantDetailModal
+          item={detailOf}
+          account={part.accounts[detailOf.id]}
+          onClose={() => setDetailOf(null)}
+        />
+      )}
 
       {reviewing && (
         <ReviewDrawer
