@@ -18,6 +18,7 @@ import {
   MAX_RINCIAN,
 } from "../../utils/rincian";
 import { newHadiah, MAX_HADIAH } from "../../utils/hadiah";
+import { MIN_ROSTER_LIMIT, MAX_ROSTER_LIMIT } from "../../utils/roster";
 import FilePreview from "./FilePreview";
 import useKtpPreview from "../../hooks/useKtpPreview";
 
@@ -42,6 +43,8 @@ const FIELD_MAP = {
   tipe_turnamen: "type",
   id_kota: "city",
   deskripsi_lokasi: "address",
+  min_roster: "minRoster",
+  maks_roster: "maksRoster",
   slot: "slot",
   jadwal_pendaftaran_tutup: "closeDate",
   jadwal_main: "matchDate",
@@ -72,6 +75,8 @@ export const emptyForm = {
   province: "",
   city: "",
   address: "",
+  minRoster: "",
+  maksRoster: "",
   slot: "",
   closeDate: "",
   matchDate: "",
@@ -325,6 +330,16 @@ function TournamentForm({
       if (form.address.trim().length < 5)
         e.address = "Alamat lokasi wajib diisi.";
     }
+    const minR = Number(form.minRoster);
+    const maxR = Number(form.maksRoster);
+    const inLimit = (n) => n >= MIN_ROSTER_LIMIT && n <= MAX_ROSTER_LIMIT;
+    if (!inLimit(minR))
+      e.minRoster = `Minimal pemain harus ${MIN_ROSTER_LIMIT} sampai ${MAX_ROSTER_LIMIT}.`;
+    if (!inLimit(maxR))
+      e.maksRoster = `Maksimal pemain harus ${MIN_ROSTER_LIMIT} sampai ${MAX_ROSTER_LIMIT}.`;
+    else if (!e.minRoster && minR > maxR)
+      e.maksRoster =
+        "Maksimal pemain tidak boleh lebih kecil dari minimal pemain.";
     if (!(Number(form.slot) >= 1)) e.slot = "Slot minimal 1.";
 
     // Di mode edit, aturan jarak tanggal hanya dicek kalau tanggalnya diubah
@@ -612,6 +627,54 @@ function TournamentForm({
       <FormSection
         title={
           <>
+            Jumlah Pemain per Squad
+            <Req />
+          </>
+        }
+      >
+        <p className="t-upload-hint" style={{ justifyContent: "flex-start" }}>
+          Jumlah pemain (termasuk cadangan) yang wajib didaftarkan setiap squad,
+          antara {MIN_ROSTER_LIMIT} sampai {MAX_ROSTER_LIMIT} pemain.
+        </p>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 16,
+          }}
+        >
+          <div>
+            <label className="t-label">
+              Minimal pemain <Req />
+            </label>
+            {underline("minRoster", {
+              placeholder: "Contoh: 5",
+              maxLength: 2,
+              ...number("minRoster"),
+            })}
+            {errors.minRoster && (
+              <p className="t-field-error">{errors.minRoster}</p>
+            )}
+          </div>
+          <div>
+            <label className="t-label">
+              Maksimal pemain <Req />
+            </label>
+            {underline("maksRoster", {
+              placeholder: "Contoh: 7",
+              maxLength: 2,
+              ...number("maksRoster"),
+            })}
+            {errors.maksRoster && (
+              <p className="t-field-error">{errors.maksRoster}</p>
+            )}
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection
+        title={
+          <>
             Slot
             <Req />
           </>
@@ -619,6 +682,9 @@ function TournamentForm({
         error={errors.slot}
       >
         {underline("slot", { placeholder: "Contoh: 32", ...number("slot") })}
+        <p className="t-upload-hint" style={{ justifyContent: "flex-start" }}>
+          Jumlah squad yang dapat mengikuti turnamen.
+        </p>
       </FormSection>
 
       <FormSection

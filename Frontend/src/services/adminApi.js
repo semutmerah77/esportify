@@ -676,6 +676,8 @@ export async function getAdminSubmissionDetail(id) {
     province: d.kota?.provinsi?.nama_provinsi ?? "",
     city: d.kota?.nama_kota ?? "",
     address: d.deskripsi_lokasi ?? "",
+    minRoster: d.min_roster ?? "",
+    maksRoster: d.maks_roster ?? "",
     slot: d.slot ?? "",
     closeDate: d.jadwal_pendaftaran_tutup ?? "",
     matchDate: d.jadwal_main ?? "",

@@ -143,7 +143,8 @@ export async function submitTournament(v) {
     f.append("id_kota", String(Number(v.city)));
     if (v.address.trim()) f.append("deskripsi_lokasi", v.address.trim());
   }
-
+  f.append("min_roster", String(Number(v.minRoster)));
+  f.append("maks_roster", String(Number(v.maksRoster)));
   f.append("slot", String(Number(v.slot)));
   f.append("jadwal_pendaftaran_tutup", v.closeDate);
   f.append("jadwal_main", v.matchDate);
@@ -239,6 +240,8 @@ export async function getSubmissionDetail(id) {
     cityId: d.kota?.id_kota ?? d.id_kota ?? "",
     cityName: d.kota?.nama_kota ?? "",
     address: d.deskripsi_lokasi ?? "",
+    minRoster: d.min_roster ?? "",
+    maksRoster: d.maks_roster ?? "",
     slot: d.slot ?? "",
     closeDate: day(d.jadwal_pendaftaran_tutup),
     matchDate: day(d.jadwal_main),
@@ -281,6 +284,8 @@ export const detailToForm = (d) => ({
   province: d.provinceId ? String(d.provinceId) : "",
   city: d.cityId ? String(d.cityId) : "",
   address: d.address,
+  minRoster: String(d.minRoster ?? ""),
+  maksRoster: String(d.maksRoster ?? ""),
   slot: String(d.slot ?? ""),
   closeDate: d.closeDate,
   matchDate: d.matchDate,
@@ -350,7 +355,11 @@ export async function updateSubmission(
       f.append("deskripsi_lokasi", v.address.trim());
     }
   }
-
+  // Kirim keduanya kalau salah satu berubah, supaya backend membandingkan pasangan yang benar
+  if (diff("minRoster") || diff("maksRoster")) {
+    f.append("min_roster", String(Number(v.minRoster)));
+    f.append("maks_roster", String(Number(v.maksRoster)));
+  }
   put("slot", "slot", (s) => String(Number(s)));
   put("jadwal_pendaftaran_tutup", "closeDate");
   put("jadwal_main", "matchDate");
@@ -430,6 +439,8 @@ export async function getTournamentDetail(id) {
     city: p.kota?.nama_kota ?? "",
     province: p.kota?.provinsi?.nama_provinsi ?? "",
     address: p.deskripsi_lokasi ?? "",
+    minRoster: p.min_roster ?? null,
+    maksRoster: p.maks_roster ?? null,
     slot: p.slot ?? null,
     closeDate: p.jadwal_pendaftaran_tutup ?? "",
     matchDate: p.jadwal_main ?? "",

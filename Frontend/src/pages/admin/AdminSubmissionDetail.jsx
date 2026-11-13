@@ -12,6 +12,7 @@ import {
 } from "../../services/adminApi";
 import "../../styles/user.css";
 import useKtpPreview from "../../hooks/useKtpPreview";
+import { rosterLabel } from "../../utils/roster";
 
 const REVISION_OPTIONS = [
   "Informasi turnamen belum lengkap",
@@ -350,6 +351,9 @@ function AdminSubmissionDetail() {
             </section>
           )}
 
+          <Field label="Jumlah Pemain per Squad">
+            {rosterLabel(data.minRoster, data.maksRoster)}
+          </Field>
           <Field label="Slot">{data.slot}</Field>
 
           <section className="d-card">
