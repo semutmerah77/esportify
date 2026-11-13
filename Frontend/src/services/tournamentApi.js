@@ -2,6 +2,7 @@ import { apiRequest } from "./httpClient";
 import { toMediaUrl } from "../utils/media";
 import { newSponsor } from "../utils/sponsor";
 import { newRincian, newRincianRows } from "../utils/rincian";
+import { newHadiah } from "../utils/hadiah";
 import { getRegistrationMeta } from "./tournamentManageApi";
 
 // Semua fungsi di file ini SELALU memakai backend (tanpa mock).
@@ -111,6 +112,17 @@ const rincianSig = (list) =>
     ]),
   );
 
+// ----- Helper hadiah lainnya -----
+const appendHadiah = (f, list) =>
+  list.forEach((h, i) => {
+    f.append(`hadiah_lainnya[${i}][nama_hadiah]`, h.nama_hadiah.trim());
+    if (h.keterangan.trim())
+      f.append(`hadiah_lainnya[${i}][keterangan]`, h.keterangan.trim());
+  });
+
+const hadiahSig = (list) =>
+  JSON.stringify(list.map((h) => [h.nama_hadiah.trim(), h.keterangan.trim()]));
+
 // ----- Buat Turnamen -----
 // POST /api/pengajuan-turnamen (multipart/form-data)
 export async function submitTournament(v) {
@@ -137,6 +149,7 @@ export async function submitTournament(v) {
   f.append("jadwal_main", v.matchDate);
   f.append("deskripsi_turnamen", v.description.trim());
   f.append("total_hadiah", String(Number(v.prize)));
+  if (v.hadiahLainnya.length > 0) appendHadiah(f, v.hadiahLainnya);
 
   v.funding.forEach((key) =>
     f.append("sumber_pendanaan[]", String(FUNDING_IDS[key])),
@@ -231,6 +244,10 @@ export async function getSubmissionDetail(id) {
     matchDate: day(d.jadwal_main),
     description: d.deskripsi_turnamen ?? "",
     prize: d.total_hadiah ?? "",
+    hadiahLainnya: (d.hadiah_lainnya ?? []).map((h) => ({
+      nama_hadiah: h.nama_hadiah ?? "",
+      keterangan: h.keterangan ?? "",
+    })),
     funding,
     fundingIds,
     sponsors: (d.sponsor ?? []).map((s) => ({
@@ -269,6 +286,7 @@ export const detailToForm = (d) => ({
   matchDate: d.matchDate,
   description: d.description,
   prize: money(d.prize),
+  hadiahLainnya: d.hadiahLainnya.map((h) => newHadiah(h)),
   funding: d.funding,
   sponsors: d.sponsors.length
     ? d.sponsors.map((s) => newSponsor(s))
@@ -338,6 +356,11 @@ export async function updateSubmission(
   put("jadwal_main", "matchDate");
   put("deskripsi_turnamen", "description", (s) => s.trim());
   put("total_hadiah", "prize", (s) => String(Number(s)));
+  // Hadiah lainnya: kirim hanya kalau berubah. Kosong = hapus semua.
+  if (hadiahSig(v.hadiahLainnya) !== hadiahSig(initial.hadiahLainnya)) {
+    if (v.hadiahLainnya.length > 0) appendHadiah(f, v.hadiahLainnya);
+    else f.append("hadiah_lainnya", "");
+  }
 
   // Rincian: kirim ulang seluruh daftar hanya kalau ada yang berubah
   if (rincianSig(v.rincian) !== rincianSig(initial.rincian))
@@ -412,6 +435,10 @@ export async function getTournamentDetail(id) {
     matchDate: p.jadwal_main ?? "",
     description: p.deskripsi_turnamen ?? "",
     prize: p.total_hadiah ?? null,
+    otherPrizes: (p.hadiah_lainnya ?? []).map((h) => ({
+      name: h.nama_hadiah ?? "",
+      note: h.keterangan ?? "",
+    })),
     feeType: String(fee.jenis_biaya ?? "").toLowerCase(),
     fee: fee.biaya_pendaftaran ?? null,
     sponsors: (p.sponsor ?? [])

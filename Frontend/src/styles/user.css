@@ -525,6 +525,43 @@
   color: #6aa3ff;
 }
 
+.t-sub {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid #243044;
+}
+.t-sub-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.t-sub-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+}
+.t-sub-hint {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.t-sub-add {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border: 1px dashed #3a4558;
+  border-radius: 8px;
+  background: none;
+  color: var(--white);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.t-sub-add:hover {
+  border-color: var(--blue);
+  color: #6aa3ff;
+}
+
 /* Input bergaris bawah */
 .t-line {
   width: 100%;

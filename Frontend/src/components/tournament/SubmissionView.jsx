@@ -109,6 +109,18 @@ function SubmissionView({ d }) {
 
       <Field label="Deskripsi">{d.description}</Field>
       <Field label="Total Hadiah">{rupiah(d.prize)}</Field>
+      {d.hadiahLainnya.length > 0 && (
+        <section className="d-card">
+          <p className="d-label">Hadiah Lainnya</p>
+          {d.hadiahLainnya.map((h, i) => (
+            <div key={i} className="d-sponsor">
+              <p className="d-sponsor-title">Hadiah {i + 1}</p>
+              <div className="d-value">{h.nama_hadiah}</div>
+              {h.keterangan && <p className="d-label">{h.keterangan}</p>}
+            </div>
+          ))}
+        </section>
+      )}
 
       <section className="d-card">
         <p className="d-label">Sumber Pendanaan</p>
