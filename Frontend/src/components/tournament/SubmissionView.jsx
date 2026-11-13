@@ -3,6 +3,7 @@ import Icon from "../icon";
 import FilePreview from "./FilePreview";
 import useKtpPreview from "../../hooks/useKtpPreview";
 import { longDate, rupiah } from "../../utils/date";
+import { rosterLabel } from "../../utils/roster";
 
 const METHOD_LABEL = {
   qris: "QRIS",
@@ -98,6 +99,9 @@ function SubmissionView({ d }) {
         </section>
       )}
 
+      <Field label="Jumlah Pemain per Squad">
+        {rosterLabel(d.minRoster, d.maksRoster)}
+      </Field>
       <Field label="Slot">{d.slot}</Field>
 
       <section className="d-card">
