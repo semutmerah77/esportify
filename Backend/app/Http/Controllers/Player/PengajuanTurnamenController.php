@@ -69,6 +69,7 @@ class PengajuanTurnamenController extends Controller
             'pembayaran',
             'sponsor',
             'rincian',
+            'hadiahLainnya',
             'sumberPendanaan',
             'turnamen',
         ])
@@ -216,6 +217,10 @@ class PengajuanTurnamenController extends Controller
             'rincian.*.peruntukanDana' => ['required', 'string', 'max:100'],
             'rincian.*.keterangan' => ['nullable', 'string', 'max:255'],
             'rincian.*.nominal' => ['required', 'numeric', 'min:1'],
+
+            'hadiah_lainnya' => ['nullable', 'array', 'max:20'],
+            'hadiah_lainnya.*.nama_hadiah' => ['required', 'string', 'max:150'],
+            'hadiah_lainnya.*.keterangan' => ['nullable', 'string', 'max:255'],
 
             'jenis_biaya' => [
                 'required',
@@ -365,6 +370,13 @@ class PengajuanTurnamenController extends Controller
                     ]);
                 }
 
+                foreach ($validated['hadiah_lainnya'] ?? [] as $h) {
+                    $pengajuan->hadiahLainnya()->create([
+                        'nama_hadiah' => $h['nama_hadiah'],
+                        'keterangan' => $h['keterangan'] ?? null,
+                    ]);
+                }
+
                 $pengajuan->pendanaan()->create([
                     'jenis_biaya' => $validated['jenis_biaya'],
                     'biaya_pendaftaran' => $validated['jenis_biaya'] === 'berbayar'
@@ -393,6 +405,7 @@ class PengajuanTurnamenController extends Controller
                     'pembayaran',
                     'sponsor',
                     'rincian',
+                    'hadiahLainnya',
                     'sumberPendanaan',
                 ])->makeHidden(['ktp']),
             ], 201);
@@ -642,6 +655,10 @@ class PengajuanTurnamenController extends Controller
                 'min:1',
             ],
 
+            'hadiah_lainnya' => ['sometimes', 'nullable', 'array', 'max:20'],
+            'hadiah_lainnya.*.nama_hadiah' => ['required_with:hadiah_lainnya', 'string', 'max:150'],
+            'hadiah_lainnya.*.keterangan' => ['nullable', 'string', 'max:255'],
+
             'jenis_biaya' => [
                 'sometimes',
                 'required',
@@ -866,6 +883,17 @@ class PengajuanTurnamenController extends Controller
                     }
                 }
 
+                if (array_key_exists('hadiah_lainnya', $validated)) {
+                    $pengajuan->hadiahLainnya()->delete();
+
+                    foreach ($validated['hadiah_lainnya'] ?? [] as $h) {
+                        $pengajuan->hadiahLainnya()->create([
+                            'nama_hadiah' => $h['nama_hadiah'],
+                            'keterangan' => $h['keterangan'] ?? null,
+                        ]);
+                    }
+                }
+
                 if (
                     array_key_exists('jenis_biaya', $validated)
                     || array_key_exists('biaya_pendaftaran', $validated)
@@ -945,6 +973,7 @@ class PengajuanTurnamenController extends Controller
                     'pembayaran',
                     'sponsor',
                     'rincian',
+                    'hadiahLainnya',
                     'sumberPendanaan',
                     'turnamen',
                 ])->makeHidden(['ktp']),

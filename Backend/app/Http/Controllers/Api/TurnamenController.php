@@ -239,6 +239,7 @@ class TurnamenController extends Controller
             'pengajuan.pendanaan',
             'pengajuan.sponsor',
             'pengajuan.pembayaran',
+            'pengajuan.hadiahLainnya',
             'penyelenggara',
         ])->find($id);
 
@@ -288,6 +289,12 @@ class TurnamenController extends Controller
                     'sisa_slot' => $sisaSlot,
                     'slot_penuh' => $sisaSlot <= 0,
                     'total_hadiah' => $pengajuan->total_hadiah,
+                    'hadiah_lainnya' => $pengajuan->hadiahLainnya
+    ->map(fn ($h) => [
+        'nama_hadiah' => $h->nama_hadiah,
+        'keterangan' => $h->keterangan,
+    ])
+    ->values(),
                     'jadwal_pendaftaran_tutup' => $pengajuan->jadwal_pendaftaran_tutup,
                     'jadwal_main' => $pengajuan->jadwal_main,
                     'deskripsi_turnamen' => $pengajuan->deskripsi_turnamen,

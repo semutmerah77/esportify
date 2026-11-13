@@ -131,6 +131,15 @@ class PengajuanTurnamen extends Model
         );
     }
 
+    public function hadiahLainnya(): HasMany
+    {
+        return $this->hasMany(
+            HadiahLainnya::class,
+            'id_pengajuan',
+            'id_pengajuan'
+        );
+    }
+
 
     public function sumberPendanaan(): BelongsToMany
     {

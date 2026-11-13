@@ -97,6 +97,7 @@ class PengajuanTurnamenController extends Controller
             'pembayaran',
             'sponsor',
             'rincian',
+            'hadiahLainnya',
         ]);
 
         // Jangan mengirimkan path KTP melalui response detail.
