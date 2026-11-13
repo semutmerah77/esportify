@@ -6,23 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('pengajuan_turnamen', function (Blueprint $table) {
-            //
+            $table->unsignedTinyInteger('min_roster')->default(1)->after('deskripsi_lokasi');
+            $table->unsignedTinyInteger('maks_roster')->default(10)->after('min_roster');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('pengajuan_turnamen', function (Blueprint $table) {
-            //
+            $table->dropColumn(['min_roster', 'maks_roster']);
         });
     }
 };
