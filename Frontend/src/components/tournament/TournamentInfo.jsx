@@ -150,6 +150,23 @@ function TournamentInfo({ d, action, registered = null }) {
         )}
       </section>
 
+      {d.otherPrizes.length > 0 && (
+        <section className="td-card">
+          <h2>Hadiah Lainnya</h2>
+          {d.otherPrizes.map((h, i) => (
+            <div className="td-item" key={i}>
+              <span className="td-icon">
+                <Icon name="trophy" size={20} />
+              </span>
+              <div>
+                <p className="td-item-main">{h.name}</p>
+                {h.note && <p className="td-item-sub">{h.note}</p>}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
       {d.sponsors.length > 0 && (
         <section className="td-card">
           <h2>Sponsor</h2>

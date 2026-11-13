@@ -681,6 +681,10 @@ export async function getAdminSubmissionDetail(id) {
     matchDate: d.jadwal_main ?? "",
     description: d.deskripsi_turnamen ?? "",
     prize: d.total_hadiah,
+    hadiahLainnya: (d.hadiah_lainnya ?? []).map((h) => ({
+      nama_hadiah: h.nama_hadiah ?? "",
+      keterangan: h.keterangan ?? "",
+    })),
     funding: (d.sumber_pendanaan ?? []).map((s) => s.nama_sumber ?? String(s)),
     sponsors: (d.sponsor ?? []).map((s) => ({
       name: s.nama_sponsor,

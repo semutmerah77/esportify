@@ -17,6 +17,7 @@ import {
   MIN_RINCIAN,
   MAX_RINCIAN,
 } from "../../utils/rincian";
+import { newHadiah, MAX_HADIAH } from "../../utils/hadiah";
 import FilePreview from "./FilePreview";
 import useKtpPreview from "../../hooks/useKtpPreview";
 
@@ -76,6 +77,7 @@ export const emptyForm = {
   matchDate: "",
   description: "",
   prize: "",
+  hadiahLainnya: [],
   funding: [],
   sponsors: [newSponsor()],
   rincian: newRincianRows(),
@@ -258,6 +260,43 @@ function TournamentForm({
     0,
   );
 
+  // ---------- Hadiah lainnya (opsional) ----------
+  const clearHadiahErrors = () =>
+    setErrors((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).filter(([k]) => !k.startsWith("hadiah_lainnya")),
+      ),
+    );
+
+  const updateHadiah = (index, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      hadiahLainnya: prev.hadiahLainnya.map((h, i) =>
+        i === index ? { ...h, [field]: value } : h,
+      ),
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      [`hadiah_lainnya.${index}.${field}`]: "",
+    }));
+    setMessage("");
+  };
+
+  const addHadiah = () =>
+    setForm((prev) =>
+      prev.hadiahLainnya.length < MAX_HADIAH
+        ? { ...prev, hadiahLainnya: [...prev.hadiahLainnya, newHadiah()] }
+        : prev,
+    );
+
+  const removeHadiah = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      hadiahLainnya: prev.hadiahLainnya.filter((_, i) => i !== index),
+    }));
+    clearHadiahErrors(); // index bergeser
+  };
+
   const changePayment = (value) => {
     set("paymentMethod", value);
     if (!["qris", "qris_transfer"].includes(value)) set("qris", null);
@@ -304,6 +343,10 @@ function TournamentForm({
     if (form.description.trim().length < 10)
       e.description = "Deskripsi minimal 10 karakter.";
     if (form.prize === "") e.prize = "Isi total hadiah (0 jika tidak ada).";
+    form.hadiahLainnya.forEach((h, i) => {
+      if (!h.nama_hadiah.trim())
+        e[`hadiah_lainnya.${i}.nama_hadiah`] = "Nama hadiah wajib diisi.";
+    });
     if (form.funding.length === 0)
       e.funding = "Pilih minimal satu sumber pendanaan.";
     if (form.funding.includes("sponsor")) {
@@ -651,6 +694,62 @@ function TournamentForm({
           {underline("prize", {
             placeholder: "Masukkan nominal hadiah turnamen",
             ...number("prize"),
+          })}
+        </div>
+
+        <div className="t-sub">
+          <div className="t-sub-head">
+            <div>
+              <p className="t-sub-title">Hadiah Lainnya (opsional)</p>
+              <p className="t-sub-hint">
+                Isi kalau ada hadiah selain uang tunai, misalnya trofi,
+                merchandise, atau voucher.
+              </p>
+            </div>
+            {form.hadiahLainnya.length < MAX_HADIAH && (
+              <button type="button" className="t-sub-add" onClick={addHadiah}>
+                + Tambah
+              </button>
+            )}
+          </div>
+
+          {form.hadiahLainnya.map((h, i) => {
+            const nKey = `hadiah_lainnya.${i}.nama_hadiah`;
+            return (
+              <div key={h.key} className="t-sponsor-item">
+                <div className="t-sponsor-head">
+                  <span className="t-sponsor-title">Hadiah {i + 1}</span>
+                  <button
+                    type="button"
+                    className="t-sponsor-remove"
+                    onClick={() => removeHadiah(i)}
+                  >
+                    ✕ Hapus
+                  </button>
+                </div>
+
+                <label className="t-label">
+                  Nama Hadiah <Req />
+                </label>
+                {underline(nKey, {
+                  placeholder: "Contoh: Trofi dan medali",
+                  value: h.nama_hadiah,
+                  onChange: (e) =>
+                    updateHadiah(i, "nama_hadiah", e.target.value),
+                })}
+                {errors[nKey] && (
+                  <p className="t-field-error">{errors[nKey]}</p>
+                )}
+
+                <label className="t-label">Keterangan (opsional)</label>
+                {underline(`hadiah_lainnya.${i}.keterangan`, {
+                  placeholder: "Contoh: Untuk juara 1, 2, dan 3",
+                  value: h.keterangan,
+                  onChange: (e) =>
+                    updateHadiah(i, "keterangan", e.target.value),
+                })}
+              </div>
+            );
           })}
         </div>
       </FormSection>

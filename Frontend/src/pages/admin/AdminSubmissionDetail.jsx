@@ -361,6 +361,18 @@ function AdminSubmissionDetail() {
 
           <Field label="Deskripsi">{data.description}</Field>
           <Field label="Total Hadiah">{rupiah(data.prize)}</Field>
+          {(data.hadiahLainnya ?? []).length > 0 && (
+            <section className="d-card">
+              <p className="d-label">Hadiah Lainnya</p>
+              {data.hadiahLainnya.map((h, i) => (
+                <div key={i} className="d-sponsor">
+                  <p className="d-sponsor-title">Hadiah {i + 1}</p>
+                  <div className="d-value">{h.nama_hadiah}</div>
+                  {h.keterangan && <p className="d-label">{h.keterangan}</p>}
+                </div>
+              ))}
+            </section>
+          )}
 
           <section className="d-card">
             <p className="d-label">Sumber Pendanaan</p>
