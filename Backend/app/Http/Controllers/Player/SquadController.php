@@ -108,7 +108,7 @@ class SquadController extends Controller
                     'logo_squad' => $logoPath,
                     'nama_squad' => $validated['nama_squad'],
                     'deskripsi' => $validated['deskripsi'],
-                    'maks_anggota' => 7,
+                    'maks_anggota' => 10,
                     'status_squad' => 'aktif',
                 ]);
 
@@ -263,8 +263,14 @@ class SquadController extends Controller
             ], 403);
         }
 
-        if ($squad->isRosterLocked()) {
-            return $this->rosterTerkunci();
+       // Roster lock per pemain: hanya pemain di roster turnamen yang dikunci.
+        if ($terkunci = $squad->pendaftaranTerkunciUntuk($player->id_player)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu masih terdaftar di roster turnamen '
+                    . $terkunci->turnamen?->pengajuan?->nama_turnamen
+                    . ' dan baru bisa keluar setelah turnamen selesai.',
+            ], 422);
         }
 
         $hasil = DB::transaction(function () use ($squad, $player, $keanggotaan) {
@@ -374,8 +380,17 @@ class SquadController extends Controller
             ], 404);
         }
 
-        if ($squad->isRosterLocked()) {
-            return $this->rosterTerkunci();
+        // Roster lock per pemain: anggota di roster turnamen tidak bisa dikeluarkan.
+        if ($terkunci = $squad->pendaftaranTerkunciUntuk((int) $idPlayer)) {
+            $keanggotaan->loadMissing('player.user');
+
+            return response()->json([
+                'success' => false,
+                'message' => $keanggotaan->player?->user?->username
+                    . ' masih terdaftar di roster turnamen '
+                    . $terkunci->turnamen?->pengajuan?->nama_turnamen
+                    . ' dan baru bisa dikeluarkan setelah turnamen selesai.',
+            ], 422);
         }
 
         $keanggotaan->update(['status_anggota' => 'dikeluarkan']);
@@ -484,6 +499,10 @@ class SquadController extends Controller
 
         $leaderPlayerId = $squad->leader?->id_player;
 
+        
+        // Roster lock per pemain: [id_player => [turnamen...]]
+        $terkunci = $squad->pemainTerkunci();
+
         $anggota = $squad->anggotaAktif
             ->sortBy('tanggal_bergabung')
             ->values()
@@ -495,6 +514,10 @@ class SquadController extends Controller
                 'avatar_url' => $this->fileUrl($a->player?->avatar),
                 'tanggal_bergabung' => $a->tanggal_bergabung?->toDateTimeString(),
                 'peran' => (int) $a->id_player === (int) $leaderPlayerId ? 'leader' : 'anggota',
+                
+                // Terkunci = ada di roster turnamen squad ini (menunggu/diterima)
+                'roster_terkunci' => $terkunci->has($a->id_player),
+                'turnamen_roster' => $terkunci->get($a->id_player, collect())->values(),
             ]);
 
         return [
@@ -518,6 +541,9 @@ class SquadController extends Controller
                 : null,
             'is_leader' => $squad->isLeader($player),
             'is_anggota' => $player ? $anggota->contains('id_player', $player->id_player) : false,
+            
+            // Untuk tombol "Keluar Squad" milik Player login
+            'roster_terkunci_saya' => $player ? $terkunci->has($player->id_player) : false,
 
             
             // PB-04: simbol biru pada tombol "Permintaan" (hanya untuk Leader)
@@ -609,14 +635,6 @@ class SquadController extends Controller
     private function fileUrl(?string $path): ?string
     {
         return $path ? asset('storage/' . $path) : null;
-    }
-
-    private function rosterTerkunci()
-    {
-        return response()->json([
-            'success' => false,
-            'message' => 'Squad Sedang Mengikuti Turnamen, Roster Terkunci.',
-        ], 422);
     }
 
     private function playerNotFound()

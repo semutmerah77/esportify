@@ -25,9 +25,16 @@ class PendaftaranTurnamenService
     /**
      * Mengembalikan pesan error pertama, atau null kalau lolos.
      * Dipanggil di dalam transaksi setelah baris turnamen dikunci.
+     *
+     * @param  int[]  $roster  id_player yang dipilih pendaftar
      */
-    public function validasiPendaftaran(Turnamen $turnamen, Squad $squad, Player $player, ?string $uidGame = null): ?string
-    {
+    public function validasiPendaftaran(
+        Turnamen $turnamen,
+        Squad $squad,
+        Player $player,
+        array $roster,
+        ?string $uidGame = null
+    ): ?string {
         if ($squad->status_squad !== 'aktif') {
             return 'Squad tidak aktif.';
         }
@@ -56,24 +63,42 @@ class PendaftaranTurnamenService
             return 'Anda sudah terdaftar pada turnamen ini melalui Squad lain.';
         }
 
-        $roster = $this->rosterSquad($squad);
+        $roster = collect($roster)->map(fn ($id) => (int) $id)->unique()->values();
+
+        // Pendaftar wajib ikut di roster.
+        if (!$roster->contains((int) $player->id_player)) {
+            return 'Pendaftar wajib termasuk dalam roster.';
+        }
+
+        // Semua pemain yang dipilih harus anggota aktif Squad.
+        $anggotaAktif = $this->rosterSquad($squad)->map(fn ($id) => (int) $id);
+        if ($roster->diff($anggotaAktif)->isNotEmpty()) {
+            return 'Pemain yang dipilih harus anggota aktif Squad.';
+        }
+
+        // Jumlah pemain sesuai aturan turnamen.
+        $min = $this->minRoster($turnamen);
+        $maks = $this->maksRoster($turnamen);
+
+        if ($roster->count() < $min) {
+            return "Roster minimal {$min} pemain.";
+        }
+
+        if ($roster->count() > $maks) {
+            return "Roster maksimal {$maks} pemain.";
+        }
 
         // Penyelenggara tidak boleh ada di roster Squad mana pun.
         if ($alasan = $this->alasanPenyelenggaraDiRoster($turnamen, $roster)) {
             return $alasan;
         }
 
-        $min = $this->minAnggota();
-        if ($roster->count() < $min) {
-            return "Jumlah anggota Squad belum memenuhi syarat minimal {$min} anggota.";
-        }
-
-        // US26: tidak ada anggota roster yang sudah terdaftar lewat Squad lain.
+        // US26: pemain di roster belum terdaftar lewat Squad lain.
         if ($alasan = $this->alasanAnggotaSudahTerdaftar($turnamen, $roster)) {
             return $alasan;
         }
 
-         // UID game tidak boleh dipakai pendaftaran lain di turnamen yang sama.
+        // UID game tidak boleh dipakai pendaftaran lain di turnamen yang sama.
         if ($uidGame !== null && $this->uidGameSudahDipakai($turnamen, $uidGame)) {
             return 'UID game sudah digunakan oleh pendaftaran lain di turnamen ini.';
         }
@@ -82,31 +107,64 @@ class PendaftaranTurnamenService
     }
 
     /**
-     * UID game dipakai pendaftaran aktif (menunggu/diterima) di turnamen ini.
-     * Pendaftaran ditolak tidak dihitung, jadi UID bisa dipakai lagi.
+     * Status setiap anggota aktif Squad untuk dipilih ke roster turnamen.
+     *
+     * @return \Illuminate\Support\Collection<int, array{id_player:int, username:?string, avatar:?string, peran:string, bisa_dipilih:bool, alasan:?string}>
      */
-    public function uidGameSudahDipakai(Turnamen $turnamen, string $uidGame): bool
+    public function statusAnggotaRoster(Turnamen $turnamen, Squad $squad): Collection
     {
-        return PendaftaranTurnamen::aktif()
-            ->where('id_turnamen', $turnamen->id_turnamen)
-            ->whereRaw('LOWER(uid_game) = ?', [mb_strtolower(trim($uidGame))])
-            ->exists();
+        $squad->loadMissing(['leader', 'anggotaAktif.player.user']);
+
+        $idPenyelenggara = $this->idPlayerPenyelenggara($turnamen);
+        $leaderId = (int) $squad->leader?->id_player;
+
+        $idSudahTerdaftar = AnggotaPendaftaranTurnamen::query()
+            ->whereIn('id_player', $squad->anggotaAktif->pluck('id_player'))
+            ->whereHas('pendaftaran', fn ($q) => $q->aktif()
+                ->where('id_turnamen', $turnamen->id_turnamen)
+                ->where('id_squad', '!=', $squad->id_squad))
+            ->pluck('id_player')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return $squad->anggotaAktif->map(function ($a) use ($idPenyelenggara, $idSudahTerdaftar, $leaderId) {
+            $idPlayer = (int) $a->id_player;
+
+            $alasan = match (true) {
+                $idPlayer === $idPenyelenggara => 'Penyelenggara turnamen ini',
+                in_array($idPlayer, $idSudahTerdaftar, true) => 'Sudah terdaftar di turnamen ini bersama squad lain',
+                default => null,
+            };
+
+            return [
+                'id_player' => $idPlayer,
+                'username' => $a->player?->user?->username,
+                'avatar' => $a->player?->avatar,
+                'peran' => $idPlayer === $leaderId ? 'leader' : 'anggota',
+                'bisa_dipilih' => $alasan === null,
+                'alasan' => $alasan,
+            ];
+        })->values();
     }
 
     /**
      * Alasan sebuah Squad tidak bisa dipilih di form daftar (squad-saya),
-     * atau null kalau bisa didaftarkan. Urutan sama dengan validasi utama.
+     * atau null kalau bisa didaftarkan.
+     *
+     * @param  \Illuminate\Support\Collection|null  $statusAnggota  hasil statusAnggotaRoster()
      */
-    public function alasanSquadTidakBisaDaftar(Turnamen $turnamen, Squad $squad, Player $player): ?string
-    {
+    public function alasanSquadTidakBisaDaftar(
+        Turnamen $turnamen,
+        Squad $squad,
+        Player $player,
+        ?Collection $statusAnggota = null
+    ): ?string {
         if ($this->pendaftaranAktifSquad($turnamen, $squad)) {
             return 'Squad sudah terdaftar pada turnamen ini.';
         }
 
-        $roster = $this->rosterSquad($squad);
-
-        if ($alasan = $this->alasanPenyelenggaraDiRoster($turnamen, $roster)) {
-            return $alasan;
+        if ($this->isPenyelenggara($turnamen, $player)) {
+            return 'Penyelenggara tidak dapat mendaftar pada turnamen yang diselenggarakannya.';
         }
 
         if ($alasan = $this->alasanTurnamenTertutup($turnamen)) {
@@ -117,15 +175,12 @@ class PendaftaranTurnamenService
             return 'Anda sudah terdaftar pada turnamen ini melalui Squad lain.';
         }
 
-        // AD Pilih Squad: squad langsung tidak bisa dipilih kalau ada
-        // anggota yang sudah terdaftar bersama Squad lain.
-        if ($alasan = $this->alasanAnggotaSudahTerdaftar($turnamen, $roster)) {
-            return $alasan;
-        }
+        $statusAnggota ??= $this->statusAnggotaRoster($turnamen, $squad);
+        $bisaDipilih = $statusAnggota->where('bisa_dipilih', true)->count();
+        $min = $this->minRoster($turnamen);
 
-        $min = $this->minAnggota();
-        if ($roster->count() < $min) {
-            return "Jumlah anggota Squad belum memenuhi syarat minimal {$min} anggota.";
+        if ($bisaDipilih < $min) {
+            return "Hanya {$bisaDipilih} anggota yang dapat didaftarkan (minimal {$min})";
         }
 
         return null;
@@ -149,6 +204,18 @@ class PendaftaranTurnamenService
         $nama = $bentrok->map(fn ($a) => $a->player?->user?->username)->filter()->unique()->implode(', ');
 
         return "{$nama} sudah terdaftar di turnamen ini bersama squad lain";
+    }
+
+    /**
+     * UID game dipakai pendaftaran aktif (menunggu/diterima) di turnamen ini.
+     * Pendaftaran ditolak tidak dihitung, jadi UID bisa dipakai lagi.
+     */
+    public function uidGameSudahDipakai(Turnamen $turnamen, string $uidGame): bool
+    {
+        return PendaftaranTurnamen::aktif()
+            ->where('id_turnamen', $turnamen->id_turnamen)
+            ->whereRaw('LOWER(uid_game) = ?', [mb_strtolower(trim($uidGame))])
+            ->exists();
     }
 
     // ==========================================
@@ -235,9 +302,18 @@ class PendaftaranTurnamenService
         return $turnamen->pengajuan?->pendanaan?->jenis_biaya === 'berbayar';
     }
 
-    public function minAnggota(): int
+    /**
+     * Jumlah pemain per Squad ditentukan penyelenggara per turnamen
+     * (pengajuan_turnamen.min_roster / maks_roster).
+     */
+    public function minRoster(Turnamen $turnamen): int
     {
-        return (int) config('esportify.min_anggota_turnamen', 5);
+        return (int) ($turnamen->pengajuan?->min_roster ?? 1);
+    }
+
+    public function maksRoster(Turnamen $turnamen): int
+    {
+        return (int) ($turnamen->pengajuan?->maks_roster ?? 10);
     }
 
     // ==========================================
@@ -318,9 +394,15 @@ class PendaftaranTurnamenService
             'status_pendaftaran' => 'ditolak',
             'alasan_penolakan' => $alasan,
             'tanggal_verifikasi' => $now,
-            'status_roster' => 'terbuka',
-            'roster_unlocked_at' => $now,
         ]);
+
+        // Semua pemain di roster pendaftaran ini dibuka kuncinya.
+        $pendaftaran->anggota()
+            ->where('status_roster', 'terkunci')
+            ->update([
+                'status_roster' => 'terbuka',
+                'tanggal_pembukaan' => $now,
+            ]);
 
         return $pendaftaran;
     }
@@ -371,12 +453,12 @@ class PendaftaranTurnamenService
                 'updated_at' => $now,
             ]);
 
-        $rosterDibuka = PendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
+        // Buka kunci semua pemain di roster turnamen ini.
+        $rosterDibuka = AnggotaPendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
             ->where('status_roster', 'terkunci')
             ->update([
                 'status_roster' => 'terbuka',
-                'roster_unlocked_at' => $now,
-                'updated_at' => $now,
+                'tanggal_pembukaan' => $now,
             ]);
 
         $turnamen->update(['status' => 'selesai']);

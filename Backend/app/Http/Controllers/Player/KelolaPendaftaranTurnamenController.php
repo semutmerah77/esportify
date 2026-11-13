@@ -394,7 +394,7 @@ class KelolaPendaftaranTurnamenController extends Controller
         $pengajuan = $turnamen->pengajuan;
 
         return array_merge($this->formatRingkas($p), [
-            'status_roster' => $p->status_roster,
+            'status_roster' => $p->statusRoster(),
             
             // Akun game perwakilan untuk turnamen ini
             'nickname_game' => $p->nickname_game,

@@ -74,10 +74,6 @@ class UndanganSquadController extends Controller
             return $this->gagal('Player ini sudah mengajukan permintaan bergabung. Silakan proses di daftar Permintaan.', 422);
         }
 
-        if ($squad->isRosterLocked()) {
-            return $this->gagal('Squad Sedang Mengikuti Turnamen, Roster Terkunci.', 422);
-        }
-
         if ($squad->isFull()) {
             return $this->gagal('Squad sudah penuh.', 422);
         }
@@ -215,10 +211,6 @@ class UndanganSquadController extends Controller
             $undangan->delete();
 
             return $this->gagal('Squad sudah tidak aktif. Undangan dihapus.', 422);
-        }
-
-        if ($squad->isRosterLocked()) {
-            return $this->gagal('Squad Sedang Mengikuti Turnamen, Roster Terkunci.', 422);
         }
 
         $hasil = DB::transaction(function () use ($squad, $undangan, $player) {

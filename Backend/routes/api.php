@@ -373,6 +373,13 @@ Route::middleware('auth:sanctum')->group(function () {
                 'squadSaya'
             ])->whereNumber('id');
 
+            
+            // Halaman 2/2: anggota Squad untuk pilih roster
+            Route::get('/turnamen/{id}/squad-saya/{idSquad}', [
+                PendaftaranTurnamenController::class,
+                'anggotaRoster'
+            ])->whereNumber('id');
+
             Route::post('/turnamen/{id}/daftar', [
                 PendaftaranTurnamenController::class,
                 'daftar'

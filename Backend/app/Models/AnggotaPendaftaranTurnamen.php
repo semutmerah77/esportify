@@ -13,10 +13,18 @@ class AnggotaPendaftaranTurnamen extends Model
 
     public $timestamps = false;
 
-    protected $fillable = [
+        protected $fillable = [
         'id_pendaftaran',
         'id_player',
         'id_turnamen',
+        'status_roster',
+        'tanggal_penguncian',
+        'tanggal_pembukaan',
+    ];
+
+    protected $casts = [
+        'tanggal_penguncian' => 'datetime',
+        'tanggal_pembukaan' => 'datetime',
     ];
 
     public function pendaftaran(): BelongsTo
