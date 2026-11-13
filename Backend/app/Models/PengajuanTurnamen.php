@@ -26,6 +26,8 @@ class PengajuanTurnamen extends Model
         'nomor_instansi',
         'tipe_turnamen',
         'deskripsi_lokasi',
+        'min_roster',
+        'maks_roster',
         'slot',
         'jadwal_pendaftaran_tutup',
         'jadwal_main',
@@ -49,6 +51,8 @@ class PengajuanTurnamen extends Model
             'diajukan_ulang_pada' => 'datetime',
             'total_hadiah' => 'decimal:2',
             'setuju_pertanggungjawaban' => 'boolean',
+            'min_roster' => 'integer',
+            'maks_roster' => 'integer',
         ];
     }
 

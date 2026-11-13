@@ -182,6 +182,8 @@ class PengajuanTurnamenController extends Controller
                 'exists:kota,id_kota',
             ],
             'deskripsi_lokasi' => ['nullable', 'string'],
+            'min_roster' => ['required', 'integer', 'min:1', 'max:10'],
+            'maks_roster' => ['required', 'integer', 'min:1', 'max:10'],
             'slot' => ['required', 'integer', 'min:1'],
             'jadwal_pendaftaran_tutup' => ['required', 'date'],
             'jadwal_main' => [
@@ -262,6 +264,11 @@ class PengajuanTurnamenController extends Controller
             $validated['jadwal_main']
         );
 
+         $this->validateRoster(
+            $validated['min_roster'],
+            $validated['maks_roster']
+        );
+
         // Apakah penanggung jawab mewakili instansi.
         $perwakilan = filter_var(
             $validated['perwakilan_instansi'] ?? false,
@@ -340,6 +347,8 @@ class PengajuanTurnamenController extends Controller
                     'deskripsi_lokasi' => $validated['tipe_turnamen'] === 'offline'
                         ? ($validated['deskripsi_lokasi'] ?? null)
                         : null,
+                    'min_roster' => $validated['min_roster'],
+                    'maks_roster' => $validated['maks_roster'],
                     'slot' => $validated['slot'],
                     'jadwal_pendaftaran_tutup' => $validated['jadwal_pendaftaran_tutup'],
                     'jadwal_main' => $validated['jadwal_main'],
@@ -604,7 +613,8 @@ class PengajuanTurnamenController extends Controller
 
             'id_kota' => ['sometimes', 'nullable', 'integer', 'exists:kota,id_kota'],
             'deskripsi_lokasi' => ['nullable', 'string'],
-
+            'min_roster' => ['sometimes', 'required', 'integer', 'min:1', 'max:10'],
+            'maks_roster' => ['sometimes', 'required', 'integer', 'min:1', 'max:10'],
             'slot' => ['sometimes', 'required', 'integer', 'min:1'],
             'jadwal_pendaftaran_tutup' => ['sometimes', 'required', 'date'],
             'jadwal_main' => ['sometimes', 'required', 'date'],
@@ -750,6 +760,14 @@ class PengajuanTurnamenController extends Controller
 
         $this->validateSchedule($jadwalTutup, $jadwalMain);
 
+        $minRoster = $validated['min_roster']
+            ?? $pengajuan->min_roster;
+
+        $maksRoster = $validated['maks_roster']
+            ?? $pengajuan->maks_roster;
+
+        $this->validateRoster($minRoster, $maksRoster);
+
         try {
             if ($request->hasFile('poster')) {
                 $newPoster = $request->file('poster')
@@ -782,6 +800,8 @@ class PengajuanTurnamenController extends Controller
                     'nama_turnamen',
                     'nama_penyelenggara',
                     'id_game',
+                    'min_roster',
+                    'maks_roster',
                     'slot',
                     'jadwal_pendaftaran_tutup',
                     'jadwal_main',
@@ -1028,6 +1048,18 @@ class PengajuanTurnamenController extends Controller
         if (strtotime($jadwalMain) <= strtotime($jadwalTutup)) {
             throw ValidationException::withMessages([
                 'jadwal_main' => 'Jadwal main harus setelah jadwal penutupan pendaftaran.',
+            ]);
+        }
+    }
+
+        /**
+     * Memastikan minimal roster tidak melebihi maksimal roster.
+     */
+    private function validateRoster($minRoster, $maksRoster): void
+    {
+        if ((int) $minRoster > (int) $maksRoster) {
+            throw ValidationException::withMessages([
+                'maks_roster' => 'Maksimal pemain per squad tidak boleh lebih kecil dari minimal pemain.',
             ]);
         }
     }
