@@ -1291,6 +1291,513 @@ a.td-register {
   color: #fff;
 }
 
+/* ===== Pilih Roster ===== */
+.tr-rm-info {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  margin: 8px 0 12px;
+  border: 1px solid #1e3a6e;
+  background: #0f1c38;
+  border-radius: 10px;
+  color: #9db7e8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.tr-rm-info svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #60a5fa;
+}
+.tr-rm-panel {
+  padding: 16px;
+  margin-bottom: 8px;
+}
+.tr-rm-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #8b95ad;
+}
+.tr-rm-top small:last-child {
+  color: #e6ebf7;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tr-rm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.tr-rm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #1b2336;
+  border: 1px solid #263150;
+  border-radius: 10px;
+  color: #e6ebf7;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.tr-rm:hover:not(:disabled) {
+  border-color: #3b82f6;
+}
+.tr-rm.on {
+  border-color: #3b82f6;
+  background: #162340;
+}
+.tr-rm:disabled {
+  cursor: default;
+}
+.tr-rm:disabled:not(.on):not(.na) {
+  opacity: 0.55;
+}
+.tr-rm.na {
+  border-style: dashed;
+  background: transparent;
+  opacity: 1;
+}
+.tr-rm-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tr-rm-name b {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tr-rm-name b em {
+  font-style: normal;
+  font-weight: 400;
+  color: #8b95ad;
+}
+.tr-rm-name small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #fbbf24;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+.tr-rm-name small svg {
+  flex-shrink: 0;
+}
+.tr-rm-state {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: #8b95ad;
+}
+.tr-rm.na .tr-rm-state {
+  color: #6b7488;
+}
+.tr-rm-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1.5px solid #3a4666;
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+.tr-rm.on .tr-rm-box {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+.tr-rm-need {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  color: #fbbf24;
+  font-size: 12.5px;
+}
+
+/* ===== Popup Konfirmasi Pendaftaran ===== */
+.tr-confirm {
+  position: relative;
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 26px 24px 22px;
+  background: #151b2b;
+  border: 1px solid #263150;
+  border-radius: 16px;
+  color: #e6ebf7;
+}
+.tr-confirm-x {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: #8b95ad;
+  cursor: pointer;
+}
+.tr-confirm-x:hover:not(:disabled) {
+  background: #1b2336;
+  color: #fff;
+}
+.tr-confirm-ic {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  background: #162340;
+  color: #60a5fa;
+}
+.tr-confirm h2 {
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+}
+.tr-confirm-sub {
+  margin: 6px 0 16px;
+  text-align: center;
+  color: #8b95ad;
+  font-size: 13px;
+}
+.tr-confirm h3 {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c3cce2;
+}
+.tr-confirm-box {
+  margin: 0;
+  padding: 4px 14px;
+  background: #0f1524;
+  border: 1px solid #263150;
+  border-radius: 10px;
+}
+.tr-confirm-box > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #1e2740;
+}
+.tr-confirm-box > div:last-child {
+  border-bottom: 0;
+}
+.tr-confirm-box dt {
+  color: #8b95ad;
+  font-size: 13px;
+}
+.tr-confirm-box dd {
+  margin: 0;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 14px;
+}
+.tr-confirm-box dd small {
+  color: #8b95ad;
+  font-size: 12px;
+}
+.tr-confirm-box dd.green {
+  color: #34d399;
+  font-weight: 600;
+}
+.tr-confirm-box dd.row {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.tr-confirm-roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.tr-confirm-roster li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #1b2336;
+  border-radius: 8px;
+  font-size: 13px;
+  min-width: 0;
+}
+.tr-confirm-roster li span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tr-confirm-roster li em {
+  font-style: normal;
+  font-size: 11px;
+  color: #60a5fa;
+}
+.tr-confirm-acc {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.tr-confirm-acc > div {
+  padding: 10px 12px;
+  background: #0f1524;
+  border: 1px solid #263150;
+  border-radius: 10px;
+  min-width: 0;
+}
+.tr-confirm-acc small {
+  display: block;
+  color: #8b95ad;
+  font-size: 11.5px;
+  margin-bottom: 2px;
+}
+.tr-confirm-acc b {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.tr-confirm-file {
+  padding: 10px 12px;
+  background: #0f1524;
+  border: 1px solid #263150;
+  border-radius: 10px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.tr-confirm-warn {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #7a5a12;
+  background: #2a2110;
+  border-radius: 10px;
+  color: #fbbf24;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.tr-confirm-warn svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.tr-confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.tr-confirm-btn {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid #263150;
+  background: transparent;
+  color: #e6ebf7;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tr-confirm-btn:hover:not(:disabled) {
+  background: #1b2336;
+}
+.tr-confirm-btn.primary {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+.tr-confirm-btn.primary:hover:not(:disabled) {
+  background: #2f6fdb;
+}
+.tr-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ===== Perbaikan popup konfirmasi (sesuai desain) ===== */
+.tr-confirm {
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+.tr-confirm h3 {
+  margin: 18px 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Roster: satu kartu, satu kolom */
+.tr-confirm-roster {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  background: #1b2336;
+  border: 1px solid #263150;
+  border-radius: 12px;
+}
+.tr-confirm-roster li {
+  background: transparent;
+  padding: 6px 0;
+  gap: 10px;
+}
+.tr-confirm-roster li span {
+  flex: none; /* avatar tidak ikut melebar */
+}
+.tr-confirm-roster li > :first-child {
+  flex-shrink: 0;
+}
+.tr-confirm-roster li .tr-confirm-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tr-confirm-roster li em {
+  font-style: normal;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #2a3550;
+  color: #aab4cc;
+}
+
+/* Akun in-game: satu kartu, dua kolom */
+.tr-confirm-acc {
+  gap: 0;
+  padding: 14px 16px;
+  background: #1b2336;
+  border: 1px solid #263150;
+  border-radius: 12px;
+}
+.tr-confirm-acc > div {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.tr-confirm-acc small {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.tr-confirm-acc b {
+  font-size: 15px;
+  color: #fff;
+}
+
+/* Bukti pembayaran & tombol */
+.tr-confirm-file {
+  padding: 14px 16px;
+  background: #1b2336;
+  border-radius: 12px;
+  color: #dbe3f5;
+}
+.tr-confirm-btn {
+  padding: 13px 14px;
+  background: #0f1524;
+}
+.tr-confirm-btn.primary {
+  background: #3b82f6;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+}
+
+/* Popup konfirmasi: scrollbar rapi + lebih ringkas */
+.tr-confirm {
+  max-height: calc(100vh - 32px);
+  padding: 22px 22px 18px;
+  overflow-y: auto;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #2f3b5c transparent;
+}
+.tr-confirm::-webkit-scrollbar {
+  width: 8px;
+}
+.tr-confirm::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 16px 0; /* menjauh dari sudut membulat */
+}
+.tr-confirm::-webkit-scrollbar-thumb {
+  background: #2f3b5c;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.tr-confirm::-webkit-scrollbar-thumb:hover {
+  background: #3f4f7a;
+  background-clip: content-box;
+}
+
+/* Lebih ringkas supaya muat tanpa scroll di layar normal */
+.tr-confirm-ic {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 6px;
+}
+.tr-confirm-sub {
+  margin: 4px 0 12px;
+}
+.tr-confirm h3 {
+  margin: 12px 0 6px;
+}
+.tr-confirm-roster {
+  padding: 6px 14px;
+  gap: 0;
+}
+.tr-confirm-roster li {
+  padding: 5px 0;
+}
+.tr-confirm-warn {
+  margin-top: 12px;
+}
+.tr-confirm-actions {
+  margin-top: 14px;
+}
+
+.tr-rm-top .tr-rm-count.ok {
+  color: #60a5fa;
+}
+.tr-rm-top .tr-rm-count.low {
+  color: #fbbf24;
+}
+
+@media (max-width: 560px) {
+  .tr-confirm-acc {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .tr-rm-grid,
+  .tr-confirm-roster,
+  .tr-confirm-acc {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .tr-ingame-fields,
   .tr-ingame-view {

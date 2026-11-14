@@ -1,6 +1,6 @@
 import { apiRequest, ApiError } from "./httpClient";
 
-export const SQUAD_CAPACITY = 7; // R1.04
+export const SQUAD_CAPACITY = 10; // BE: maks_anggota = 10 untuk semua squad
 export const SEARCH_PAGE_SIZE = 8;
 export const MY_PAGE_SIZE = 5;
 
@@ -104,7 +104,9 @@ function mapDetail(d) {
   return {
     ...mapSquad(d),
     viewerRole: d.is_leader ? "leader" : d.is_anggota ? "member" : "guest",
-    locked: false, // flag roster terkunci belum ada di data; diisi dari error 422 (PB-06)
+    // Roster lock per pemain: true bila user yang login masuk roster pendaftaran
+    // turnamen (menunggu/diterima) dari squad ini -> tidak bisa keluar squad.
+    myRosterLocked: d.roster_terkunci_saya === true,
     pendingRequests: d.jumlah_permintaan_menunggu ?? 0, // angka untuk Leader (null bila bukan Leader)
     myRequest: d.permintaan_saya
       ? {
@@ -126,6 +128,12 @@ function mapDetail(d) {
       joinedAt: a.tanggal_bergabung,
       role: roleOf(a.peran),
       isMe: false, // diisi halaman dari akun yang login
+      // Roster lock per pemain: terkunci hanya bila ada di roster pendaftaran squad ini
+      rosterLocked: a.roster_terkunci === true,
+      rosterTournaments: (a.turnamen_roster ?? []).map((t) => ({
+        id: t.id_turnamen,
+        name: t.nama_turnamen,
+      })),
     })),
     // Selalu [] sampai Sprint 3 (PB-18, PB-19, PB-20): tampilan memakai keadaan kosong.
     winrates: [],
@@ -223,7 +231,8 @@ export async function getSentInvitations(id) {
 }
 
 // ===== Keanggotaan (PB-02) =====
-// 422 "Squad Sedang Mengikuti Turnamen, Roster Terkunci." (aktif setelah PB-06)
+// Catatan: pesan lama "Squad Sedang Mengikuti Turnamen, Roster Terkunci." sudah tidak dipakai BE.
+// Dibiarkan diekspor supaya komponen lama yang masih mengimpornya tidak error (selalu false).
 export function isRosterLocked(err) {
   return (
     err instanceof ApiError &&
@@ -233,6 +242,7 @@ export function isRosterLocked(err) {
 }
 
 // POST /api/squad/:id/keluar. Leader keluar -> leader baru otomatis; anggota terakhir -> squad arsip.
+// 422 bila pemain masih ada di roster turnamen (pesan dari BE ditampilkan apa adanya).
 export async function leaveSquad(id) {
   const res = await apiRequest(`/squad/${encodeURIComponent(id)}/keluar`, {
     method: "POST",
@@ -245,6 +255,7 @@ export async function leaveSquad(id) {
 }
 
 // DELETE /api/squad/:id/anggota/:playerId (hanya Leader). Mengembalikan detail squad terbaru.
+// 422 bila anggota masih ada di roster turnamen.
 export async function kickMember(id, playerId) {
   const res = await apiRequest(
     `/squad/${encodeURIComponent(id)}/anggota/${encodeURIComponent(playerId)}`,
@@ -254,7 +265,8 @@ export async function kickMember(id, playerId) {
 }
 
 // POST /api/squad/:id/leader (hanya Leader). Leader lama tetap menjadi anggota biasa.
-// Boleh walau roster terkunci. Mengembalikan detail squad terbaru (is_leader pemanggil sudah false).
+// Boleh walau roster terkunci (juga untuk/oleh anggota terkunci).
+// Mengembalikan detail squad terbaru (is_leader pemanggil sudah false).
 export async function transferLeader(id, playerId) {
   const form = new FormData();
   form.append("id_player", playerId);

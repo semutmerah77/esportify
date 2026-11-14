@@ -9,6 +9,7 @@ function initials(name = "") {
   return name.slice(0, 2).toUpperCase();
 }
 
+// locked = anggota ini sedang ada di roster turnamen (status menunggu/diterima)
 function KickMemberDialog({
   member,
   locked,
@@ -22,6 +23,10 @@ function KickMemberDialog({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [loading, onClose]);
+
+  const tournaments = (member.rosterTournaments ?? [])
+    .map((t) => t.name)
+    .join(", ");
 
   return (
     <div
@@ -74,11 +79,11 @@ function KickMemberDialog({
           <div className="sqd-kick-warn" role="alert">
             <Icon name="lock" size={16} />
             <div>
-              <b>Roster Lock Aktif</b>
+              <b>Roster Turnamen Aktif</b>
               <p>
-                Squad ini telah terdaftar sebagai peserta turnamen aktif.
-                Anggota tidak dapat dikeluarkan hingga seluruh rangkaian
-                turnamen selesai.
+                {member.username} masih terdaftar di roster turnamen
+                {tournaments ? ` ${tournaments}` : ""} dan baru bisa dikeluarkan
+                setelah turnamen selesai.
               </p>
             </div>
           </div>

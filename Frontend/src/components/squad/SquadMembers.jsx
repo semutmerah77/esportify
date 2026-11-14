@@ -6,6 +6,7 @@ import MemberProfileModal from "./MemberProfileModal";
 // leader  : undang, permintaan bergabung, keluar; jadikan leader & keluarkan anggota lewat profil anggota
 // anggota : keluar
 // bukan anggota : tidak ada tombol
+// Roster lock per pemain: anggota yang ada di roster turnamen diberi ikon gembok & tidak bisa keluar/dikeluarkan.
 function SquadMembers({
   squad,
   onLeave,
@@ -17,16 +18,25 @@ function SquadMembers({
   const isLeader = squad.viewerRole === "leader";
   const isMember = squad.viewerRole === "member" || isLeader;
   const [selected, setSelected] = useState(null); // anggota yang profilnya dibuka
+  const lockedCount = squad.members.filter((m) => m.rosterLocked).length;
 
   return (
     <section>
       <div className="sqd-members-head">
-        <h2>
-          Anggota Squad{" "}
-          <span className="sqd-count">
-            {squad.members.length}/{squad.capacity}
-          </span>
-        </h2>
+        <div className="sqd-members-title">
+          <h2>
+            Anggota Squad{" "}
+            <span className="sqd-count">
+              {squad.members.length}/{squad.capacity}
+            </span>
+          </h2>
+          {lockedCount > 0 && (
+            <p className="sqd-roster-sub">
+              <Icon name="lock" size={14} /> {lockedCount} di roster turnamen
+              aktif
+            </p>
+          )}
+        </div>
 
         {isMember && (
           <div className="sqd-actions">
@@ -57,12 +67,12 @@ function SquadMembers({
               type="button"
               className="sqd-iconbtn danger"
               title={
-                squad.locked
-                  ? "Roster terkunci, tidak bisa keluar"
+                squad.myRosterLocked
+                  ? "Kamu masih terdaftar di roster turnamen, tidak bisa keluar"
                   : "Keluar dari squad"
               }
               aria-label="Keluar dari squad"
-              disabled={squad.locked}
+              disabled={squad.myRosterLocked}
               onClick={onLeave}
             >
               <Icon name="logout" size={16} />
@@ -75,6 +85,9 @@ function SquadMembers({
         {squad.members.map((m) => {
           // Klik kartu anggota lain untuk membuka profil + aksi (kartu sendiri tidak punya aksi)
           const clickable = isMember && !m.isMe;
+          const tournaments = (m.rosterTournaments ?? [])
+            .map((t) => t.name)
+            .join(", ");
           return (
             <div
               key={m.id}
@@ -106,6 +119,19 @@ function SquadMembers({
                   {m.role === "leader" ? "Leader" : "Anggota"}
                 </em>
               </div>
+              {m.rosterLocked && (
+                <span
+                  className="sqd-lock-badge"
+                  title={
+                    tournaments
+                      ? `Roster turnamen: ${tournaments}`
+                      : "Roster turnamen aktif"
+                  }
+                  aria-label="Roster turnamen aktif"
+                >
+                  <Icon name="lock" size={12} />
+                </span>
+              )}
             </div>
           );
         })}
