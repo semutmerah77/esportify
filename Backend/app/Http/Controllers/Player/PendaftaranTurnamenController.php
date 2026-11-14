@@ -35,17 +35,18 @@ class PendaftaranTurnamenController extends Controller
         if (!$turnamen || !$turnamen->pengajuan) {
             return $this->turnamenNotFound();
         }
-
         $squads = Squad::aktif()
             ->whereHas('anggotaAktif', fn ($q) => $q->where('id_player', $player->id_player))
-            ->with(['leader', 'anggotaAktif'])
+            ->with(['leader', 'anggotaAktif.player.user'])
             ->orderBy('nama_squad')
             ->get();
 
-        $min = $this->service->minAnggota();
+        $min = $this->service->minRoster($turnamen);
+        $maks = $this->service->maksRoster($turnamen);
 
-        $data = $squads->map(function (Squad $squad) use ($turnamen, $player, $min) {
-            $alasan = $this->service->alasanSquadTidakBisaDaftar($turnamen, $squad, $player);
+        $data = $squads->map(function (Squad $squad) use ($turnamen, $player, $min, $maks) {
+            $statusAnggota = $this->service->statusAnggotaRoster($turnamen, $squad);
+            $alasan = $this->service->alasanSquadTidakBisaDaftar($turnamen, $squad, $player, $statusAnggota);
             $pendaftaranSquad = $this->service->pendaftaranAktifSquad($turnamen, $squad);
 
             return [
@@ -55,8 +56,10 @@ class PendaftaranTurnamenController extends Controller
                 'logo_squad' => $squad->logo_squad,
                 'logo_url' => $this->fileUrl($squad->logo_squad),
                 'is_leader' => $squad->isLeader($player),
-                'jumlah_anggota' => $squad->anggotaAktif->count(),
-                'min_anggota' => $min,
+                'jumlah_anggota' => $statusAnggota->count(),
+                'jumlah_bisa_dipilih' => $statusAnggota->where('bisa_dipilih', true)->count(),
+                'min_roster' => $min,
+                'maks_roster' => $maks,
                 'id_pendaftaran' => $pendaftaranSquad?->id_pendaftaran,
                 'bisa_daftar' => $alasan === null,
                 'alasan' => $alasan,
@@ -70,9 +73,72 @@ class PendaftaranTurnamenController extends Controller
                 : 'Daftar Squad berhasil diambil.',
             'data' => $data,
             'meta' => [
-                'min_anggota' => $min,
+                'min_roster' => $min,
+                'maks_roster' => $maks,
                 'jenis_biaya' => $turnamen->pengajuan->pendanaan?->jenis_biaya ?? 'gratis',
                 'is_penyelenggara' => $this->service->isPenyelenggara($turnamen, $player),
+            ],
+        ]);
+    }
+
+    /**
+     * GET /turnamen/{id}/squad-saya/{idSquad}
+     * Halaman 2/2: anggota Squad yang bisa dipilih ke roster.
+     */
+    public function anggotaRoster(Request $request, $id, $idSquad)
+    {
+        $player = $request->user()->player;
+        if (!$player) {
+            return $this->playerNotFound();
+        }
+
+        $turnamen = Turnamen::with('pengajuan.pendanaan')->find($id);
+        if (!$turnamen || !$turnamen->pengajuan) {
+            return $this->turnamenNotFound();
+        }
+
+        $squad = Squad::cariDenganKunci($idSquad);
+        if (!$squad || $squad->status_squad !== 'aktif' || !$squad->isAnggotaAktif($player)) {
+            return $this->squadNotFound();
+        }
+
+        $statusAnggota = $this->service->statusAnggotaRoster($turnamen, $squad);
+        $alasan = $this->service->alasanSquadTidakBisaDaftar($turnamen, $squad, $player, $statusAnggota);
+
+        $anggota = $statusAnggota
+            // Pendaftar paling atas, lalu yang bisa dipilih
+            ->sortBy(fn ($a) => [
+                $a['id_player'] === (int) $player->id_player ? 0 : 1,
+                $a['bisa_dipilih'] ? 0 : 1,
+            ])
+            ->map(fn ($a) => [
+                'id_player' => $a['id_player'],
+                'username' => $a['username'],
+                'avatar_url' => $this->fileUrl($a['avatar']),
+                'peran' => $a['peran'],
+                // Pendaftar otomatis masuk roster dan tidak bisa dibatalkan
+                'is_pendaftar' => $a['id_player'] === (int) $player->id_player,
+                'bisa_dipilih' => $a['bisa_dipilih'],
+                'alasan' => $a['alasan'],
+            ])
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar anggota Squad berhasil diambil.',
+            'data' => [
+                'squad' => [
+                    'id_squad' => $squad->id_squad,
+                    'kode_squad' => $squad->kode_squad,
+                    'nama_squad' => $squad->nama_squad,
+                    'logo_url' => $this->fileUrl($squad->logo_squad),
+                ],
+                'min_roster' => $this->service->minRoster($turnamen),
+                'maks_roster' => $this->service->maksRoster($turnamen),
+                'jumlah_bisa_dipilih' => $statusAnggota->where('bisa_dipilih', true)->count(),
+                'bisa_daftar' => $alasan === null,
+                'alasan' => $alasan,
+                'anggota' => $anggota,
             ],
         ]);
     }
@@ -108,6 +174,8 @@ class PendaftaranTurnamenController extends Controller
 
         $rules = [
             'id_squad' => ['required'],
+            'roster' => ['required', 'array', 'min:1'],
+            'roster.*' => ['integer', 'distinct'],
             'nickname_game' => ['required', 'string', 'max:50'],
             'uid_game' => ['required', 'string', 'max:50'],
         ];
@@ -119,6 +187,11 @@ class PendaftaranTurnamenController extends Controller
 
         $validator = Validator::make($request->all(), $rules, [
             'id_squad.required' => 'Pilih Squad yang akan didaftarkan.',
+            'roster.required' => 'Pilih pemain yang akan didaftarkan.',
+            'roster.array' => 'Format roster tidak valid.',
+            'roster.min' => 'Pilih pemain yang akan didaftarkan.',
+            'roster.*.integer' => 'Format roster tidak valid.',
+            'roster.*.distinct' => 'Pemain di roster tidak boleh dobel.',
             'nickname_game.required' => 'Nickname game wajib diisi.',
             'nickname_game.max' => 'Nickname game maksimal 50 karakter.',
             'uid_game.required' => 'UID game wajib diisi.',
@@ -142,6 +215,12 @@ class PendaftaranTurnamenController extends Controller
             return $this->squadNotFound();
         }
 
+        $roster = collect($request->input('roster', []))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
         $nickname = trim((string) $request->input('nickname_game'));
         $uidGame = trim((string) $request->input('uid_game'));
 
@@ -155,12 +234,12 @@ class PendaftaranTurnamenController extends Controller
             : null;
 
         try {
-            $hasil = DB::transaction(function () use ($turnamen, $squad, $player, $berbayar, $pathBukti, $nickname, $uidGame) {
+            $hasil = DB::transaction(function () use ($turnamen, $squad, $player, $roster, $berbayar, $pathBukti, $nickname, $uidGame) {
                 // Kunci baris turnamen agar dua pendaftaran bersamaan
                 // tidak bisa sama-sama mengambil slot terakhir.
                 Turnamen::whereKey($turnamen->id_turnamen)->lockForUpdate()->first();
 
-                $error = $this->service->validasiPendaftaran($turnamen, $squad, $player, $uidGame);
+                $error = $this->service->validasiPendaftaran($turnamen, $squad, $player,$roster, $uidGame);
                 if ($error) {
                     return ['error' => $error];
                 }
@@ -175,18 +254,19 @@ class PendaftaranTurnamenController extends Controller
                     'bukti_pembayaran' => $pathBukti,
                     // Gratis langsung diterima, berbayar menunggu verifikasi.
                     'status_pendaftaran' => $berbayar ? 'menunggu' : 'diterima',
-                    'status_roster' => 'terkunci',
                     'tanggal_daftar' => $now,
                     'tanggal_verifikasi' => $berbayar ? null : $now,
-                    'roster_locked_at' => $now,
                 ]);
 
-                // Snapshot roster saat mendaftar.
-                foreach ($squad->anggotaAktif()->pluck('id_player') as $idPlayer) {
+                // Roster = pemain yang dipilih pendaftar.
+                foreach ($roster as $idPlayer) {
                     AnggotaPendaftaranTurnamen::create([
                         'id_pendaftaran' => $pendaftaran->id_pendaftaran,
                         'id_player' => $idPlayer,
                         'id_turnamen' => $turnamen->id_turnamen,
+                        // Roster lock per pemain sejak mendaftar
+                        'status_roster' => 'terkunci',
+                        'tanggal_penguncian' => $now,
                     ]);
                 }
 
@@ -271,7 +351,7 @@ class PendaftaranTurnamenController extends Controller
             ->map(fn (PendaftaranTurnamen $p) => [
                 'id_pendaftaran' => $p->id_pendaftaran,
                 'status_pendaftaran' => $p->status_pendaftaran,
-                'status_roster' => $p->status_roster,
+                'status_roster' => $p->statusRoster(),
                 'tanggal_daftar' => $p->tanggal_daftar,
                 'alasan_penolakan' => $p->alasan_penolakan,
                 'turnamen' => [
@@ -364,7 +444,7 @@ class PendaftaranTurnamenController extends Controller
         return [
             'id_pendaftaran' => $p->id_pendaftaran,
             'status_pendaftaran' => $p->status_pendaftaran,
-            'status_roster' => $p->status_roster,
+            'status_roster' => $p->statusRoster(),
             'tanggal_daftar' => $p->tanggal_daftar,
             'tanggal_verifikasi' => $p->tanggal_verifikasi,
             'alasan_penolakan' => $p->alasan_penolakan,

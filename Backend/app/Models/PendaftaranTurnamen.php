@@ -27,12 +27,9 @@ class PendaftaranTurnamen extends Model
         'uid_game',
         'bukti_pembayaran',
         'status_pendaftaran',
-        'status_roster',
         'tanggal_daftar',
         'tanggal_verifikasi',
-        'roster_locked_at',
         'alasan_penolakan',
-        'roster_unlocked_at',
     ];
 
     protected $hidden = [
@@ -42,8 +39,6 @@ class PendaftaranTurnamen extends Model
     protected $casts = [
         'tanggal_daftar' => 'datetime',
         'tanggal_verifikasi' => 'datetime',
-        'roster_locked_at' => 'datetime',
-        'roster_unlocked_at' => 'datetime',
     ];
 
     public function squad(): BelongsTo
@@ -70,6 +65,16 @@ class PendaftaranTurnamen extends Model
     public function anggota(): HasMany
     {
         return $this->hasMany(AnggotaPendaftaranTurnamen::class, 'id_pendaftaran', 'id_pendaftaran');
+    }
+
+    /**
+     * "terkunci" kalau masih ada pemain di roster ini yang terkunci.
+     */
+    public function statusRoster(): string
+    {
+        return $this->anggota()->where('status_roster', 'terkunci')->exists()
+            ? 'terkunci'
+            : 'terbuka';
     }
 
     public function scopeAktif(Builder $query): Builder

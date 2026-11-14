@@ -284,6 +284,9 @@ class TurnamenController extends Controller
                     'nama_instansi' => $pengajuan->nama_instansi,
                     'poster' => $pengajuan->poster,
                     'tipe_turnamen' => $pengajuan->tipe_turnamen,
+                    // Jumlah pemain per squad (diatur penyelenggara)
+                    'min_roster' => $pengajuan->min_roster,
+                    'maks_roster' => $pengajuan->maks_roster,
                     'slot' => $pengajuan->slot,
                     'slot_terisi' => $slotTerisi,
                     'sisa_slot' => $sisaSlot,

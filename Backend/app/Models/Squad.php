@@ -139,16 +139,37 @@ class Squad extends Model
     }
 
     /**
-     * R2.01–R2.05: roster terkunci sejak Squad mendaftar turnamen
-     * (menunggu atau diterima) sampai roster dibuka kembali
-     * (pendaftaran ditolak / turnamen selesai, PB-09 & PB-10).
+     * Roster lock per pemain: pendaftaran milik Squad ini (menunggu/diterima)
+     * yang masih mengunci Player tersebut. Null kalau Player bebas.
      */
-    public function isRosterLocked(): bool
+    public function pendaftaranTerkunciUntuk(int $idPlayer): ?PendaftaranTurnamen
     {
         return $this->pendaftaranTurnamen()
             ->aktif()
+            ->whereHas('anggota', fn ($q) => $q
+                ->where('id_player', $idPlayer)
+                ->where('status_roster', 'terkunci'))
+            ->with('turnamen.pengajuan')
+            ->latest('tanggal_daftar')
+            ->first();
+    }
+
+    /**
+     * Pemain Squad ini yang sedang terkunci roster, beserta turnamennya.
+     * Hasil: [id_player => [ {id_turnamen, nama_turnamen}, ... ]]
+     */
+    public function pemainTerkunci(): \Illuminate\Support\Collection
+    {
+        return AnggotaPendaftaranTurnamen::query()
             ->where('status_roster', 'terkunci')
-            ->exists();
+            ->whereHas('pendaftaran', fn ($q) => $q->aktif()->where('id_squad', $this->id_squad))
+            ->with('turnamen.pengajuan')
+            ->get()
+            ->groupBy('id_player')
+            ->map(fn ($rows) => $rows->map(fn ($a) => [
+                'id_turnamen' => $a->id_turnamen,
+                'nama_turnamen' => $a->turnamen?->pengajuan?->nama_turnamen,
+            ])->unique('id_turnamen')->values());
     }
 
     /**

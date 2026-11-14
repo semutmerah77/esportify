@@ -54,10 +54,6 @@ class PermintaanBergabungController extends Controller
             return $this->gagal('Kamu sudah diundang ke Squad ini. Silakan terima undangan di Inbox.', 422);
         }
 
-        if ($squad->isRosterLocked()) {
-            return $this->gagal('Squad Sedang Mengikuti Turnamen, Roster Terkunci.', 422);
-        }
-
         if ($squad->isFull()) {
             return $this->gagal('Squad sudah penuh.', 422);
         }
@@ -93,12 +89,6 @@ class PermintaanBergabungController extends Controller
 
         if ($error) {
             return $error;
-        }
-
-        // Diagram "Menerima Permintaan": roster dicek saat Leader membuka daftar
-
-        if ($squad->isRosterLocked()) {
-            return $this->gagal('Squad Sedang Mengikuti Turnamen, Roster Terkunci.', 422);
         }
 
         $daftar = $squad->permintaan()
@@ -141,10 +131,6 @@ class PermintaanBergabungController extends Controller
 
         if (!$permintaan) {
             return $this->gagal('Permintaan bergabung tidak ditemukan atau sudah diproses.', 404);
-        }
-
-        if ($squad->isRosterLocked()) {
-            return $this->gagal('Squad Sedang Mengikuti Turnamen, Roster Terkunci.', 422);
         }
 
         $hasil = DB::transaction(function () use ($squad, $permintaan) {
