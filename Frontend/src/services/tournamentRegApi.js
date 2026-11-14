@@ -67,6 +67,8 @@ export async function getTournamentForRegister(id) {
     game: d.game?.nama_game ?? d.nama_game ?? p.nama_game ?? "",
     paid,
     fee: Number(p.pendanaan?.biaya_pendaftaran ?? 0),
+    minRoster: p.min_roster ?? null,
+    maxRoster: p.maks_roster ?? null,
     payment: p.pembayaran
       ? {
           method: p.pembayaran.metode_pembayaran,
@@ -78,7 +80,7 @@ export async function getTournamentForRegister(id) {
   };
 }
 
-// GET /api/turnamen/:id/squad-saya
+// GET /api/turnamen/:id/squad-saya  (halaman 1/2 - pilih squad, tanpa daftar anggota)
 export async function getSquadChoices(id) {
   const res = await apiRequest(
     `/turnamen/${encodeURIComponent(id)}/squad-saya`,
@@ -91,14 +93,44 @@ export async function getSquadChoices(id) {
       logo: s.logo_url || null,
       isLeader: s.is_leader,
       count: s.jumlah_anggota,
-      min: s.min_anggota,
+      selectable: s.jumlah_bisa_dipilih ?? null,
+      minRoster: s.min_roster ?? null,
+      maxRoster: s.maks_roster ?? null,
       registrationId: s.id_pendaftaran,
       canRegister: s.bisa_daftar,
       reason: s.alasan || "",
     })),
+    minRoster: res?.meta?.min_roster ?? null,
+    maxRoster: res?.meta?.maks_roster ?? null,
     paid: res?.meta?.jenis_biaya === "berbayar",
     message: res?.message || "",
     organizer: res?.meta?.is_penyelenggara === true,
+  };
+}
+
+// GET /api/turnamen/:id/squad-saya/:idSquad  (halaman 2/2 - pilih roster)
+export async function getSquadRoster(id, squadId) {
+  const res = await apiRequest(
+    `/turnamen/${encodeURIComponent(id)}/squad-saya/${encodeURIComponent(squadId)}`,
+  );
+  const d = res?.data ?? {};
+  return {
+    minRoster: d.min_roster ?? null,
+    maxRoster: d.maks_roster ?? null,
+    selectable: d.jumlah_bisa_dipilih ?? null,
+    canRegister: d.bisa_daftar !== false,
+    reason: d.alasan || "",
+    members: (d.anggota ?? []).map((a) => ({
+      id: a.id_player,
+      username: a.username,
+      avatar: a.avatar_url || null,
+      role: a.peran,
+      isMe: a.is_pendaftar === true,
+      canPick: a.bisa_dipilih === true,
+      reason: /^penyelenggara/i.test(a.alasan || "")
+        ? `${a.username} adalah penyelenggara turnamen ini`
+        : a.alasan || "",
+    })),
   };
 }
 
@@ -141,10 +173,11 @@ export function mapRegistration(d) {
 // POST /api/turnamen/:id/daftar (multipart). 422 -> err.message sudah bahasa Indonesia.
 export async function submitRegistration(
   tournamentId,
-  { squadId, nickname, uid, file, agree },
+  { squadId, roster = [], nickname, uid, file, agree },
 ) {
   const form = new FormData();
   form.append("id_squad", squadId);
+  roster.forEach((playerId) => form.append("roster[]", playerId));
   form.append("nickname_game", nickname);
   form.append("uid_game", uid);
   if (file) form.append("bukti_pembayaran", file);

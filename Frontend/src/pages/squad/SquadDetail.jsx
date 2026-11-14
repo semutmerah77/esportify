@@ -13,11 +13,8 @@ import InvitePlayerModal from "../../components/squad/InvitePlayerModal";
 import JoinRequestsModal from "../../components/squad/JoinRequestsModal";
 import JoinSquadDialog from "../../components/squad/JoinSquadDialog";
 import SuccessDialog from "../../components/squad/SuccessDialog";
-import { getRegistrationState } from "../../services/tournamentRegApi";
-import { isSquadRosterLocked } from "../../services/tournamentManageApi";
 import {
   getSquadDetail,
-  isRosterLocked,
   kickMember,
   leaveSquad,
   requestJoin,
@@ -55,7 +52,6 @@ function SquadDetail() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState(""); // pesan gagal
-  const [rosterLocked, setRosterLocked] = useState(false);
   // Popup berhasil. Bisa dibawa dari halaman lain lewat navigate(..., { state: { notice } })
   const [notice, setNotice] = useState(location.state?.notice || "");
 
@@ -71,19 +67,10 @@ function SquadDetail() {
     setMissing(false);
     setLoadError("");
     getSquadDetail(id)
-      .then(async (data) => {
+      .then((data) => {
         if (off) return;
         if (!data) return setMissing(true);
-        // Anggota squad: cek pendaftaran turnamen untuk status roster terkunci
-        if (data.viewerRole !== "guest") {
-          try {
-            const regs = await getSquadRegistrations(data.squadId ?? data.id);
-            data.locked = regs.some((r) => r.rosterLocked);
-          } catch {
-            /* biarkan, tetap bisa terdeteksi dari error 422 */
-          }
-        }
-        if (!off) setSquad(data);
+        setSquad(data);
       })
       .catch(
         (err) =>
@@ -99,17 +86,6 @@ function SquadDetail() {
     const t = setTimeout(() => setToast(""), 3000);
     return () => clearTimeout(t);
   }, [toast]);
-
-  useEffect(() => {
-    if (!squad || squad.viewerRole !== "leader") return undefined;
-    let off = false;
-    isSquadRosterLocked(squad.squadId ?? squad.id)
-      .then((l) => !off && setRosterLocked(l))
-      .catch(() => {});
-    return () => {
-      off = true;
-    };
-  }, [squad?.squadId, squad?.id, squad?.viewerRole]);
 
   const back = (
     <button type="button" className="d-back" onClick={() => navigate(-1)}>
@@ -137,7 +113,7 @@ function SquadDetail() {
 
   const apiId = squad.squadId ?? squad.id;
 
-  // Muat ulang detail (anggota, jumlah, permintaan_saya, undangan_saya, badge permintaan)
+  // Muat ulang detail (anggota, jumlah, permintaan_saya, undangan_saya, status roster terkunci)
   const reload = async () => {
     try {
       const fresh = await getSquadDetail(id);
@@ -157,8 +133,7 @@ function SquadDetail() {
       setNotice(res.message || "Permintaan bergabung berhasil dikirim.");
       await reload();
     } catch (err) {
-      if (isRosterLocked(err)) setSquad((s) => ({ ...s, locked: true }));
-      else if (err.status === 422) reload(); // status berubah (mis. sudah diundang / sudah mengajukan)
+      if (err.status === 422) reload(); // status berubah (mis. sudah diundang / sudah mengajukan)
       setJoinError(err.message || "Gagal mengirim permintaan.");
     } finally {
       setBusy(false);
@@ -203,7 +178,8 @@ function SquadDetail() {
         state: { notice: res.message },
       });
     } catch (err) {
-      if (isRosterLocked(err)) setSquad((s) => ({ ...s, locked: true }));
+      // 422: masih di roster turnamen -> pesan BE tampil di dialog, status kunci disegarkan
+      if (err.status === 422) reload();
       setError(err.message || "Gagal keluar dari squad.");
       setBusy(false);
     }
@@ -224,7 +200,7 @@ function SquadDetail() {
       closeKick();
       setNotice(res.message || "Anggota berhasil dikeluarkan.");
     } catch (err) {
-      if (isRosterLocked(err)) setSquad((s) => ({ ...s, locked: true }));
+      if (err.status === 422) reload();
       setKickError(err.message || "Gagal mengeluarkan anggota.");
     } finally {
       setBusy(false);
@@ -256,13 +232,15 @@ function SquadDetail() {
 
   const role = squad.viewerRole;
   // Tandai anggota yang sedang login (dicocokkan lewat username)
+  // locked: false -> kunci tidak lagi berlaku untuk seluruh squad (undang/terima tetap aktif);
+  // kunci per pemain ada di members[].rosterLocked dan myRosterLocked.
   const view = {
     ...squad,
     members: squad.members.map((m) => ({
       ...m,
       isMe: Boolean(user?.username) && m.username === user.username,
     })),
-    locked: Boolean(squad.locked) || rosterLocked,
+    locked: false,
   };
 
   return (
@@ -282,9 +260,9 @@ function SquadDetail() {
 
         <div className="sqd-hero-side">
           <code className="sqd-id">ID: #{squad.id}</code>
-          {squad.locked && (
+          {squad.myRosterLocked && (
             <span className="tr-lock">
-              <Icon name="lock" size={12} /> Roster Terkunci
+              <Icon name="lock" size={12} /> Roster Turnamen
             </span>
           )}
           {role === "guest" && squad.myInvite && (
@@ -362,7 +340,7 @@ function SquadDetail() {
       {inviting && (
         <InvitePlayerModal
           squad={squad}
-          locked={view.locked}
+          locked={false}
           onClose={() => setInviting(false)}
         />
       )}
@@ -370,7 +348,7 @@ function SquadDetail() {
       {requestsOpen && (
         <JoinRequestsModal
           squad={squad}
-          locked={view.locked}
+          locked={false}
           onClose={() => setRequestsOpen(false)}
           onChanged={reload}
         />
@@ -399,7 +377,7 @@ function SquadDetail() {
       {kicking && (
         <KickMemberDialog
           member={kicking}
-          locked={view.locked}
+          locked={Boolean(kicking.rosterLocked)}
           loading={busy}
           error={kickError}
           onConfirm={handleKick}

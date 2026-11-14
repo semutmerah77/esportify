@@ -17,12 +17,18 @@ const joinedText = (value) => {
 // Profil singkat anggota. Aksi menyesuaikan peran yang melihat:
 // semua anggota : Kirim Permintaan Teman (belum ada API pertemanan -> nonaktif)
 // leader        : + Tetapkan Sebagai Leader, Keluarkan dari Squad
+// Keluarkan nonaktif bila anggota ada di roster turnamen (roster lock per pemain).
 function MemberProfileModal({ member, canManage, onClose, onPromote, onKick }) {
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const tournaments = (member.rosterTournaments ?? [])
+    .map((t) => t.name)
+    .join(", ");
+  const kickLocked = member.rosterLocked === true;
 
   return (
     <div
@@ -96,13 +102,24 @@ function MemberProfileModal({ member, canManage, onClose, onPromote, onKick }) {
               <button
                 type="button"
                 className="sqm-action danger"
+                disabled={kickLocked}
                 onClick={() => onKick(member)}
               >
                 <span className="sqm-ic red">
-                  <Icon name="user-minus" size={14} />
+                  <Icon name={kickLocked ? "lock" : "user-minus"} size={14} />
                 </span>
                 Keluarkan dari Squad
               </button>
+              {kickLocked && (
+                <p className="sqm-lock-note">
+                  <Icon name="lock" size={13} />
+                  <span>
+                    {member.username} masih terdaftar di roster turnamen
+                    {tournaments ? ` ${tournaments}` : ""} dan baru bisa
+                    dikeluarkan setelah turnamen selesai.
+                  </span>
+                </p>
+              )}
             </>
           )}
         </div>
