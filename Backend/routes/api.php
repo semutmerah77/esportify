@@ -405,6 +405,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 'indexSquad'
             ]);
 
+            // US40: daftar peserta lain (pemain di roster peserta)
+            Route::get('/turnamen/{id}/peserta', [
+                PendaftaranTurnamenController::class,
+                'pesertaLain'
+            ])->whereNumber('id');
+
               // Turnamen yang roster-nya memuat Player login
             Route::get('/turnamen-saya', [
                 PendaftaranTurnamenController::class,
@@ -450,6 +456,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 KelolaPendaftaranTurnamenController::class,
                 'peserta'
             ])->whereNumber('id');
+
+            // US39: detail peserta
+            Route::get('/turnamen-kelolaan/{id}/peserta/{idPendaftaran}', [
+                KelolaPendaftaranTurnamenController::class,
+                'detailPeserta'
+            ])->whereNumber(['id', 'idPendaftaran']);
 
         });
 

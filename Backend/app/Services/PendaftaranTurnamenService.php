@@ -339,6 +339,18 @@ class PendaftaranTurnamenService
             ->first();
     }
 
+    /**
+     * Pendaftaran DITERIMA (peserta) yang roster-nya memuat Player ini.
+     * Dipakai untuk akses daftar peserta lain (US40).
+     */
+    public function pendaftaranDiterimaPlayer(int $idTurnamen, int $idPlayer): ?PendaftaranTurnamen
+    {
+        return PendaftaranTurnamen::where('id_turnamen', $idTurnamen)
+            ->where('status_pendaftaran', 'diterima')
+            ->whereHas('anggota', fn ($q) => $q->where('id_player', $idPlayer))
+            ->first();
+    }
+
     public function rosterSquad(Squad $squad): Collection
     {
         return $squad->anggotaAktif()->pluck('id_player');
