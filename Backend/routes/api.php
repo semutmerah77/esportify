@@ -405,6 +405,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 'indexSquad'
             ]);
 
+              // Turnamen yang roster-nya memuat Player login
+            Route::get('/turnamen-saya', [
+                PendaftaranTurnamenController::class,
+                'turnamenSaya'
+            ]);
+
         });
 
         // ==========================================

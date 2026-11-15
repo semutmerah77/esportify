@@ -372,6 +372,68 @@ class PendaftaranTurnamenController extends Controller
         ]);
     }
 
+        /**
+     * GET /turnamen-saya
+     * Turnamen yang roster-nya memuat Player login.
+     * Anggota squad yang tidak dipilih ke roster tidak ikut melihatnya.
+     */
+    public function turnamenSaya(Request $request)
+    {
+        $player = $request->user()->player;
+        if (!$player) {
+            return $this->playerNotFound();
+        }
+
+        $idPlayer = $player->id_player;
+
+        $data = PendaftaranTurnamen::with([
+                'turnamen.pengajuan.game',
+                'squad',
+                // hanya baris roster milik player login (untuk status kunci miliknya)
+                'anggota' => fn ($q) => $q->where('id_player', $idPlayer),
+            ])
+            ->whereHas('anggota', fn ($q) => $q->where('id_player', $idPlayer))
+            ->latest('tanggal_daftar')
+            ->get()
+            ->map(function (PendaftaranTurnamen $p) {
+                $turnamen = $p->turnamen;
+                $pengajuan = $turnamen?->pengajuan;
+                $anggotaSaya = $p->anggota->first();
+
+                return [
+                    'id_pendaftaran' => $p->id_pendaftaran,
+                    'status_pendaftaran' => $p->status_pendaftaran,
+                    'alasan_penolakan' => $p->alasan_penolakan,
+                    'tanggal_daftar' => $p->tanggal_daftar,
+                    'roster_terkunci_saya' => $anggotaSaya?->status_roster === 'terkunci',
+
+                    'squad' => [
+                        'id_squad' => $p->id_squad,
+                        'nama_squad' => $p->squad?->nama_squad,
+                        'logo_url' => $this->fileUrl($p->squad?->logo_squad),
+                    ],
+
+                    'turnamen' => [
+                        'id_turnamen' => $p->id_turnamen,
+                        'nama_turnamen' => $pengajuan?->nama_turnamen,
+                        'jadwal_main' => $pengajuan?->jadwal_main,
+                        'status' => $this->statusTurnamen($pengajuan?->jadwal_main, $turnamen?->status),
+                        'tipe_turnamen' => $pengajuan?->tipe_turnamen,
+                        'nama_game' => $pengajuan?->game?->nama_game,
+                        'slot' => $pengajuan?->slot,
+                        'slot_terisi' => $turnamen ? $turnamen->slotTerisi() : 0,
+                    ],
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar turnamen saya berhasil diambil.',
+            'data' => $data,
+        ]);
+    }
+
     /**
      * GET /pendaftaran-turnamen/{id}/bukti-pembayaran
      * File bukti pembayaran (privat, tidak lewat /storage publik).
@@ -489,6 +551,23 @@ class PendaftaranTurnamenController extends Controller
                 ? url("/api/pendaftaran-turnamen/{$p->id_pendaftaran}/bukti-pembayaran")
                 : null,
         ];
+    }
+
+    /**
+     * Sama dengan TurnamenController::hitungStatus:
+     * "selesai" hanya dari status tersimpan (Sprint 3, bracket).
+     */
+    private function statusTurnamen($jadwalMain, ?string $statusTersimpan): string
+    {
+        if ($statusTersimpan === 'selesai') {
+            return 'selesai';
+        }
+
+        if (!$jadwalMain) {
+            return 'pendaftaran';
+        }
+
+        return now()->lt($jadwalMain) ? 'pendaftaran' : 'berlangsung';
     }
 
     private function gagal(string $pesan)
