@@ -7,6 +7,7 @@ use App\Models\Turnamen;
 use App\Models\PendaftaranTurnamen;
 use App\Models\Player;
 use App\Models\Penyelenggara;
+use App\Services\BracketService;
 use App\Services\PendaftaranTurnamenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -17,15 +18,17 @@ class TurnamenController extends Controller
     /**
      * Satu aturan status untuk list, kelolaan, dan detail.
      *
-     * Status "selesai" hanya ditetapkan saat bracket menemukan
-     * pemenang (Sprint 3), supaya status turnamen selalu sejalan
-     * dengan pembukaan roster. Sebelum itu, setelah jadwal_main
-     * statusnya "berlangsung".
+     * Status disimpan di turnamen.status (keputusan SA Sprint 2):
+     * - "berlangsung" diset sistem saat jadwal_main tiba, semua
+     *   pendaftaran sudah diverifikasi, dan bracket dipublikasikan
+     *   (BracketService::terapkanBerlangsung, scheduler turnamen:mulai).
+     * - "selesai" diset saat Penyelenggara menetapkan hasil akhir.
+     * Selain itu "pendaftaran", walaupun jadwal_main sudah lewat.
      */
     private function hitungStatus($jadwalMain, ?string $statusTersimpan = null): string
     {
         // Status disimpan di turnamen.status (keputusan SA Sprint 2):
-        // "berlangsung" diset BracketService::mulaiJikaSiap,
+        // "berlangsung" diset BracketService::terapkanBerlangsung,
         // "selesai" saat hasil akhir ditetapkan.
         return in_array($statusTersimpan, ['berlangsung', 'selesai'], true)
             ? $statusTersimpan
@@ -191,6 +194,7 @@ class TurnamenController extends Controller
                     'id_turnamen' => $item->id_turnamen,
                     'status' => $this->hitungStatus($pengajuan->jadwal_main, $item->status),
                     'created_at' => $item->created_at,
+                 ] + app(BracketService::class)->infoPersiapan($item) + [
 
                     'pengajuan' => [
                         'id_pengajuan' => $pengajuan->id_pengajuan,
@@ -268,6 +272,8 @@ class TurnamenController extends Controller
             'data' => [
                 'id_turnamen' => $turnamen->id_turnamen,
                 'status' => $status,
+                // Indikator "Persiapan tertunda" (tidak disimpan di DB)
+                ...app(BracketService::class)->infoPersiapan($turnamen),
                 'created_at' => $turnamen->created_at,
 
                 'pengajuan' => [

@@ -373,11 +373,12 @@ class PendaftaranTurnamenService
             return 'Turnamen sudah selesai.';
         }
 
-        // Verifikasi tetap dibuka setelah jadwal_main lewat (keputusan SA):
-        // turnamen menunggu sampai semua pendaftaran diverifikasi.
-        // Ditutup setelah bracket terbentuk.
-        if ($turnamen->status === 'berlangsung' || $turnamen->bracket()->exists()) {
-            return 'Bracket sudah dibentuk, pendaftaran tidak dapat diverifikasi lagi.';
+        // Verifikasi tetap dibuka setelah pendaftaran ditutup dan setelah
+        // jadwal_main lewat (keputusan SA): turnamen menunggu sampai semua
+        // pendaftaran diverifikasi. Ditutup setelah bracket dipublikasikan.
+        if ($turnamen->status === 'berlangsung'
+            || $turnamen->bracket()->where('status_bracket', 'dipublikasikan')->exists()) {
+            return 'Bracket sudah dipublikasikan, pendaftaran tidak dapat diverifikasi lagi.';
         }
 
         return null;

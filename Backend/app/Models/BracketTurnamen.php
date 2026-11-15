@@ -18,6 +18,7 @@ class BracketTurnamen extends Model
     protected $fillable = [
         'id_turnamen',
         'status_bracket',
+        'deskripsi_bracket',
         'tanggal_publikasi',
     ];
 

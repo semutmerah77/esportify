@@ -47,6 +47,7 @@ use App\Http\Controllers\Api\TurnamenController;
 use App\Http\Controllers\Player\PendaftaranTurnamenController;
 use App\Http\Controllers\Player\KelolaPendaftaranTurnamenController;
 use App\Http\Controllers\Player\KelolaBracketController;
+use App\Http\Controllers\Player\BracketController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
 // ==========================================
@@ -489,6 +490,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 'publikasi'
             ])->whereNumber('id');
 
+            // Bagian "Deskripsi Bracket" (tambah/edit)
+            Route::put('/turnamen-kelolaan/{id}/bracket/deskripsi', [
+                KelolaBracketController::class,
+                'ubahDeskripsi'
+            ])->whereNumber('id');
+
             // AD Edit Babak: judul babak dan jam
             Route::put('/turnamen-kelolaan/{id}/bracket/babak/{idBabak}', [
                 KelolaBracketController::class,
@@ -496,6 +503,25 @@ Route::middleware('auth:sanctum')->group(function () {
             ])->whereNumber(['id', 'idBabak']);
 
         });
+
+        
+        // ==========================================
+        // MODUL 4: TAMPILAN BRACKET (PB-14)
+        // & UPDATE / KOREKSI SKOR (PB-18, PB-19)
+        // ==========================================
+
+        // Tab Bracket untuk Player (isi tampil setelah dipublikasikan)
+        Route::get('/turnamen/{id}/bracket', [
+            BracketController::class,
+            'show'
+        ])->whereNumber('id')->middleware('permission:lihat_bracket');
+
+        // AD Update Bracket: isi/koreksi skor langsung (khusus penyelenggara, dicek di controller)
+        Route::put('/turnamen-kelolaan/{id}/pertandingan/{idPertandingan}/skor', [
+            KelolaBracketController::class,
+            'updateSkor'
+        ])->whereNumber(['id', 'idPertandingan'])->middleware('permission:update_bracket');
+        
 
         // NONAKTIF SEMENTARA: status "selesai" ditetapkan saat bracket
         // menemukan pemenang (Sprint 3), bukan lewat tombol.
