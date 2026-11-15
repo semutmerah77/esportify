@@ -30,6 +30,8 @@ class PendaftaranTurnamen extends Model
         'tanggal_daftar',
         'tanggal_verifikasi',
         'alasan_penolakan',
+        'peringkat_akhir',
+        'nomor_seed',
     ];
 
     protected $hidden = [

@@ -77,6 +77,7 @@ class PermissionSeeder extends Seeder
             'lihat_pendaftaran_turnamen',
             'kelola_pendaftaran_turnamen',
             'selesaikan_turnamen',
+            'kelola_bracket',
         ];
 
         foreach ($permissions as $permission) {

@@ -373,9 +373,11 @@ class PendaftaranTurnamenService
             return 'Turnamen sudah selesai.';
         }
 
-        $jadwalMain = $turnamen->pengajuan?->jadwal_main;
-        if ($jadwalMain && now()->gte(Carbon::parse($jadwalMain))) {
-            return 'Turnamen sudah dimulai, pendaftaran tidak dapat diverifikasi lagi.';
+        // Verifikasi tetap dibuka setelah jadwal_main lewat (keputusan SA):
+        // turnamen menunggu sampai semua pendaftaran diverifikasi.
+        // Ditutup setelah bracket terbentuk.
+        if ($turnamen->status === 'berlangsung' || $turnamen->bracket()->exists()) {
+            return 'Bracket sudah dibentuk, pendaftaran tidak dapat diverifikasi lagi.';
         }
 
         return null;

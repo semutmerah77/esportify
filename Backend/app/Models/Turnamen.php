@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Turnamen extends Model
 {
@@ -43,6 +44,17 @@ class Turnamen extends Model
             'id_turnamen',
             'id_turnamen'
         );
+    }
+
+    public function bracket(): HasOne
+    {
+        return $this->hasOne(BracketTurnamen::class, 'id_turnamen', 'id_turnamen');
+    }
+
+    public function pengumuman(): HasMany
+    {
+        return $this->hasMany(Pengumuman::class, 'id_turnamen', 'id_turnamen')
+            ->latest();
     }
 
     /**
