@@ -164,7 +164,11 @@ class KelolaPendaftaranTurnamenController extends Controller
                 return ['error' => $alasan];
             }
 
-            return ['pendaftaran' => $this->service->terima($pendaftaran)];
+            $this->service->terima($pendaftaran);
+            // Peserta bertambah → bracket draft disesuaikan otomatis.
+            app(\App\Services\BracketService::class)->sinkronkanBracket($turnamen);
+
+            return ['pendaftaran' => $pendaftaran];
         });
 
         if (isset($hasil['notFound'])) {

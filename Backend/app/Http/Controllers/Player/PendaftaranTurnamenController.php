@@ -270,6 +270,11 @@ class PendaftaranTurnamenController extends Controller
                     ]);
                 }
 
+                // Turnamen gratis: langsung diterima → bracket draft disesuaikan.
+                if (!$berbayar) {
+                    app(\App\Services\BracketService::class)->sinkronkanBracket($turnamen);
+                }
+
                 return ['pendaftaran' => $pendaftaran];
             });
         } catch (\Throwable $e) {
@@ -418,6 +423,9 @@ class PendaftaranTurnamenController extends Controller
                         'nama_turnamen' => $pengajuan?->nama_turnamen,
                         'jadwal_main' => $pengajuan?->jadwal_main,
                         'status' => $this->statusTurnamen($pengajuan?->jadwal_main, $turnamen?->status),
+                        'persiapan_tertunda' => $turnamen
+                            ? app(\App\Services\BracketService::class)->infoPersiapan($turnamen)['persiapan_tertunda']
+                            : false,
                         'tipe_turnamen' => $pengajuan?->tipe_turnamen,
                         'nama_game' => $pengajuan?->game?->nama_game,
                         'slot' => $pengajuan?->slot,

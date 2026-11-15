@@ -21,16 +21,28 @@ use Illuminate\Support\Facades\DB;
  */
 class BracketService
 {
+    public const GRACE_PERIOD_MENIT = 60;
+
     // ==========================================
-    // SYARAT PEMBENTUKAN
+    // KONDISI TURNAMEN
     // ==========================================
 
+    /**
+     * Pendaftaran ditutup berdasarkan jadwal_pendaftaran_tutup (bukan turnamen.status).
+     */
     public function pendaftaranSudahTutup(Turnamen $turnamen): bool
     {
         $pengajuan = $turnamen->pengajuan;
         $tutup = $pengajuan?->jadwal_pendaftaran_tutup ?? $pengajuan?->jadwal_main;
 
         return $tutup !== null && now()->gte(Carbon::parse($tutup));
+    }
+
+    public function jadwalMainSudahTiba(Turnamen $turnamen): bool
+    {
+        $jadwalMain = $turnamen->pengajuan?->jadwal_main;
+
+        return $jadwalMain !== null && now()->gte(Carbon::parse($jadwalMain));
     }
 
     public function jumlahMenunggu(Turnamen $turnamen): int
@@ -47,29 +59,160 @@ class BracketService
             ->count();
     }
 
+    public function bracketDari(Turnamen $turnamen): ?BracketTurnamen
+    {
+        return BracketTurnamen::where('id_turnamen', $turnamen->id_turnamen)->first();
+    }
+
     /**
-     * Alasan bracket belum bisa dibentuk, atau null kalau bisa.
+     * Alasan bracket tidak bisa dipublikasikan (dipakai publikasi manual,
+     * scheduler, dan tampilan), atau null kalau bisa.
      */
-    public function alasanBelumBisaDibentuk(Turnamen $turnamen): ?string
+    public function alasanTidakBisaDipublikasikan(Turnamen $turnamen, ?BracketTurnamen $bracket): ?string
     {
         if ($turnamen->status === 'selesai') {
             return 'Turnamen sudah selesai.';
         }
 
+        if ($bracket && !$bracket->isDraft()) {
+            return 'Bracket sudah dipublikasikan.';
+        }
+
         if (!$this->pendaftaranSudahTutup($turnamen)) {
-            return 'Bracket dibentuk otomatis setelah pendaftaran ditutup.';
+            return 'Pendaftaran turnamen masih dibuka. Bracket hanya dapat dipublikasikan setelah pendaftaran ditutup.';
         }
 
         $menunggu = $this->jumlahMenunggu($turnamen);
         if ($menunggu > 0) {
-            return "Masih ada {$menunggu} pendaftaran yang menunggu verifikasi. Verifikasi terlebih dahulu sebelum membentuk bracket.";
+            return "Masih ada {$menunggu} pendaftaran yang menunggu verifikasi. Selesaikan seluruh verifikasi terlebih dahulu sebelum memublikasikan bracket.";
         }
 
-        if ($this->jumlahDiterima($turnamen) < 2) {
-            return 'Bracket membutuhkan minimal 2 peserta yang diterima.';
+        if (!$bracket) {
+            return $this->jumlahDiterima($turnamen) === 0
+                ? 'Bracket belum dapat dipublikasikan karena belum ada pendaftaran yang diterima.'
+                : 'Bracket belum siap dipublikasikan. Sistem belum berhasil membentuk bracket. Silakan coba kembali.';
         }
 
         return null;
+    }
+
+    /**
+     * Awal grace period 1 jam:
+     * - verifikasi selesai sebelum jadwal_main → saat jadwal_main tiba;
+     * - verifikasi selesai setelah jadwal_main → saat verifikasi terakhir.
+     * Null kalau jadwal_main belum tiba atau masih ada pendaftaran menunggu.
+     */
+    public function awalGracePeriod(Turnamen $turnamen): ?Carbon
+    {
+        if (!$this->jadwalMainSudahTiba($turnamen) || $this->jumlahMenunggu($turnamen) > 0) {
+            return null;
+        }
+
+        $jadwalMain = Carbon::parse($turnamen->pengajuan->jadwal_main);
+
+        $verifikasiTerakhir = PendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
+            ->whereIn('status_pendaftaran', ['diterima', 'ditolak'])
+            ->max('tanggal_verifikasi');
+
+        if ($verifikasiTerakhir && Carbon::parse($verifikasiTerakhir)->gt($jadwalMain)) {
+            return Carbon::parse($verifikasiTerakhir);
+        }
+
+        return $jadwalMain;
+    }
+
+    public function batasPublikasiOtomatis(Turnamen $turnamen): ?Carbon
+    {
+        return $this->awalGracePeriod($turnamen)?->copy()->addMinutes(self::GRACE_PERIOD_MENIT);
+    }
+
+    /**
+     * Indikator tampilan (tidak disimpan di DB): badge pendaftaran,
+     * persiapan tertunda, countdown grace period, kesiapan publikasi, H-1.
+     */
+    public function infoPersiapan(Turnamen $turnamen): array
+    {
+        $turnamen->loadMissing('pengajuan');
+
+        $bracket = $this->bracketDari($turnamen);
+        $menunggu = $this->jumlahMenunggu($turnamen);
+        $ditutup = $this->pendaftaranSudahTutup($turnamen);
+        $sudahMain = $this->jadwalMainSudahTiba($turnamen);
+        $alasanPublikasi = $this->alasanTidakBisaDipublikasikan($turnamen, $bracket);
+        $dipublikasikan = $bracket !== null && !$bracket->isDraft();
+
+        $kondisi = match (true) {
+            $turnamen->status === 'selesai' => 'selesai',
+            $turnamen->status === 'berlangsung' => 'berlangsung',
+            $dipublikasikan => 'dipublikasikan',
+            !$ditutup => 'pendaftaran_dibuka',
+            $sudahMain && ($menunggu > 0 || !$bracket) => 'persiapan_tertunda',
+            $sudahMain => 'menunggu_publikasi',
+            $menunggu > 0 => 'menunggu_verifikasi',
+            !$bracket => 'belum_ada_peserta',
+            default => 'siap_dipublikasikan',
+        };
+
+        $batas = $kondisi === 'menunggu_publikasi' ? $this->batasPublikasiOtomatis($turnamen) : null;
+
+        return [
+            'pendaftaran_ditutup' => $ditutup,
+            'jumlah_menunggu' => $menunggu,
+            'status_bracket' => $bracket?->status_bracket,
+            'kondisi_persiapan' => $kondisi,
+
+            'persiapan_tertunda' => $kondisi === 'persiapan_tertunda',
+            'alasan_tertunda' => $kondisi === 'persiapan_tertunda'
+                ? ($menunggu > 0
+                    ? 'Publikasi otomatis tertunda karena masih terdapat pendaftaran yang belum diverifikasi. Selesaikan seluruh verifikasi terlebih dahulu.'
+                    : $alasanPublikasi)
+                : null,
+
+            'menunggu_publikasi' => $kondisi === 'menunggu_publikasi',
+            'batas_publikasi_otomatis' => $batas,
+            'sisa_detik_publikasi_otomatis' => $batas ? max(0, (int) now()->diffInSeconds($batas, false)) : null,
+
+            'bisa_dipublikasikan' => $alasanPublikasi === null,
+            'alasan_tidak_bisa_dipublikasikan' => $alasanPublikasi,
+
+            'pengingat_h1' => $this->pengingatH1($turnamen, $bracket, $menunggu),
+            'waktu_server' => now(),
+        ];
+    }
+
+    /**
+     * Pengingat H-1 di Turnamen Kelolaan (24 jam sebelum jadwal_main).
+     */
+    private function pengingatH1(Turnamen $turnamen, ?BracketTurnamen $bracket, int $menunggu): ?array
+    {
+        $jadwalMain = $turnamen->pengajuan?->jadwal_main;
+
+        if ($turnamen->status !== 'pendaftaran' || !$jadwalMain) {
+            return null;
+        }
+
+        $jadwalMain = Carbon::parse($jadwalMain);
+        if (now()->gte($jadwalMain) || now()->lt($jadwalMain->copy()->subDay())) {
+            return null;
+        }
+
+        $prioritas = match (true) {
+            $menunggu > 0 => 'verifikasi',
+            $bracket === null => 'pembentukan_bracket',
+            $bracket->isDraft() => 'publikasi',
+            default => 'selesai',
+        };
+
+        return [
+            'pesan' => 'Jadwal pertandingan tinggal 1 hari lagi. Pastikan seluruh persiapan turnamen telah selesai, termasuk verifikasi pendaftaran (jika diperlukan), pembentukan bracket, dan publikasi bracket sebelum pertandingan dimulai.',
+            'prioritas' => $prioritas,
+            'keterangan' => match ($prioritas) {
+                'verifikasi' => "Masih ada {$menunggu} pendaftaran yang menunggu verifikasi.",
+                'pembentukan_bracket' => 'Bracket belum terbentuk karena belum ada pendaftaran yang diterima.',
+                'publikasi' => 'Bracket masih draft. Publikasikan bracket setelah pendaftaran ditutup.',
+                default => 'Persiapan bracket sudah selesai.',
+            },
+        ];
     }
 
     // ==========================================
@@ -77,31 +220,70 @@ class BracketService
     // ==========================================
 
     /**
-     * Bracket turnamen ini. Kalau belum ada dan syarat terpenuhi,
-     * dibentuk otomatis (draft) sesuai urutan daftar peserta.
-     * Panggil di dalam DB::transaction setelah baris turnamen dikunci.
+     * Bracket draft dibentuk/disesuaikan otomatis dari pendaftaran yang
+     * diterima (tidak menunggu pendaftaran ditutup). Idempotent.
+     * - belum ada bracket & ada peserta → dibentuk;
+     * - peserta berubah selama draft → disesuaikan (urutan lama dipertahankan,
+     *   peserta baru di belakang; struktur dibangun ulang kalau ukurannya berubah);
+     * - sudah dipublikasikan → tidak diubah.
+     * Mengunci baris turnamen supaya tidak terbentuk dobel.
      */
-    public function bentukJikaBisa(Turnamen $turnamen): ?BracketTurnamen
+    public function sinkronkanBracket(Turnamen $turnamen): ?BracketTurnamen
     {
-        $bracket = BracketTurnamen::where('id_turnamen', $turnamen->id_turnamen)->first();
-        if ($bracket) {
+        Turnamen::whereKey($turnamen->id_turnamen)->lockForUpdate()->first();
+
+        $bracket = $this->bracketDari($turnamen);
+
+        if ($turnamen->status === 'selesai' || ($bracket && !$bracket->isDraft())) {
             return $bracket;
         }
 
-        if ($this->alasanBelumBisaDibentuk($turnamen) !== null) {
-            return null;
+        $peserta = $this->pesertaDiterima($turnamen);
+        if ($peserta->isEmpty()) {
+            return $bracket;
         }
 
-        // R6.26: diisi berurutan sesuai urutan daftar peserta.
-        $peserta = $this->pesertaDiterima($turnamen);
+        if (!$bracket) {
+            $bracket = BracketTurnamen::create([
+                'id_turnamen' => $turnamen->id_turnamen,
+                'status_bracket' => BracketTurnamen::STATUS_DRAFT,
+            ]);
 
-        $bracket = BracketTurnamen::create([
-            'id_turnamen' => $turnamen->id_turnamen,
-            'status_bracket' => BracketTurnamen::STATUS_DRAFT,
-        ]);
+            $this->buatStruktur($bracket, $peserta->count());
+            $this->isiPeserta($bracket, $peserta);
 
-        $this->buatStruktur($bracket, $peserta->count());
-        $this->isiPeserta($bracket, $peserta);
+            return $bracket;
+        }
+
+        $idSeedLama = PendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
+            ->whereNotNull('nomor_seed')
+            ->orderBy('nomor_seed')
+            ->pluck('id_pendaftaran');
+
+        $idPeserta = $peserta->pluck('id_pendaftaran');
+
+        if ($idSeedLama->sort()->values()->all() === $idPeserta->sort()->values()->all()) {
+            return $bracket;
+        }
+
+        // Urutan lama (hasil acak) dipertahankan, peserta baru di belakang.
+        $urut = $idSeedLama->intersect($idPeserta)->values()
+            ->merge($idPeserta->diff($idSeedLama)->values());
+        $pesertaUrut = $urut->map(fn ($id) => $peserta->firstWhere('id_pendaftaran', $id))->values();
+
+        $jumlahLama = $idSeedLama->count();
+        $jumlahBaru = $pesertaUrut->count();
+        $strukturSama = $jumlahLama > 0
+            && $this->ukuranBracket($jumlahLama) === $this->ukuranBracket($jumlahBaru)
+            && ($jumlahLama >= 4) === ($jumlahBaru >= 4);
+
+        if (!$strukturSama) {
+            Pertandingan::where('id_bracket', $bracket->id_bracket)->delete();
+            BabakTurnamen::where('id_bracket', $bracket->id_bracket)->delete();
+            $this->buatStruktur($bracket, $jumlahBaru);
+        }
+
+        $this->isiPeserta($bracket, $pesertaUrut);
 
         return $bracket;
     }
@@ -112,16 +294,14 @@ class BracketService
      */
     public function acak(BracketTurnamen $bracket): void
     {
-        $turnamen = $bracket->turnamen;
-
-        $peserta = $this->pesertaDiterima($turnamen)->shuffle()->values();
+        $peserta = $this->pesertaDiterima($bracket->turnamen)->shuffle()->values();
 
         $this->isiPeserta($bracket, $peserta);
     }
 
     /**
-     * US46: publikasi bracket. Turnamen baru "berlangsung" kalau
-     * jadwal_main sudah tiba (lihat mulaiJikaSiap).
+     * US46: publikasi bracket (manual / otomatis). Syarat dicek pemanggil
+     * lewat alasanTidakBisaDipublikasikan.
      */
     public function publikasikan(BracketTurnamen $bracket): void
     {
@@ -136,29 +316,17 @@ class BracketService
     }
 
     /**
-     * Mengubah status turnamen menjadi "berlangsung" kalau semua syarat
-     * terpenuhi: jadwal_main tiba, tidak ada pendaftaran menunggu,
-     * bracket terbentuk (dipublikasikan otomatis kalau masih draft).
-     * Tidak pernah menerima pendaftaran secara otomatis.
-     * Panggil di dalam DB::transaction setelah baris turnamen dikunci.
+     * Status "berlangsung" hanya kalau jadwal_main sudah tiba dan
+     * bracket sudah dipublikasikan.
      */
-    public function mulaiJikaSiap(Turnamen $turnamen): bool
+    public function terapkanBerlangsung(Turnamen $turnamen): bool
     {
-        if ($turnamen->status !== 'pendaftaran') {
+        $bracket = $this->bracketDari($turnamen);
+
+        if ($turnamen->status !== 'pendaftaran' || !$bracket || $bracket->isDraft()
+            || !$this->jadwalMainSudahTiba($turnamen)) {
             return false;
         }
-
-        $jadwalMain = $turnamen->pengajuan?->jadwal_main;
-        if (!$jadwalMain || now()->lt(Carbon::parse($jadwalMain))) {
-            return false;
-        }
-
-        $bracket = $this->bentukJikaBisa($turnamen);
-        if (!$bracket) {
-            return false;
-        }
-
-        $this->publikasikan($bracket);
 
         $turnamen->update(['status' => 'berlangsung']);
 
@@ -166,28 +334,70 @@ class BracketService
     }
 
     /**
-     * Dipanggil scheduler tiap menit (command turnamen:mulai).
+     * Proses otomatis satu turnamen (scheduler). Panggil di dalam DB::transaction.
+     * 1. sinkronkan bracket draft dengan peserta diterima;
+     * 2. sudah dipublikasikan & jadwal_main tiba → berlangsung;
+     * 3. belum dipublikasikan → publikasi otomatis kalau grace period habis
+     *    dan semua syarat publikasi terpenuhi (tidak pernah menerima
+     *    pendaftaran otomatis).
      *
-     * @return int jumlah turnamen yang dimulai
+     * @return string|null 'dipublikasikan' | 'berlangsung' | null
      */
-    public function prosesTurnamenSiapMulai(): int
+    public function prosesOtomatis(Turnamen $turnamen): ?string
     {
-        $kandidat = Turnamen::where('status', 'pendaftaran')
-            ->whereHas('pengajuan', fn ($q) => $q->where('jadwal_main', '<=', now()))
-            ->pluck('id_turnamen');
-
-        $dimulai = 0;
-
-        foreach ($kandidat as $idTurnamen) {
-            $dimulai += DB::transaction(function () use ($idTurnamen) {
-                $turnamen = Turnamen::whereKey($idTurnamen)->lockForUpdate()->first();
-                $turnamen?->load('pengajuan');
-
-                return $turnamen && $this->mulaiJikaSiap($turnamen) ? 1 : 0;
-            });
+        if ($turnamen->status !== 'pendaftaran') {
+            return null;
         }
 
-        return $dimulai;
+        $bracket = $this->sinkronkanBracket($turnamen);
+
+        if ($this->terapkanBerlangsung($turnamen)) {
+            return 'berlangsung';
+        }
+
+        if (!$this->jadwalMainSudahTiba($turnamen)
+            || $this->alasanTidakBisaDipublikasikan($turnamen, $bracket) !== null) {
+            return null;
+        }
+
+        $batas = $this->batasPublikasiOtomatis($turnamen);
+        if (!$batas || now()->lt($batas)) {
+            return null;
+        }
+
+        $this->publikasikan($bracket);
+        $this->terapkanBerlangsung($turnamen);
+
+        return 'dipublikasikan';
+    }
+
+    /**
+     * Dipanggil scheduler tiap menit (command turnamen:mulai).
+     *
+     * @return array{dipublikasikan:int, berlangsung:int}
+     */
+    public function prosesSemuaTurnamen(): array
+    {
+        $hasil = ['dipublikasikan' => 0, 'berlangsung' => 0];
+
+        $kandidat = Turnamen::where('status', 'pendaftaran')->pluck('id_turnamen');
+
+        foreach ($kandidat as $idTurnamen) {
+            $status = DB::transaction(function () use ($idTurnamen) {
+                $turnamen = Turnamen::with('pengajuan')->lockForUpdate()->find($idTurnamen);
+
+                return $turnamen ? $this->prosesOtomatis($turnamen) : null;
+            });
+
+            if ($status === 'dipublikasikan') {
+                $hasil['dipublikasikan']++;
+                $hasil['berlangsung']++;
+            } elseif ($status === 'berlangsung') {
+                $hasil['berlangsung']++;
+            }
+        }
+
+        return $hasil;
     }
 
     // ==========================================
@@ -368,6 +578,88 @@ class BracketService
     }
 
     // ==========================================
+    // HASIL PERTANDINGAN (PB-14, PB-18, PB-19)
+    // ==========================================
+
+    /**
+     * Alasan skor pertandingan tidak bisa diisi/dikoreksi, atau null kalau bisa.
+     */
+    public function alasanTidakBisaUbahSkor(Turnamen $turnamen, Pertandingan $pertandingan): ?string
+    {
+        if ($turnamen->status === 'selesai') {
+            return 'Turnamen sudah selesai.';
+        }
+
+        if ($pertandingan->bracket?->isDraft()) {
+            return 'Bracket belum dipublikasikan.';
+        }
+
+        if ($turnamen->status !== 'berlangsung') {
+            return 'Turnamen belum berlangsung.';
+        }
+
+        if ($pertandingan->is_bye) {
+            return 'Pertandingan bye tidak memiliki skor.';
+        }
+
+        if (!$pertandingan->keduaSquadAda()) {
+            return 'Kedua Squad pada pertandingan ini belum ditentukan.';
+        }
+
+        if ($pertandingan->punyaSkor()) {
+            return $this->alasanTidakBisaDikoreksi($pertandingan);
+        }
+
+        return null;
+    }
+
+    /**
+     * R6.22: koreksi hanya selama pertandingan berikutnya (jalur pemenang,
+     * dan jalur yang kalah untuk semifinal) belum memiliki skor.
+     */
+    public function alasanTidakBisaDikoreksi(Pertandingan $pertandingan): ?string
+    {
+        $berikutnya = array_filter([
+            $pertandingan->id_pertandingan_selanjutnya,
+            $pertandingan->id_pertandingan_kalah_selanjutnya,
+        ]);
+
+        foreach ($berikutnya as $idPertandingan) {
+            if (Pertandingan::find($idPertandingan)?->punyaSkor()) {
+                return 'Skor tidak dapat dikoreksi karena pertandingan berikutnya sudah memiliki skor.';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Inti penetapan hasil: simpan skor, tentukan pemenang, pemenang maju,
+     * yang kalah di semifinal ke perebutan Juara 3. Dipakai update skor
+     * langsung (PB-18), koreksi (PB-19), dan persetujuan laporan (PB-16).
+     * Kalau koreksi mengubah pemenang, slot berikutnya ikut diganti.
+     * Panggil di dalam DB::transaction. Skor tidak boleh seri.
+     */
+    public function tetapkanHasil(Pertandingan $pertandingan, int $skorA, int $skorB): Pertandingan
+    {
+        $menangA = $skorA > $skorB;
+
+        $idPemenang = $menangA ? $pertandingan->id_pendaftaran_a : $pertandingan->id_pendaftaran_b;
+        $idKalah = $menangA ? $pertandingan->id_pendaftaran_b : $pertandingan->id_pendaftaran_a;
+
+        $pertandingan->update([
+            'skor_a' => $skorA,
+            'skor_b' => $skorB,
+            'id_pendaftaran_pemenang' => $idPemenang,
+            'status_pertandingan' => Pertandingan::STATUS_SELESAI,
+        ]);
+
+        $this->majukan($pertandingan, $idPemenang, $idKalah);
+
+        return $pertandingan;
+    }
+
+    // ==========================================
     // FORMAT RESPONSE
     // ==========================================
 
@@ -375,8 +667,10 @@ class BracketService
      * Bracket lengkap per babak. $idPendaftaranSaya dipakai untuk
      * menandai pertandingan Squad milik user (PB-14).
      */
-    public function formatBracket(BracketTurnamen $bracket, ?int $idPendaftaranSaya = null): array
+    public function formatBracket(BracketTurnamen $bracket, ?int $idPendaftaranSaya = null, bool $untukPenyelenggara = false): array
     {
+        $turnamen = $untukPenyelenggara ? $bracket->turnamen()->with('pengajuan')->first() : null;
+
         $bracket->load([
             'babak.pertandingan.pendaftaranA.squad',
             'babak.pertandingan.pendaftaranB.squad',
@@ -393,6 +687,7 @@ class BracketService
         return [
             'id_bracket' => $bracket->id_bracket,
             'status_bracket' => $bracket->status_bracket,
+            'deskripsi_bracket' => $bracket->deskripsi_bracket,
             'tanggal_publikasi' => $bracket->tanggal_publikasi,
             'jumlah_peserta' => $jumlahPeserta,
             'jumlah_slot' => $this->ukuranBracket(max(2, $jumlahPeserta)),
@@ -419,6 +714,9 @@ class BracketService
                     'posisi_pemenang_selanjutnya' => $p->posisi_pemenang_selanjutnya,
                     'id_pertandingan_kalah_selanjutnya' => $p->id_pertandingan_kalah_selanjutnya,
                     'posisi_kalah_selanjutnya' => $p->posisi_kalah_selanjutnya,
+                    // Penyelenggara: ikon pensil (update/koreksi skor) aktif atau tidak
+                    'bisa_update_skor' => $turnamen !== null
+                        && $this->alasanTidakBisaUbahSkor($turnamen, $p->setRelation('bracket', $bracket)) === null,
                     'melibatkan_squad_saya' => $idPendaftaranSaya !== null && in_array(
                         $idPendaftaranSaya,
                         [(int) $p->id_pendaftaran_a, (int) $p->id_pendaftaran_b],
