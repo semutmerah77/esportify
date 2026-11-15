@@ -15,11 +15,16 @@ const listOf = (response) => {
 // ASSUMPTION: ID sumber pendanaan. Hanya Dana Pribadi = 2 yang terkonfirmasi.
 const FUNDING_IDS = { sponsor: 1, dana_pribadi: 2, biaya_peserta: 3 };
 
+const toNum = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+
 // ----- Kelola Turnamen -----
+// GET /turnamen-kelolaan. Tiap item membawa indikator persiapan (sejajar "status"):
+// pendaftaran_ditutup, jumlah_menunggu, persiapan_tertunda, alasan_tertunda, pengingat_h1.
 export async function getManagedTournaments() {
   const response = await apiRequest("/turnamen-kelolaan");
   const list = listOf(response).map((t) => {
     const p = t.pengajuan ?? {};
+    const h1 = t.pengingat_h1 ?? null;
     return {
       id: Number(t.id_turnamen),
       name: p.nama_turnamen ?? "-",
@@ -27,20 +32,39 @@ export async function getManagedTournaments() {
       status: String(t.status ?? "")
         .trim()
         .toLowerCase(),
+      closed: t.pendaftaran_ditutup === true,
+      delayed: t.persiapan_tertunda === true,
+      delayReason: t.alasan_tertunda ?? "",
+      reminder: h1
+        ? {
+            message: h1.pesan ?? "",
+            priority: h1.prioritas ?? "",
+            note: h1.keterangan ?? "",
+          }
+        : null,
       registrationCloses: p.jadwal_pendaftaran_tutup ?? "",
       matchDate: p.jadwal_main ?? "",
       type: String(p.tipe_turnamen ?? "").toLowerCase(),
       capacity: p.slot ?? null,
-      filled: null,
-      pendingVerify: null,
+      filled: toNum(p.slot_terisi),
+      pendingVerify: toNum(t.jumlah_menunggu),
     };
   });
-  const metas = await Promise.all(list.map((t) => getRegistrationMeta(t.id)));
-  return list.map((t, i) => ({
-    ...t,
-    filled: metas[i]?.filled ?? null,
-    pendingVerify: metas[i]?.waiting ?? null,
-  }));
+
+  // Cadangan: kalau BE belum mengirim angkanya, ambil dari tab pendaftaran per turnamen
+  const missing = list.filter(
+    (t) => t.filled === null || t.pendingVerify === null,
+  );
+  if (missing.length > 0) {
+    const metas = await Promise.all(
+      missing.map((t) => getRegistrationMeta(t.id)),
+    );
+    missing.forEach((t, i) => {
+      if (t.filled === null) t.filled = metas[i]?.filled ?? null;
+      if (t.pendingVerify === null) t.pendingVerify = metas[i]?.waiting ?? null;
+    });
+  }
+  return list;
 }
 
 // ----- Status Pengajuan -----

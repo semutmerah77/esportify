@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Icon from "../../components/icon";
+import BracketPanel from "../../components/kelola/BracketPanel";
 import { RegistrantRow } from "../../components/kelola/KlParts";
 import ParticipantDetailModal from "../../components/kelola/ParticipantDetailModal";
 import ParticipantsPanel from "../../components/kelola/ParticipantsPanel";
@@ -16,6 +17,8 @@ import "../../styles/kelola.css";
 
 const STATUS_LABEL = {
   pendaftaran: "Pendaftaran",
+  ditutup: "Pendaftaran ditutup",
+  tertunda: "Tertunda",
   berlangsung: "Berlangsung",
   selesai: "Selesai",
 };
@@ -132,6 +135,13 @@ function KelolaTurnamen() {
   }
   if (!head) return <div className="kl-page">{back}</div>;
 
+  // Indikator tampilan dari BE (bukan nilai status): Tertunda menggantikan Berlangsung
+  const statusKey = head.delayed
+    ? "tertunda"
+    : head.status === "pendaftaran" && head.closed
+      ? "ditutup"
+      : head.status;
+
   const percent = head.slot
     ? Math.min(100, Math.round(((head.filled ?? 0) / head.slot) * 100))
     : 0;
@@ -195,8 +205,8 @@ function KelolaTurnamen() {
             <h2>{head.name}</h2>
             <p>{head.game}</p>
           </div>
-          <span className={`kl-pill ${head.status}`}>
-            <i></i> {STATUS_LABEL[head.status] ?? head.status}
+          <span className={`kl-pill ${statusKey}`}>
+            <i></i> {STATUS_LABEL[statusKey] ?? statusKey}
           </span>
         </div>
 
@@ -281,11 +291,10 @@ function KelolaTurnamen() {
           />
         )}
 
-        {(tab === "bracket" || tab === "pengumuman") && (
-          <p className="kl-empty">
-            Fitur {tab === "bracket" ? "Bracket" : "Pengumuman"} akan segera
-            tersedia.
-          </p>
+        {tab === "bracket" && <BracketPanel id={id} onChanged={loadHead} />}
+
+        {tab === "pengumuman" && (
+          <p className="kl-empty">Fitur Pengumuman akan segera tersedia.</p>
         )}
       </section>
 

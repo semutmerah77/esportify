@@ -65,6 +65,9 @@ export async function getManageHeader(id) {
     status: String(t.status ?? "")
       .trim()
       .toLowerCase(), // pendaftaran | berlangsung | selesai
+    closed: t.pendaftaran_ditutup === true,
+    delayed: t.persiapan_tertunda === true,
+    delayReason: t.alasan_tertunda ?? "",
     closeDate: p.jadwal_pendaftaran_tutup ?? "",
     matchDate: p.jadwal_main ?? "",
     type: String(p.tipe_turnamen ?? "").toLowerCase(),

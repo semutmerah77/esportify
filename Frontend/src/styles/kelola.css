@@ -75,6 +75,19 @@
   background: rgba(71, 85, 105, 0.3);
   color: #cbd5e1;
 }
+
+.kl-pill.ditutup {
+  border-color: #475569;
+  background: rgba(71, 85, 105, 0.3);
+  color: #cbd5e1;
+}
+
+.kl-pill.tertunda {
+  border-color: #7c2d12;
+  background: rgba(154, 52, 18, 0.3);
+  color: #fb923c;
+}
+
 .kl-head-meta {
   display: flex;
   flex-wrap: wrap;

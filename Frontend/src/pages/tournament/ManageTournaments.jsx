@@ -12,6 +12,23 @@ const FILTERS = [
   { value: "selesai", label: "Selesai" },
 ];
 
+function CardSkeleton() {
+  return (
+    <div className="t-card t-skel" aria-hidden="true">
+      <i className="w30" />
+      <i className="w15" />
+      <div className="t-skel-grid">
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+      </div>
+      <i className="bar" />
+    </div>
+  );
+}
+
 function ManageTournaments() {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
@@ -26,7 +43,8 @@ function ManageTournaments() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Pencarian dan filter dikerjakan di klien, sementara
+  // Pencarian dan filter dikerjakan di klien, sementara.
+  // Filter memakai status asli turnamen (Tertunda & Pendaftaran ditutup tetap termasuk "Pendaftaran").
   const keyword = search.trim().toLowerCase();
   const visible = items.filter(
     (t) =>
@@ -72,7 +90,13 @@ function ManageTournaments() {
         </div>
 
         {error && <p className="admin-message error">{error}</p>}
-        {loading && <p className="admin-message">Memuat...</p>}
+
+        {loading && (
+          <div className="t-list">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        )}
 
         <div className="t-list">
           {visible.map((t) => (
