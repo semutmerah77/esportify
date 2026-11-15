@@ -127,8 +127,9 @@ class BracketService
     }
 
     /**
-     * Indikator tampilan (tidak disimpan di DB): badge pendaftaran,
-     * persiapan tertunda, countdown grace period, kesiapan publikasi, H-1.
+     * Indikator tampilan untuk FE (tidak disimpan di DB), sesuai catatan
+     * final SA bagian 13: badge pendaftaran, jumlah menunggu, persiapan
+     * tertunda, countdown grace period, kesiapan publikasi, pengingat H-1.
      */
     public function infoPersiapan(Turnamen $turnamen): array
     {
@@ -136,39 +137,29 @@ class BracketService
 
         $bracket = $this->bracketDari($turnamen);
         $menunggu = $this->jumlahMenunggu($turnamen);
-        $ditutup = $this->pendaftaranSudahTutup($turnamen);
-        $sudahMain = $this->jadwalMainSudahTiba($turnamen);
         $alasanPublikasi = $this->alasanTidakBisaDipublikasikan($turnamen, $bracket);
-        $dipublikasikan = $bracket !== null && !$bracket->isDraft();
 
-        $kondisi = match (true) {
-            $turnamen->status === 'selesai' => 'selesai',
-            $turnamen->status === 'berlangsung' => 'berlangsung',
-            $dipublikasikan => 'dipublikasikan',
-            !$ditutup => 'pendaftaran_dibuka',
-            $sudahMain && ($menunggu > 0 || !$bracket) => 'persiapan_tertunda',
-            $sudahMain => 'menunggu_publikasi',
-            $menunggu > 0 => 'menunggu_verifikasi',
-            !$bracket => 'belum_ada_peserta',
-            default => 'siap_dipublikasikan',
-        };
+        // Hanya relevan sebelum bracket dipublikasikan & setelah jadwal_main tiba.
+        $belumMulai = $turnamen->status === 'pendaftaran'
+            && !($bracket && !$bracket->isDraft())
+            && $this->jadwalMainSudahTiba($turnamen);
 
-        $batas = $kondisi === 'menunggu_publikasi' ? $this->batasPublikasiOtomatis($turnamen) : null;
+        $tertunda = $belumMulai && ($menunggu > 0 || !$bracket);
+
+        // Countdown hanya selama grace period berjalan.
+        $batas = $belumMulai && !$tertunda ? $this->batasPublikasiOtomatis($turnamen) : null;
 
         return [
-            'pendaftaran_ditutup' => $ditutup,
+            'pendaftaran_ditutup' => $this->pendaftaranSudahTutup($turnamen),
             'jumlah_menunggu' => $menunggu,
-            'status_bracket' => $bracket?->status_bracket,
-            'kondisi_persiapan' => $kondisi,
 
-            'persiapan_tertunda' => $kondisi === 'persiapan_tertunda',
-            'alasan_tertunda' => $kondisi === 'persiapan_tertunda'
+            'persiapan_tertunda' => $tertunda,
+            'alasan_tertunda' => $tertunda
                 ? ($menunggu > 0
                     ? 'Publikasi otomatis tertunda karena masih terdapat pendaftaran yang belum diverifikasi. Selesaikan seluruh verifikasi terlebih dahulu.'
                     : $alasanPublikasi)
                 : null,
 
-            'menunggu_publikasi' => $kondisi === 'menunggu_publikasi',
             'batas_publikasi_otomatis' => $batas,
             'sisa_detik_publikasi_otomatis' => $batas ? max(0, (int) now()->diffInSeconds($batas, false)) : null,
 
