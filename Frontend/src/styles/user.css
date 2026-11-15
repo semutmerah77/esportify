@@ -2348,6 +2348,143 @@
 .t-card .t-btn-primary:hover {
   background: var(--blue-hover);
 }
+
+/* PB-14 (indikator persiapan di daftar Turnamen Kelolaan) */
+
+/* Label status kartu: pil seperti di halaman Kelola */
+
+.t-status {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 8px;
+  height: auto;
+  min-height: 0;
+  padding: 3px 14px;
+  border: 1px solid #14532d;
+  border-radius: 999px;
+  background: rgba(22, 101, 52, 0.3);
+  color: #22c55e;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.t-status i {
+  flex: none;
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Pendaftaran (hijau) memakai gaya dasar di atas */
+.t-status.berlangsung {
+  border-color: #78350f;
+  background: rgba(146, 64, 14, 0.3);
+  color: #fbbf24;
+}
+.t-status.ditutup,
+.t-status.selesai {
+  border-color: #475569;
+  background: rgba(71, 85, 105, 0.3);
+  color: #cbd5e1;
+}
+.t-status.tertunda {
+  border-color: #7c2d12;
+  background: rgba(154, 52, 18, 0.3);
+  color: #fb923c;
+}
+.t-stats dd.t-red {
+  color: #f87171;
+}
+.t-stats dd.t-yellow {
+  color: #facc15;
+}
+
+.t-alert {
+  display: grid;
+  gap: 6px;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid;
+  border-radius: 10px;
+}
+.t-alert strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.t-alert b {
+  font-size: 14px;
+  color: #fff;
+}
+.t-alert p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.t-alert.danger {
+  border-color: #7f1d1d;
+  background: #1a0b0b;
+}
+.t-alert.danger strong {
+  color: #fff;
+}
+.t-alert.danger strong svg {
+  color: #f87171;
+}
+.t-alert.danger p {
+  color: #cbd5e1;
+}
+.t-alert.warn {
+  border-color: #713f12;
+  background: #1c1608;
+}
+.t-alert.warn strong {
+  color: #facc15;
+}
+.t-alert.warn p {
+  color: #e2e8f0;
+}
+
+/* Skeleton kartu */
+.t-skel {
+  display: grid;
+  gap: 14px;
+}
+.t-skel i {
+  display: block;
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #182033 25%, #1f2a44 50%, #182033 75%);
+  background-size: 200% 100%;
+  animation: t-skel-shimmer 1.2s infinite linear;
+}
+.t-skel i.w30 {
+  width: 30%;
+  height: 18px;
+}
+.t-skel i.w15 {
+  width: 15%;
+}
+.t-skel i.bar {
+  height: 40px;
+}
+.t-skel-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+@keyframes t-skel-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @media (max-width: 900px) {
   .t-stats.t-stats-5 {
     grid-template-columns: repeat(2, 1fr);

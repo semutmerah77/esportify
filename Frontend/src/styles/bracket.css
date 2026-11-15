@@ -1,0 +1,689 @@
+/* PB-13 Kelola Bracket (prefix kl-bk-) */
+
+/* Kartu status */
+.kl-bk-card {
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border: 1px solid #243044;
+  border-radius: 12px;
+  background: #121a2c;
+}
+.kl-bk-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.kl-bk-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.kl-bk-title h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--white);
+}
+.kl-bk-draft {
+  padding: 3px 10px;
+  border: 1px solid #243044;
+  border-radius: 6px;
+  background: #0b1020;
+  color: #cbd5e1;
+  font-size: 12px;
+}
+.kl-bk-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.kl-bk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #243044;
+  border-radius: 8px;
+  background: #0b1020;
+  color: var(--white);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.kl-bk-btn:hover:not(:disabled) {
+  background: #1f2535;
+}
+.kl-bk-btn.primary {
+  border-color: transparent;
+  background: #3b82f6;
+}
+.kl-bk-btn.primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+.kl-bk-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.kl-bk-card-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.kl-bk-card-sub p {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+.kl-bk-hintline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.kl-bk-hintline.lock {
+  color: #94a3b8;
+}
+.kl-bk-hintline.warn {
+  color: #fbbf24;
+  font-weight: 600;
+}
+.kl-bk-hintline.ok {
+  color: #22c55e;
+}
+
+/* Canvas */
+.kl-bk {
+  position: relative;
+  border: 1px solid #243044;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #0a111d;
+  background-image: radial-gradient(
+    circle,
+    rgba(100, 116, 139, 0.22) 1px,
+    transparent 1.2px
+  );
+  background-size: 25px 25px;
+}
+.kl-bk-scroll {
+  max-height: 600px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #3b4a9a transparent;
+}
+.kl-bk-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.kl-bk-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #3b4a9a;
+}
+.kl-bk-zoom {
+  position: relative;
+  min-width: 100%;
+}
+.kl-bk-heads {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  border-bottom: 1px solid #2c3a78;
+  background: #121a2c;
+}
+.kl-bk-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0 52px;
+  border-right: 1px solid #243044;
+  text-align: center;
+}
+.kl-bk-head b {
+  display: block;
+  font-size: 13px;
+  color: var(--white);
+}
+.kl-bk-head span {
+  display: block;
+  font-size: 12px;
+  color: #60a5fa;
+}
+.kl-bk-head span.unset {
+  color: #64748b;
+}
+.kl-bk-edit {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  transform: translateY(-50%);
+  border: 1px solid #3b4a9a;
+  border-radius: 8px;
+  background: #151d3a;
+  color: #cbd5e1;
+  cursor: pointer;
+}
+.kl-bk-edit:hover {
+  background: #1f2a55;
+}
+.kl-bk-body {
+  position: relative;
+}
+.kl-bk-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+.kl-bk-lines path {
+  fill: none;
+  stroke: #3b4a9a;
+  stroke-width: 2;
+}
+.kl-bk-lines path.loser {
+  stroke-dasharray: 5 4;
+  opacity: 0.6;
+}
+
+/* Kartu pertandingan */
+.kl-bk-match {
+  position: absolute;
+  border: 1px solid #3b4a9a;
+  border-radius: 6px;
+  background: #151d3a;
+}
+.kl-bk-match.mine {
+  border-color: #60a5fa;
+}
+.kl-bk-match.empty {
+  border-style: dashed;
+  background: rgba(21, 29, 58, 0.6);
+}
+.kl-bk-no {
+  position: absolute;
+  top: 50%;
+  left: -28px;
+  width: 26px;
+  transform: translateY(-50%);
+  background: #0a111d;
+  font-style: normal;
+  font-size: 11px;
+  text-align: right;
+  color: #8b93c9;
+}
+.kl-bk-slot {
+  display: flex;
+  align-items: stretch;
+  height: 30px;
+  font-size: 13px;
+  color: var(--white);
+}
+.kl-bk-slot + .kl-bk-slot {
+  border-top: 1px solid #2c3a78;
+}
+.kl-bk-seed {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  background: #232d63;
+  font-size: 12px;
+  font-weight: 600;
+}
+.kl-bk-name {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+  line-height: 30px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.kl-bk-score {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  border-left: 1px solid #2c3a78;
+  background: #10172f;
+  font-size: 12px;
+  color: #8b93c9;
+}
+.kl-bk-slot.tbd .kl-bk-name,
+.kl-bk-slot.bye .kl-bk-name {
+  color: #64748b;
+}
+.kl-bk-slot.tbd .kl-bk-seed,
+.kl-bk-slot.bye .kl-bk-seed {
+  background: transparent;
+}
+.kl-bk-slot.bye .kl-bk-name {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.kl-bk-slot.won .kl-bk-name,
+.kl-bk-slot.won .kl-bk-score {
+  font-weight: 700;
+  color: #fff;
+}
+.kl-bk-slot.lost {
+  opacity: 0.6;
+}
+
+/* Kontrol zoom */
+.kl-bk-zoombar {
+  position: absolute;
+  right: 14px;
+  bottom: 18px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border: 1px solid #2c3a78;
+  border-radius: 10px;
+  background: #121a2c;
+  font-size: 12px;
+  color: var(--white);
+}
+.kl-bk-zoombar span {
+  min-width: 42px;
+  text-align: center;
+}
+.kl-bk-zoombar i {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: #2c3a78;
+}
+.kl-bk-zoombar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.kl-bk-zoombar button:hover {
+  background: #1f2a55;
+}
+
+/* Dialog konfirmasi (Acak / Publikasi) */
+.kl-bk-confirm {
+  max-width: 480px;
+  background: #121a2c;
+}
+.kl-bk-confirm-ic {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: #1b2a52;
+  color: #3b82f6;
+}
+.kl-bk-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0 18px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.kl-bk-err {
+  margin: 0 0 12px !important;
+  font-size: 13px !important;
+  color: #f87171 !important;
+}
+.kl-bk-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.kl-bk-confirm-actions .kl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+}
+.kl-bk-primary {
+  background: #3b82f6;
+  color: #fff;
+}
+.kl-bk-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+/* Dialog Edit jadwal babak */
+.kl-bk-edit-dlg {
+  max-width: 440px;
+  background: #121a2c;
+}
+.kl-bk-edit-dlg header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.kl-bk-edit-dlg label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+}
+.kl-bk-x {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #94a3b8;
+  cursor: pointer;
+}
+.kl-bk-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  margin-bottom: 16px;
+  padding: 0 14px;
+  border: 1px solid #243044;
+  border-radius: 10px;
+  background: #0b1020;
+  color: #64748b;
+}
+.kl-bk-field:focus-within {
+  border-color: #3b82f6;
+}
+.kl-bk-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--white);
+  font: inherit;
+  font-size: 15px;
+}
+.kl-bk-field input::placeholder {
+  color: #64748b;
+}
+.kl-bk-field em {
+  font-style: normal;
+  font-size: 13px;
+  color: #94a3b8;
+}
+.kl-bk-hint {
+  display: block;
+  margin: -8px 0 18px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Skeleton */
+.kl-bk-skel {
+  display: grid;
+  gap: 12px;
+}
+.kl-bk-skel i,
+.kl-bk-skel-canvas {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #182033 25%, #1f2a44 50%, #182033 75%);
+  background-size: 200% 100%;
+  animation: kl-bk-shimmer 1.2s infinite linear;
+}
+.kl-bk-skel i {
+  height: 16px;
+}
+.kl-bk-skel i.w40 {
+  width: 40%;
+}
+.kl-bk-skel i.w70 {
+  width: 70%;
+}
+.kl-bk-skel-canvas {
+  height: 360px;
+  border-radius: 12px;
+}
+
+/* Revisi: hitung mundur, deskripsi bracket */
+.kl-bk-hintline.timer {
+  color: #cbd5e1;
+}
+.kl-bk-hintline.timer svg {
+  color: #fbbf24;
+}
+.kl-bk-hintline.timer b {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  color: #fbbf24;
+}
+.kl-bk-desc {
+  display: block;
+}
+.kl-bk-desc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.kl-bk-desc h4 {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.kl-bk-desc p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: #e2e8f0;
+}
+.kl-bk-desc p.empty {
+  color: #64748b;
+}
+.kl-bk-edit.static {
+  position: static;
+  transform: none;
+}
+.kl-bk-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #243044;
+  border-radius: 10px;
+  outline: 0;
+  resize: vertical;
+  background: #0b1020;
+  color: var(--white);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.kl-bk-textarea:focus {
+  border-color: #3b82f6;
+}
+.kl-bk-desc-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.kl-bk-desc-foot em {
+  font-style: normal;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.kl-bk-desc-foot > div {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.kl-bk-desc-foot .kl-btn {
+  padding: 0 18px;
+}
+.kl-bk-err.inline {
+  margin: 0 !important;
+}
+
+/* Pemilih jam */
+.kl-bk-tp {
+  position: relative;
+  margin-bottom: 16px;
+}
+.kl-bk-tp .kl-bk-field {
+  width: 100%;
+  margin-bottom: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.kl-bk-tp .kl-bk-field span {
+  flex: 1;
+  font-size: 15px;
+  color: var(--white);
+}
+.kl-bk-tp .kl-bk-field span.ph {
+  color: #64748b;
+}
+
+.kl-bk-tp-pop {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #2c3a78;
+  border-radius: 12px;
+  background: #0f1627;
+}
+
+.kl-bk-tp-cols {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.kl-bk-tp-sep {
+  font-size: 18px;
+  font-weight: 700;
+  color: #64748b;
+}
+.kl-bk-tp-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  width: 84px;
+  outline: 0;
+}
+.kl-bk-tp-col button {
+  display: block;
+  width: 100%;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #64748b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.kl-bk-tp-col button:hover {
+  background: #1f2a55;
+  color: #cbd5e1;
+}
+.kl-bk-tp-col button.on {
+  height: 34px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+}
+.kl-bk-tp-col button.step {
+  display: grid;
+  place-items: center;
+  height: 26px;
+  color: #94a3b8;
+}
+.kl-bk-tp-col:focus-visible {
+  box-shadow: 0 0 0 2px #3b82f6;
+  border-radius: 8px;
+}
+.kl-bk-tp-foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #243044;
+}
+.kl-bk-tp-foot button {
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #94a3b8;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.kl-bk-tp-foot button:hover {
+  background: #1f2a55;
+}
+.kl-bk-tp-foot button.ok {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+/* Tombol Laporan Hasil (tampilan saja) */
+.kl-bk-btn.report {
+  border-color: #3b82f6;
+  background: transparent;
+  cursor: default;
+}
+.kl-bk-btn.report svg {
+  color: #60a5fa;
+}
+.kl-bk-btn.report:hover {
+  background: transparent;
+}
+
+@keyframes kl-bk-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .kl-bk-actions {
+    width: 100%;
+  }
+  .kl-bk-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
