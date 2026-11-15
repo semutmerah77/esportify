@@ -275,6 +275,34 @@ class KelolaPendaftaranTurnamenController extends Controller
     }
 
     /**
+     * GET /turnamen-kelolaan/{id}/peserta/{idPendaftaran}
+     * US39: detail peserta (Squad, roster, perwakilan, akun in-game).
+     */
+    public function detailPeserta(Request $request, $id, $idPendaftaran)
+    {
+        [$turnamen, $error] = $this->turnamenKelolaan($request, $id);
+        if ($error) {
+            return $error;
+        }
+
+        $pendaftaran = $this->findPendaftaran($turnamen, $idPendaftaran);
+
+        // Hanya pendaftaran diterima yang dianggap peserta.
+        if (!$pendaftaran || $pendaftaran->status_pendaftaran !== 'diterima') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Peserta tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail peserta berhasil diambil.',
+            'data' => $this->formatDetail($turnamen, $pendaftaran),
+        ]);
+    }
+
+    /**
      * POST /turnamen-kelolaan/{id}/selesaikan (PB-09, US29)
      * Menyelesaikan turnamen dan membuka kembali seluruh roster Squad.
      */
@@ -383,6 +411,10 @@ class KelolaPendaftaranTurnamenController extends Controller
                 'username' => $p->pendaftar?->user?->username,
                 'avatar_url' => $this->fileUrl($p->pendaftar?->avatar),
             ],
+
+            // Akun in-game perwakilan (US38)
+            'nickname_game' => $p->nickname_game,
+            'uid_game' => $p->uid_game,
         ];
     }
 

@@ -435,6 +435,68 @@ class PendaftaranTurnamenController extends Controller
     }
 
     /**
+     * GET /turnamen/{id}/peserta
+     * US40: daftar Squad peserta (diterima) beserta perwakilan dan akun in-game.
+     * Hanya untuk pemain di roster peserta turnamen ini (R3.31) dan penyelenggaranya.
+     */
+    public function pesertaLain(Request $request, $id)
+    {
+        $player = $request->user()->player;
+        if (!$player) {
+            return $this->playerNotFound();
+        }
+
+        $turnamen = Turnamen::with('pengajuan')->find($id);
+        if (!$turnamen || !$turnamen->pengajuan) {
+            return $this->turnamenNotFound();
+        }
+
+        $pendaftaranSaya = $this->service->pendaftaranDiterimaPlayer($turnamen->id_turnamen, $player->id_player);
+
+        if (!$pendaftaranSaya && !$this->service->isPenyelenggara($turnamen, $player)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Daftar peserta hanya dapat dilihat oleh peserta turnamen ini.',
+            ], 403);
+        }
+
+        $data = PendaftaranTurnamen::with(['squad', 'pendaftar.user'])
+            ->where('id_turnamen', $turnamen->id_turnamen)
+            ->where('status_pendaftaran', 'diterima')
+            ->orderBy('tanggal_verifikasi')
+            ->get()
+            ->map(fn (PendaftaranTurnamen $p) => [
+                'id_pendaftaran' => $p->id_pendaftaran,
+                'squad' => [
+                    'id_squad' => $p->id_squad,
+                    'kode_squad' => $p->squad?->kode_squad,
+                    'nama_squad' => $p->squad?->nama_squad,
+                    'logo_url' => $this->fileUrl($p->squad?->logo_squad),
+                ],
+                'perwakilan' => [
+                    'username' => $p->pendaftar?->user?->username,
+                    'avatar_url' => $this->fileUrl($p->pendaftar?->avatar),
+                ],
+                'nickname_game' => $p->nickname_game,
+                'uid_game' => $p->uid_game,
+                'squad_saya' => $pendaftaranSaya
+                    && (int) $p->id_pendaftaran === (int) $pendaftaranSaya->id_pendaftaran,
+            ])
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar peserta berhasil diambil.',
+            'data' => $data,
+            'meta' => [
+                'id_turnamen' => $turnamen->id_turnamen,
+                'nama_turnamen' => $turnamen->pengajuan->nama_turnamen,
+                'jumlah_peserta' => $data->count(),
+            ],
+        ]);
+    }
+
+    /**
      * GET /pendaftaran-turnamen/{id}/bukti-pembayaran
      * File bukti pembayaran (privat, tidak lewat /storage publik).
      */
