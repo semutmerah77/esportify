@@ -27,6 +27,9 @@ export function mapRow(r) {
       username: r.perwakilan?.username ?? "-",
       avatar: r.perwakilan?.avatar_url ?? "",
     },
+    // Akun in-game perwakilan (ada di list peserta & list pendaftaran)
+    gameNickname: r.nickname_game ?? "",
+    gameUid: r.uid_game ?? "",
   };
 }
 
@@ -170,23 +173,11 @@ export async function getParticipants(id) {
   };
 }
 
-// Detail tiap peserta (anggota + akun in-game perwakilan).
-// List peserta belum membawa nickname/UID, jadi diambil dari detail pendaftaran (8 request sekaligus).
-// Kalau BE sudah menambahkan nickname_game/uid_game ke list peserta, fungsi ini bisa dihapus.
-export async function getParticipantAccounts(id, items) {
-  const map = {};
-  for (let i = 0; i < items.length; i += 8) {
-    await Promise.all(
-      items.slice(i, i + 8).map(async (it) => {
-        try {
-          map[it.id] = await getRegistrationReview(id, it.id);
-        } catch {
-          map[it.id] = null;
-        }
-      }),
-    );
-  }
-  return map;
+// GET /turnamen-kelolaan/{id}/peserta/{id_pendaftaran}
+// Detail peserta: roster (anggota) + akun in-game perwakilan. 404 = bukan peserta (belum diterima).
+export async function getParticipantDetail(id, regId) {
+  const res = await apiRequest(`/turnamen-kelolaan/${id}/peserta/${regId}`);
+  return mapDetail(res?.data ?? res);
 }
 
 // ----- Selesaikan turnamen (PB-09) -----

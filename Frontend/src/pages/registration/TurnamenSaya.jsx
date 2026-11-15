@@ -228,7 +228,7 @@ function TurnamenSaya() {
               return (
                 <Link
                   key={t.id}
-                  to={`/pendaftaran/${t.id}`}
+                  to={`/turnamen/ikut/${t.tournamentId}`}
                   className="mytour-card"
                 >
                   <div className="mytour-card-top">

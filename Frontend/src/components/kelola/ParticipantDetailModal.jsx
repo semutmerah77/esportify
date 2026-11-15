@@ -2,16 +2,35 @@ import { useEffect } from "react";
 import Icon from "../icon";
 import { CopyChip, KlAvatar } from "./KlParts";
 
-// Modal detail peserta: daftar anggota + akun in-game perwakilan.
-// account = detail pendaftaran dari getParticipantAccounts (boleh null).
-function ParticipantDetailModal({ item, account, onClose }) {
+// Modal detail peserta (penyelenggara & peserta).
+// item     : baris peserta (squad, rep, gameNickname, gameUid)
+// detail   : hasil detail { members, gameNickname, gameUid } atau { members: null } bila daftar anggota tidak tersedia
+// loading  : sedang memuat detail
+// error    : pesan gagal memuat detail
+// mine     : squad milik user login -> badge "Squad kamu" dan anggota yang login diberi garis biru
+function ParticipantDetailModal({
+  item,
+  detail,
+  loading,
+  error,
+  mine = false,
+  meUsername = "",
+  onClose,
+}) {
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const members = account?.members ?? [];
+  const members = detail?.members ?? null;
+  const nickname = detail?.gameNickname || item.gameNickname;
+  const uid = detail?.gameUid || item.gameUid;
+
+  // Daftar anggota tidak tersedia (peserta lain): tampilkan perwakilannya saja
+  const repOnly = [
+    { id: "rep", username: item.rep.username, avatar: item.rep.avatar },
+  ];
 
   return (
     <div
@@ -32,6 +51,7 @@ function ParticipantDetailModal({ item, account, onClose }) {
             size={56}
           />
           <h2>{item.squad.name}</h2>
+          {mine && <span className="kl-pd-mine">Squad kamu</span>}
           <button
             type="button"
             className="kl-dr-x"
@@ -42,30 +62,52 @@ function ParticipantDetailModal({ item, account, onClose }) {
           </button>
         </header>
 
-        {!account ? (
-          <p className="kl-pd-empty">Detail peserta tidak dapat dimuat.</p>
+        {loading ? (
+          <div className="kl-dr-skel" aria-hidden="true">
+            <i className="tall" />
+            <i />
+          </div>
         ) : (
           <>
-            <h3 className="kl-dr-label">Daftar Anggota ({members.length})</h3>
-            <ul className="kl-pd-members">
-              {members.map((m) => (
-                <li key={m.id ?? m.username}>
-                  <KlAvatar name={m.username} src={m.avatar} size={32} />
-                  <span>{m.username}</span>
-                  {m.id === item.rep.id && <em>Perwakilan</em>}
-                </li>
-              ))}
-            </ul>
+            {error && <p className="kl-pd-empty">{error}</p>}
+            {!error && (
+              <>
+                <h3 className="kl-dr-label">
+                  {members
+                    ? `Daftar Anggota (${members.length})`
+                    : "Perwakilan"}
+                </h3>
+                <ul className="kl-pd-members">
+                  {(members ?? repOnly).map((m) => (
+                    <li
+                      key={m.id ?? m.username}
+                      className={
+                        mine && meUsername && m.username === meUsername
+                          ? "me"
+                          : ""
+                      }
+                    >
+                      <KlAvatar name={m.username} src={m.avatar} size={32} />
+                      <span>{m.username}</span>
+                      {(members === null ||
+                        m.username === item.rep.username) && (
+                        <em>Perwakilan</em>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
             <h3 className="kl-dr-label kl-pd-gap">Akun In-Game Perwakilan</h3>
             <div className="kl-pd-acc">
               <div>
                 <small>Nickname in-game</small>
-                <b>{account.gameNickname || "-"}</b>
+                <b>{nickname || "-"}</b>
               </div>
               <div>
                 <small>ID in-game</small>
-                <CopyChip value={account.gameUid} />
+                <CopyChip value={uid} />
               </div>
             </div>
           </>

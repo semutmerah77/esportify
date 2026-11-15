@@ -27,6 +27,7 @@ const colorFor = (seed) => {
   return COLORS[h % COLORS.length];
 };
 
+// Lingkaran inisial berwarna. Kalau ada gambar (logo/avatar) yang berhasil dimuat, gambar menutupinya.
 export function KlAvatar({ name, src, size = 40, seed }) {
   const [broken, setBroken] = useState(false);
   const [from, to] = colorFor(seed ?? name);
@@ -48,6 +49,7 @@ export function KlAvatar({ name, src, size = 40, seed }) {
   );
 }
 
+// Baris squad: nama, jumlah anggota + kode, perwakilan, dan (opsional) tombol Tinjau.
 export function RegistrantRow({ item, repLabel = "Pendaftar", onReview }) {
   return (
     <li className="kl-row">
@@ -115,10 +117,10 @@ export function CopyChip({ value }) {
 }
 
 // Baris peserta (tab Peserta): squad, perwakilan, nickname & ID in-game, tombol Detail.
-// account = detail pendaftaran (boleh null kalau gagal dimuat).
-export function ParticipantRow({ item, account, onDetail }) {
+// mine = squad milik user login (diberi garis biru).
+export function ParticipantRow({ item, onDetail, mine = false }) {
   return (
-    <li className="kl-row kl-prow">
+    <li className={`kl-row kl-prow ${mine ? "mine" : ""}`}>
       <KlAvatar
         name={item.squad.name}
         src={item.squad.logo}
@@ -133,11 +135,11 @@ export function ParticipantRow({ item, account, onDetail }) {
       </div>
       <div className="kl-acc">
         <small>Nickname in-game</small>
-        <b>{account?.gameNickname || "-"}</b>
+        <b>{item.gameNickname || "-"}</b>
       </div>
       <div className="kl-acc">
         <small>ID in-game</small>
-        <CopyChip value={account?.gameUid} />
+        <CopyChip value={item.gameUid} />
       </div>
       <div className="kl-prow-side">
         {item.squad.code && <small>ID: {item.squad.code}</small>}
@@ -153,7 +155,20 @@ export function ParticipantRow({ item, account, onDetail }) {
   );
 }
 
-// Pratinjau bukti (gambar / PDF) di modal, memakai gaya .t-preview yang sudah ada.
+// Keadaan kosong tab Peserta (ikon + judul + keterangan).
+export function PesertaEmpty({ icon, title, text, ring = false }) {
+  return (
+    <div className="kl-pempty">
+      <span className={`kl-pempty-ic ${ring ? "ring" : ""}`}>
+        <Icon name={icon} size={ring ? 22 : 26} />
+      </span>
+      <b>{title}</b>
+      <p>{text}</p>
+    </div>
+  );
+}
+
+// Pratinjau bukti pembayaran (gambar / PDF) di modal, memakai gaya .t-preview yang sudah ada.
 export function ProofPreview({ file, name, onClose }) {
   const isPdf = file.type === "application/pdf";
   return (

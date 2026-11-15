@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Icon from "../../components/icon";
-import { ParticipantRow, RegistrantRow } from "../../components/kelola/KlParts";
+import { RegistrantRow } from "../../components/kelola/KlParts";
 import ParticipantDetailModal from "../../components/kelola/ParticipantDetailModal";
+import ParticipantsPanel from "../../components/kelola/ParticipantsPanel";
 import ReviewDrawer from "../../components/kelola/ReviewDrawer";
 import { longDate } from "../../utils/date";
 import {
   getManageHeader,
-  getParticipantAccounts,
+  getParticipantDetail,
   getParticipants,
   getRegistrations,
 } from "../../services/tournamentManageApi";
@@ -35,11 +36,10 @@ function KelolaTurnamen() {
   });
   const [part, setPart] = useState({
     items: [],
-    accounts: {},
     ready: false,
     error: "",
   });
-  const [partQ, setPartQ] = useState("");
+  // Detail peserta: { item, data, loading, error }
   const [detailOf, setDetailOf] = useState(null);
 
   const [reviewing, setReviewing] = useState(null);
@@ -73,11 +73,10 @@ function KelolaTurnamen() {
   const loadPart = useCallback(
     () =>
       getParticipants(id)
-        .then(async (res) => {
-          // Nickname & ID in-game belum ada di list peserta: ambil dari detail, tampil bersamaan
-          const accounts = await getParticipantAccounts(id, res.items);
-          setPart({ items: res.items, accounts, ready: true, error: "" });
-        })
+        .then((res) =>
+          // Nickname & ID in-game sudah ada di list peserta
+          setPart({ items: res.items, ready: true, error: "" }),
+        )
         .catch((err) =>
           setPart((p) => ({
             ...p,
@@ -156,13 +155,27 @@ function KelolaTurnamen() {
     { key: "pengumuman", label: "Pengumuman" },
   ];
 
-  const partKeyword = partQ.trim().toLowerCase().replace(/^#/, "");
-  const partShown = part.items.filter(
-    (it) =>
-      !partKeyword ||
-      it.squad.name.toLowerCase().includes(partKeyword) ||
-      String(it.squad.code).toLowerCase().includes(partKeyword),
-  );
+  // Buka detail peserta: daftar anggota (roster) diambil dari endpoint detail
+  const openDetail = (item) => {
+    setDetailOf({ item, data: null, loading: true, error: "" });
+    getParticipantDetail(id, item.id)
+      .then((data) =>
+        setDetailOf((d) =>
+          d?.item.id === item.id ? { ...d, data, loading: false } : d,
+        ),
+      )
+      .catch((err) =>
+        setDetailOf((d) =>
+          d?.item.id === item.id
+            ? {
+                ...d,
+                loading: false,
+                error: err.message || "Detail peserta tidak dapat dimuat.",
+              }
+            : d,
+        ),
+      );
+  };
 
   // Setelah Terima / Tolak: segarkan daftar, peserta, dan slot di header
   const afterVerify = async (message) => {
@@ -255,37 +268,17 @@ function KelolaTurnamen() {
         )}
 
         {tab === "peserta" && (
-          <>
-            <div className="kl-panel-head kl-panel-bar">
-              <span>{part.items.length} squad peserta</span>
-              <label className="kl-search">
-                <Icon name="search" size={16} />
-                <input
-                  type="text"
-                  placeholder="Cari Nama Squad atau ID Squad"
-                  value={partQ}
-                  onChange={(e) => setPartQ(e.target.value)}
-                />
-              </label>
-            </div>
-            {part.error && <p className="admin-message error">{part.error}</p>}
-            {part.ready && !part.error && part.items.length === 0 && (
-              <p className="kl-empty">Belum ada peserta.</p>
-            )}
-            {part.items.length > 0 && partShown.length === 0 && (
-              <p className="kl-empty">Squad tidak ditemukan.</p>
-            )}
-            <ul className="kl-list">
-              {partShown.map((item) => (
-                <ParticipantRow
-                  key={item.id}
-                  item={item}
-                  account={part.accounts[item.id]}
-                  onDetail={setDetailOf}
-                />
-              ))}
-            </ul>
-          </>
+          <ParticipantsPanel
+            items={part.items}
+            ready={part.ready}
+            error={part.error}
+            emptyText={
+              paid
+                ? "Squad yang diterima di tab Verifikasi Pendaftar akan muncul di sini."
+                : "Squad yang mendaftar akan muncul di sini."
+            }
+            onDetail={openDetail}
+          />
         )}
 
         {(tab === "bracket" || tab === "pengumuman") && (
@@ -298,8 +291,10 @@ function KelolaTurnamen() {
 
       {detailOf && (
         <ParticipantDetailModal
-          item={detailOf}
-          account={part.accounts[detailOf.id]}
+          item={detailOf.item}
+          detail={detailOf.data}
+          loading={detailOf.loading}
+          error={detailOf.error}
           onClose={() => setDetailOf(null)}
         />
       )}
