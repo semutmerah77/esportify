@@ -46,6 +46,7 @@ use App\Http\Controllers\Api\LokasiController;
 use App\Http\Controllers\Api\TurnamenController;
 use App\Http\Controllers\Player\PendaftaranTurnamenController;
 use App\Http\Controllers\Player\KelolaPendaftaranTurnamenController;
+use App\Http\Controllers\Player\KelolaBracketController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
 // ==========================================
@@ -462,6 +463,37 @@ Route::middleware('auth:sanctum')->group(function () {
                 KelolaPendaftaranTurnamenController::class,
                 'detailPeserta'
             ])->whereNumber(['id', 'idPendaftaran']);
+
+        });
+
+        // ==========================================
+        // MODUL 4: KELOLA BRACKET (PB-13)
+        // Hanya penyelenggara turnamen tersebut (dicek di controller)
+        // ==========================================
+
+        Route::middleware('permission:kelola_bracket')->group(function () {
+
+            // Tab Bracket: bracket dibentuk otomatis kalau syarat terpenuhi
+            Route::get('/turnamen-kelolaan/{id}/bracket', [
+                KelolaBracketController::class,
+                'show'
+            ])->whereNumber('id');
+
+            Route::post('/turnamen-kelolaan/{id}/bracket/acak', [
+                KelolaBracketController::class,
+                'acak'
+            ])->whereNumber('id');
+
+            Route::post('/turnamen-kelolaan/{id}/bracket/publikasi', [
+                KelolaBracketController::class,
+                'publikasi'
+            ])->whereNumber('id');
+
+            // AD Edit Babak: judul babak dan jam
+            Route::put('/turnamen-kelolaan/{id}/bracket/babak/{idBabak}', [
+                KelolaBracketController::class,
+                'ubahBabak'
+            ])->whereNumber(['id', 'idBabak']);
 
         });
 

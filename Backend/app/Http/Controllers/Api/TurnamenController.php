@@ -24,17 +24,12 @@ class TurnamenController extends Controller
      */
     private function hitungStatus($jadwalMain, ?string $statusTersimpan = null): string
     {
-        if ($statusTersimpan === 'selesai') {
-            return 'selesai';
-        }
-
-        if (!$jadwalMain) {
-            return 'pendaftaran';
-        }
-
-        return now()->lt(Carbon::parse($jadwalMain))
-            ? 'pendaftaran'
-            : 'berlangsung';
+        // Status disimpan di turnamen.status (keputusan SA Sprint 2):
+        // "berlangsung" diset BracketService::mulaiJikaSiap,
+        // "selesai" saat hasil akhir ditetapkan.
+        return in_array($statusTersimpan, ['berlangsung', 'selesai'], true)
+            ? $statusTersimpan
+            : 'pendaftaran';
     }
 
     /**

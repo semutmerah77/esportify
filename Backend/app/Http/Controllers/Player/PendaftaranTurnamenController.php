@@ -621,15 +621,12 @@ class PendaftaranTurnamenController extends Controller
      */
     private function statusTurnamen($jadwalMain, ?string $statusTersimpan): string
     {
-        if ($statusTersimpan === 'selesai') {
-            return 'selesai';
-        }
-
-        if (!$jadwalMain) {
-            return 'pendaftaran';
-        }
-
-        return now()->lt($jadwalMain) ? 'pendaftaran' : 'berlangsung';
+        // Status disimpan di turnamen.status (keputusan SA Sprint 2):
+        // "berlangsung" diset BracketService::mulaiJikaSiap,
+        // "selesai" saat hasil akhir ditetapkan.
+        return in_array($statusTersimpan, ['berlangsung', 'selesai'], true)
+            ? $statusTersimpan
+            : 'pendaftaran';
     }
 
     private function gagal(string $pesan)
