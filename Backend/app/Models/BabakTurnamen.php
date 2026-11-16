@@ -21,7 +21,6 @@ class BabakTurnamen extends Model
 
     protected $casts = [
         'urutan_babak' => 'integer',
-        'waktu_mulai' => 'datetime',
     ];
 
     public function bracket(): BelongsTo

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,6 +23,7 @@ class LaporanHasilPertandingan extends Model
         'id_player_pelapor',
         'skor_squad_pelapor',
         'skor_squad_lawan',
+        'catatan_pelapor',
         'status_laporan',
         'catatan_verifikasi',
         'id_penyelenggara_verifikator',
@@ -58,6 +60,12 @@ class LaporanHasilPertandingan extends Model
 
     public function bukti(): HasMany
     {
-        return $this->hasMany(BuktiPertandingan::class, 'id_laporan', 'id_laporan');
+        return $this->hasMany(BuktiPertandingan::class, 'id_laporan', 'id_laporan')
+            ->orderBy('id_bukti');
+    }
+
+    public function scopeMenunggu(Builder $query): Builder
+    {
+        return $query->where('status_laporan', self::STATUS_MENUNGGU);
     }
 }
