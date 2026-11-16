@@ -1009,6 +1009,16 @@ a.td-register {
   border-color: #5b4511;
   background: rgba(146, 64, 14, 0.25);
 }
+
+.mytour-pill.orange {
+  border-color: #7c2d12;
+  background: rgba(154, 52, 18, 0.3);
+  color: #fb923c;
+}
+.mytour-pill.orange i {
+  background: currentColor;
+}
+
 .mytour-pill.red {
   color: #f87171;
   border-color: #5b1a1a;

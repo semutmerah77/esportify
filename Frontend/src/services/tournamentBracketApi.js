@@ -143,3 +143,24 @@ export async function updateDescription(id, text) {
   });
   return wrap(res);
 }
+
+// ----- Tab Bracket Player (PB-14) -----
+// GET /turnamen/{id}/bracket (semua Player yang login)
+// dipublikasikan false -> bracket null, tampilkan "keterangan". bisa_update_skor selalu false untuk Player.
+export async function getPlayerBracket(id) {
+  const res = await apiRequest(`/turnamen/${id}/bracket`);
+  const d = res?.data ?? res;
+  const me = d?.squad_saya ?? null;
+  return {
+    ...mapBracketData(d),
+    published: d?.dipublikasikan === true,
+    note: d?.keterangan ?? "",
+    mySquad: me
+      ? {
+          regId: num(me.id_pendaftaran),
+          id: num(me.id_squad),
+          name: me.nama_squad ?? "",
+        }
+      : null,
+  };
+}

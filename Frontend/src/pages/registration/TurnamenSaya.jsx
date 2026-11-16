@@ -26,6 +26,7 @@ const TOURNAMENT_STATUS = {
   pendaftaran: { label: "Pendaftaran", tone: "green" },
   berlangsung: { label: "Berlangsung", tone: "yellow" },
   selesai: { label: "Selesai", tone: "gray" },
+  tertunda: { label: "Tertunda", tone: "orange" },
 };
 const REGISTRATION_STATUS = {
   menunggu: { label: "Menunggu", tone: "yellow" },
@@ -235,7 +236,7 @@ function TurnamenSaya() {
                     <h3>{t.name}</h3>
                     <span className="mytour-card-side">
                       <StatusPill
-                        status={t.tournamentStatus}
+                        status={t.delayed ? "tertunda" : t.tournamentStatus}
                         map={TOURNAMENT_STATUS}
                       />
                       <span className="mytour-chevron">
