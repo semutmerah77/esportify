@@ -15,9 +15,12 @@ const DETOUR = 16; // jarak garis pemenang dari kartu yang dilewati
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 1.5;
 
-// Jam babak: WIB, format 24 jam (backend kirim UTC ISO)
+// Jam babak: WIB, format 24 jam
 export function roundTime(iso) {
   if (!iso) return "";
+  // Kontrak terbaru: waktu_mulai = "HH:MM" (WIB)
+  if (/^\d{2}:\d{2}/.test(iso))
+    return `${iso.slice(0, 2)}.${iso.slice(3, 5)} WIB`;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const t = d.toLocaleTimeString("id-ID", {
@@ -91,15 +94,23 @@ function SlotRow({ squad, bye, tbd, score, match, mineReg }) {
   );
 }
 
-function MatchCard({ match, y, col, label, mineReg, onScore }) {
+function MatchCard({ match, y, col, label, mineReg, onScore, onReport }) {
   const aTbd = !match.a ? (label.get(`${match.id}:A`) ?? "TBD") : "";
   const bTbd =
     !match.b && !match.isBye ? (label.get(`${match.id}:B`) ?? "TBD") : "";
   const empty = !match.a && !match.b;
+  // Penyelenggara: pensil input/revisi skor (bisa_update_skor). Pemain: pensil lapor hasil (pertandingan squad sendiri).
   const scorable = Boolean(onScore) && match.canScore;
+  const reportable =
+    Boolean(onReport) &&
+    match.mine &&
+    Boolean(match.a) &&
+    Boolean(match.b) &&
+    !match.isBye;
+  const hasPen = scorable || reportable;
   return (
     <div
-      className={`kl-bk-match ${empty ? "empty" : ""} ${match.mine ? "mine" : ""} ${scorable ? "scorable" : ""}`}
+      className={`kl-bk-match ${empty ? "empty" : ""} ${match.mine ? "mine" : ""} ${hasPen ? "scorable" : ""}`}
       style={{
         left: col * COL_W + OFF,
         top: y + PAD_Y,
@@ -125,12 +136,16 @@ function MatchCard({ match, y, col, label, mineReg, onScore }) {
           mineReg={mineReg}
         />
       </div>
-      {scorable && (
+      {hasPen && (
         <button
           type="button"
           className="kl-bk-pen"
-          aria-label={`${match.scoreA === null ? "Input" : "Revisi"} skor pertandingan #${match.number}`}
-          onClick={() => onScore(match)}
+          aria-label={
+            scorable
+              ? `${match.scoreA === null ? "Input" : "Revisi"} skor pertandingan #${match.number}`
+              : `Laporkan hasil pertandingan #${match.number}`
+          }
+          onClick={() => (scorable ? onScore(match) : onReport(match))}
         >
           <BracketIcon name="pencil" size={13} />
         </button>
@@ -194,12 +209,14 @@ function Connectors({ rounds, layout }) {
 // onEdit   : (round) => void
 // mineReg  : id_pendaftaran squad milik user (tampilan peserta) -> baris squad diberi tanda
 // onScore  : (match) => void; pensil skor muncul di kartu yang bisa_update_skor = true (penyelenggara)
+// onReport : (match) => void; pensil lapor hasil muncul di kartu pertandingan squad pemain (peserta)
 function BracketCanvas({
   rounds,
   editable = false,
   onEdit,
   mineReg = null,
   onScore,
+  onReport,
 }) {
   const [zoom, setZoom] = useState(1);
   const wrapRef = useRef(null);
@@ -207,9 +224,15 @@ function BracketCanvas({
 
   const clamp = (z) =>
     Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
+  // +/- selalu jatuh ke kelipatan 10% (…90, 100, 110…), tidak meleset karena pecahan hasil "Sesuaikan"
+  const zoomIn = () =>
+    setZoom((z) => clamp(Math.floor(z * 10 + 0.001) / 10 + 0.1));
+  const zoomOut = () =>
+    setZoom((z) => clamp(Math.ceil(z * 10 - 0.001) / 10 - 0.1));
+  // Sesuaikan: muat ke lebar layar, tapi tidak pernah diperbesar melebihi 100%
   const fit = () => {
     const w = wrapRef.current?.clientWidth;
-    if (w) setZoom(clamp((w - 12) / layout.width));
+    if (w) setZoom(clamp(Math.min(1, (w - 12) / layout.width)));
   };
 
   return (
@@ -250,6 +273,7 @@ function BracketCanvas({
                   label={layout.label}
                   mineReg={mineReg}
                   onScore={onScore}
+                  onReport={onReport}
                 />
               )),
             )}
@@ -258,19 +282,11 @@ function BracketCanvas({
       </div>
 
       <div className="kl-bk-zoombar">
-        <button
-          type="button"
-          aria-label="Perkecil"
-          onClick={() => setZoom((z) => clamp(z - 0.1))}
-        >
+        <button type="button" aria-label="Perkecil" onClick={zoomOut}>
           <BracketIcon name="minus" size={14} />
         </button>
         <span>{Math.round(zoom * 100)}%</span>
-        <button
-          type="button"
-          aria-label="Perbesar"
-          onClick={() => setZoom((z) => clamp(z + 0.1))}
-        >
+        <button type="button" aria-label="Perbesar" onClick={zoomIn}>
           <BracketIcon name="plus" size={14} />
         </button>
         <i />
