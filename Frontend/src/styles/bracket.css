@@ -672,6 +672,33 @@
   background: transparent;
 }
 
+/* Tampilan peserta: tanda squad sendiri */
+.kl-bk-match.mine {
+  border-color: #22d3ee;
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.35),
+    0 0 14px rgba(34, 211, 238, 0.22);
+}
+.kl-bk-slot.me .kl-bk-seed {
+  background: #0e7490;
+}
+.kl-bk-slot.me .kl-bk-name {
+  font-weight: 700;
+  color: #fff;
+}
+.kl-bk-lines path.mine {
+  stroke: #22d3ee;
+}
+
+.kl-bk-match {
+  border-radius: 7px;
+}
+.kl-bk-rows {
+  height: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
 @keyframes kl-bk-shimmer {
   to {
     background-position: -200% 0;

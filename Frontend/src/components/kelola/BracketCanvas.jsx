@@ -73,12 +73,13 @@ function buildLayout(rounds) {
   };
 }
 
-function SlotRow({ squad, bye, tbd, score, match, side }) {
+function SlotRow({ squad, bye, tbd, score, match, mineReg }) {
   const won = squad && match.winnerRegId && match.winnerRegId === squad.regId;
   const lost = squad && match.winnerRegId && match.winnerRegId !== squad.regId;
+  const me = squad && mineReg && squad.regId === mineReg;
   return (
     <div
-      className={`kl-bk-slot ${tbd ? "tbd" : ""} ${bye ? "bye" : ""} ${won ? "won" : ""} ${lost ? "lost" : ""}`}
+      className={`kl-bk-slot ${tbd ? "tbd" : ""} ${bye ? "bye" : ""} ${won ? "won" : ""} ${lost ? "lost" : ""} ${me ? "me" : ""}`}
     >
       <span className="kl-bk-seed">{squad?.seed ?? ""}</span>
       <span className="kl-bk-name" title={squad?.name}>
@@ -89,7 +90,7 @@ function SlotRow({ squad, bye, tbd, score, match, side }) {
   );
 }
 
-function MatchCard({ match, y, col, label }) {
+function MatchCard({ match, y, col, label, mineReg }) {
   const aTbd = !match.a ? (label.get(`${match.id}:A`) ?? "TBD") : "";
   const bTbd =
     !match.b && !match.isBye ? (label.get(`${match.id}:B`) ?? "TBD") : "";
@@ -104,21 +105,20 @@ function MatchCard({ match, y, col, label }) {
         height: CARD_H,
       }}
     >
-      <i className="kl-bk-no">#{match.number}</i>
-      <SlotRow squad={match.a} tbd={aTbd} score={match.scoreA} match={match} />
-      <SlotRow
-        squad={match.b}
-        bye={match.isBye}
-        tbd={bTbd}
-        score={match.scoreB}
-        match={match}
-      />
+    <i className="kl-bk-no">#{match.number}</i>
+      <div className="kl-bk-rows">
+        <SlotRow squad={match.a} tbd={aTbd} score={match.scoreA} match={match} mineReg={mineReg} />
+        <SlotRow squad={match.b} bye={match.isBye} tbd={bTbd} score={match.scoreB} match={match} mineReg={mineReg} />
+      </div>
     </div>
   );
 }
 
 function Connectors({ rounds, layout }) {
   const paths = [];
+  const mineLines = []; // jalur squad sendiri digambar terakhir agar di atas garis lain
+  const byId = new Map();
+  rounds.forEach((r) => r.matches.forEach((x) => byId.set(x.id, x)));
   rounds.forEach((r) =>
     r.matches.forEach((m) => {
       const from = layout.pos.get(m.id);
@@ -133,24 +133,21 @@ function Connectors({ rounds, layout }) {
         const tx = to.col * COL_W + OFF;
         const ty = to.y + PAD_Y + ROW_H;
         const mx = tx - OFF;
-        paths.push(
+        const mineLine = m.mine && byId.get(targetId)?.mine && !loser;
+        (mineLine ? mineLines : paths).push(
           <path
             key={`${m.id}-${targetId}-${loser ? "l" : "w"}`}
             d={`M${sx} ${sy}H${mx}V${ty}H${tx}`}
-            className={loser ? "loser" : ""}
+            className={loser ? "loser" : mineLine ? "mine" : ""}
           />,
         );
       });
     }),
   );
   return (
-    <svg
-      className="kl-bk-lines"
-      width={layout.width}
-      height={layout.height}
-      aria-hidden="true"
-    >
+    <svg className="kl-bk-lines" width={layout.width} height={layout.height} aria-hidden="true">
       {paths}
+      {mineLines}
     </svg>
   );
 }
@@ -158,7 +155,8 @@ function Connectors({ rounds, layout }) {
 // rounds   : daftar babak dari backend (sudah berurutan)
 // editable : tampilkan ikon pensil di header babak
 // onEdit   : (round) => void
-function BracketCanvas({ rounds, editable, onEdit }) {
+// mineReg  : id_pendaftaran squad milik user (tampilan peserta) -> baris squad diberi tanda
+function BracketCanvas({ rounds, editable = false, onEdit, mineReg = null }) {
   const [zoom, setZoom] = useState(1);
   const wrapRef = useRef(null);
   const layout = useMemo(() => buildLayout(rounds), [rounds]);
@@ -207,6 +205,7 @@ function BracketCanvas({ rounds, editable, onEdit }) {
                   col={col}
                   y={layout.pos.get(m.id)?.y ?? 0}
                   label={layout.label}
+                  mineReg={mineReg}
                 />
               )),
             )}

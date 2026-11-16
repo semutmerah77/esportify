@@ -23,5 +23,6 @@ export async function getMyTournaments() {
     type: String(r.turnamen?.tipe_turnamen ?? "").toLowerCase(),
     slot: r.turnamen?.slot ?? null,
     filled: r.turnamen?.slot_terisi ?? null,
+    delayed: Boolean(r.turnamen?.persiapan_tertunda),
   }));
 }
