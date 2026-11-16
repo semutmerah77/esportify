@@ -80,6 +80,8 @@ class PermissionSeeder extends Seeder
             'kelola_bracket',
             'lihat_bracket',
             'update_bracket',
+            'kirim_hasil_pertandingan',
+            'verifikasi_hasil_pertandingan',
         ];
 
         foreach ($permissions as $permission) {

@@ -48,6 +48,8 @@ use App\Http\Controllers\Player\PendaftaranTurnamenController;
 use App\Http\Controllers\Player\KelolaPendaftaranTurnamenController;
 use App\Http\Controllers\Player\KelolaBracketController;
 use App\Http\Controllers\Player\BracketController;
+use App\Http\Controllers\Player\LaporanPertandinganController;
+use App\Http\Controllers\Player\KelolaLaporanPertandinganController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
 // ==========================================
@@ -521,6 +523,63 @@ Route::middleware('auth:sanctum')->group(function () {
             KelolaBracketController::class,
             'updateSkor'
         ])->whereNumber(['id', 'idPertandingan'])->middleware('permission:update_bracket');
+
+        
+        // ==========================================
+        // MODUL 4: LAPORAN HASIL PERTANDINGAN
+        // PB-15 (lapor + bukti), PB-17 (kirim ulang / sanggahan)
+        // ==========================================
+
+        Route::middleware('permission:kirim_hasil_pertandingan')->group(function () {
+
+            // Status laporan Squad saat tombol laporan di kartu pertandingan dibuka (R6.25)
+            Route::get('/turnamen/{id}/pertandingan/{idPertandingan}/laporan-saya', [
+                LaporanPertandinganController::class,
+                'statusSaya'
+            ])->whereNumber(['id', 'idPertandingan']);
+
+            // Kirim laporan / kirim ulang / sanggahan (multipart)
+            Route::post('/turnamen/{id}/pertandingan/{idPertandingan}/laporan', [
+                LaporanPertandinganController::class,
+                'kirim'
+            ])->whereNumber(['id', 'idPertandingan']);
+
+        });
+
+        // File bukti (privat): Squad pelapor & Penyelenggara (dicek di controller)
+        Route::get('/laporan-pertandingan/{idLaporan}/bukti/{idBukti}', [
+            LaporanPertandinganController::class,
+            'lihatBukti'
+        ])->whereNumber(['idLaporan', 'idBukti'])->middleware('permission:lihat_bracket');
+
+        // ==========================================
+        // MODUL 4: VERIFIKASI LAPORAN (PB-16)
+        // Inbox Penyelenggara (dicek di controller)
+        // ==========================================
+
+        Route::middleware('permission:verifikasi_hasil_pertandingan')->group(function () {
+
+            Route::get('/turnamen-kelolaan/{id}/laporan', [
+                KelolaLaporanPertandinganController::class,
+                'index'
+            ])->whereNumber('id');
+
+            Route::get('/turnamen-kelolaan/{id}/laporan/{idLaporan}', [
+                KelolaLaporanPertandinganController::class,
+                'show'
+            ])->whereNumber(['id', 'idLaporan']);
+
+            Route::post('/turnamen-kelolaan/{id}/laporan/{idLaporan}/setujui', [
+                KelolaLaporanPertandinganController::class,
+                'setujui'
+            ])->whereNumber(['id', 'idLaporan']);
+
+            Route::post('/turnamen-kelolaan/{id}/laporan/{idLaporan}/tolak', [
+                KelolaLaporanPertandinganController::class,
+                'tolak'
+            ])->whereNumber(['id', 'idLaporan']);
+
+        });
         
 
         // NONAKTIF SEMENTARA: status "selesai" ditetapkan saat bracket

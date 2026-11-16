@@ -687,7 +687,8 @@ class BracketService
                 'id_babak' => $b->id_babak,
                 'urutan_babak' => $b->urutan_babak,
                 'nama_babak' => $b->nama_babak,
-                'waktu_mulai' => $b->waktu_mulai,
+                // Jam saja "HH:MM" (24 jam WIB)
+                'waktu_mulai' => $b->waktu_mulai ? substr($b->waktu_mulai, 0, 5) : null,
                 'is_perebutan_juara_3' => $idJuara3 !== null
                     && $b->pertandingan->contains('id_pertandingan', $idJuara3),
 

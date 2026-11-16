@@ -87,6 +87,8 @@ class RolePermissionSeeder extends Seeder
             'kelola_bracket',
             'lihat_bracket',
             'update_bracket',
+            'kirim_hasil_pertandingan',
+            'verifikasi_hasil_pertandingan',
         ];
 
         $admin = Role::findByName('admin', 'web');

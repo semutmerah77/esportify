@@ -129,7 +129,7 @@ class KelolaBracketController extends Controller
 
     /**
      * PUT /turnamen-kelolaan/{id}/bracket/babak/{idBabak}
-     * AD Edit Babak: Judul Babak dan Jam.
+     * AD Edit Babak: Judul Babak (maks 30) dan Jam (HH:MM, 24 jam WIB).
      */
     public function ubahBabak(Request $request, $id, $idBabak)
     {
@@ -143,12 +143,12 @@ class KelolaBracketController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'nama_babak' => ['required', 'string', 'max:50'],
-            'waktu_mulai' => ['nullable', 'date'],
+            'nama_babak' => ['required', 'string', 'max:30'],
+            'waktu_mulai' => ['nullable', 'date_format:H:i'],
         ], [
             'nama_babak.required' => 'Judul babak wajib diisi.',
-            'nama_babak.max' => 'Judul babak maksimal 50 karakter.',
-            'waktu_mulai.date' => 'Format jam babak tidak valid.',
+            'nama_babak.max' => 'Judul babak maksimal 30 karakter.',
+            'waktu_mulai.date_format' => 'Format jam tidak valid. Gunakan format 24 jam (HH:MM).',
         ]);
 
         if ($validator->fails()) {
@@ -171,7 +171,8 @@ class KelolaBracketController extends Controller
 
         $babak->update([
             'nama_babak' => trim($request->input('nama_babak')),
-            'waktu_mulai' => $request->input('waktu_mulai'),
+            // Disimpan sebagai TIME "HH:MM:SS"
+            'waktu_mulai' => $request->filled('waktu_mulai') ? $request->input('waktu_mulai') . ':00' : null,
         ]);
 
         return response()->json([
@@ -326,6 +327,8 @@ class KelolaBracketController extends Controller
                 'jadwal_pendaftaran_tutup' => $turnamen->pengajuan->jadwal_pendaftaran_tutup,
                 'jadwal_main' => $turnamen->pengajuan->jadwal_main,
                 'jumlah_diterima' => $this->bracket->jumlahDiterima($turnamen),
+                // Badge tombol Inbox (laporan hasil menunggu verifikasi)
+                'jumlah_laporan_menunggu' => app(\App\Services\LaporanPertandinganService::class)->jumlahMenunggu($turnamen),
             ] + $this->bracket->infoPersiapan($turnamen),
             'alasan_belum_dibentuk' => $bracket
                 ? null
