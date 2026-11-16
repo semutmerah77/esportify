@@ -10,6 +10,7 @@ const CARD_H = ROW_H * 2;
 const PITCH = 80;
 const PAD_Y = 18;
 const HEAD_H = 64;
+const DETOUR = 16; // jarak garis pemenang dari kartu yang dilewati
 
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 1.5;
@@ -90,14 +91,15 @@ function SlotRow({ squad, bye, tbd, score, match, mineReg }) {
   );
 }
 
-function MatchCard({ match, y, col, label, mineReg }) {
+function MatchCard({ match, y, col, label, mineReg, onScore }) {
   const aTbd = !match.a ? (label.get(`${match.id}:A`) ?? "TBD") : "";
   const bTbd =
     !match.b && !match.isBye ? (label.get(`${match.id}:B`) ?? "TBD") : "";
   const empty = !match.a && !match.b;
+  const scorable = Boolean(onScore) && match.canScore;
   return (
     <div
-      className={`kl-bk-match ${empty ? "empty" : ""} ${match.mine ? "mine" : ""}`}
+      className={`kl-bk-match ${empty ? "empty" : ""} ${match.mine ? "mine" : ""} ${scorable ? "scorable" : ""}`}
       style={{
         left: col * COL_W + OFF,
         top: y + PAD_Y,
@@ -105,11 +107,34 @@ function MatchCard({ match, y, col, label, mineReg }) {
         height: CARD_H,
       }}
     >
-    <i className="kl-bk-no">#{match.number}</i>
+      <i className="kl-bk-no">#{match.number}</i>
       <div className="kl-bk-rows">
-        <SlotRow squad={match.a} tbd={aTbd} score={match.scoreA} match={match} mineReg={mineReg} />
-        <SlotRow squad={match.b} bye={match.isBye} tbd={bTbd} score={match.scoreB} match={match} mineReg={mineReg} />
+        <SlotRow
+          squad={match.a}
+          tbd={aTbd}
+          score={match.scoreA}
+          match={match}
+          mineReg={mineReg}
+        />
+        <SlotRow
+          squad={match.b}
+          bye={match.isBye}
+          tbd={bTbd}
+          score={match.scoreB}
+          match={match}
+          mineReg={mineReg}
+        />
       </div>
+      {scorable && (
+        <button
+          type="button"
+          className="kl-bk-pen"
+          aria-label={`${match.scoreA === null ? "Input" : "Revisi"} skor pertandingan #${match.number}`}
+          onClick={() => onScore(match)}
+        >
+          <BracketIcon name="pencil" size={13} />
+        </button>
+      )}
     </div>
   );
 }
@@ -133,11 +158,18 @@ function Connectors({ rounds, layout }) {
         const tx = to.col * COL_W + OFF;
         const ty = to.y + PAD_Y + ROW_H;
         const mx = tx - OFF;
+        // Garis pemenang yang melompati satu kolom (Semifinal -> Final melewati kolom Juara 3):
+        // menjauh dulu dari kartu di tengah (naik/turun) supaya tidak mepet.
+        const skip = !loser && to.col - from.col > 1 && sy !== ty;
+        const dy = sy < ty ? -DETOUR : DETOUR;
+        const d = skip
+          ? `M${sx} ${sy}H${sx + DETOUR}V${sy + dy}H${mx}V${ty}H${tx}`
+          : `M${sx} ${sy}H${mx}V${ty}H${tx}`;
         const mineLine = m.mine && byId.get(targetId)?.mine && !loser;
         (mineLine ? mineLines : paths).push(
           <path
             key={`${m.id}-${targetId}-${loser ? "l" : "w"}`}
-            d={`M${sx} ${sy}H${mx}V${ty}H${tx}`}
+            d={d}
             className={loser ? "loser" : mineLine ? "mine" : ""}
           />,
         );
@@ -145,7 +177,12 @@ function Connectors({ rounds, layout }) {
     }),
   );
   return (
-    <svg className="kl-bk-lines" width={layout.width} height={layout.height} aria-hidden="true">
+    <svg
+      className="kl-bk-lines"
+      width={layout.width}
+      height={layout.height}
+      aria-hidden="true"
+    >
       {paths}
       {mineLines}
     </svg>
@@ -156,7 +193,14 @@ function Connectors({ rounds, layout }) {
 // editable : tampilkan ikon pensil di header babak
 // onEdit   : (round) => void
 // mineReg  : id_pendaftaran squad milik user (tampilan peserta) -> baris squad diberi tanda
-function BracketCanvas({ rounds, editable = false, onEdit, mineReg = null }) {
+// onScore  : (match) => void; pensil skor muncul di kartu yang bisa_update_skor = true (penyelenggara)
+function BracketCanvas({
+  rounds,
+  editable = false,
+  onEdit,
+  mineReg = null,
+  onScore,
+}) {
   const [zoom, setZoom] = useState(1);
   const wrapRef = useRef(null);
   const layout = useMemo(() => buildLayout(rounds), [rounds]);
@@ -165,8 +209,7 @@ function BracketCanvas({ rounds, editable = false, onEdit, mineReg = null }) {
     Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
   const fit = () => {
     const w = wrapRef.current?.clientWidth;
-    // Sesuaikan hanya mengecilkan agar muat; tidak pernah di atas 100%
-    if (w) setZoom(clamp(Math.min(1, (w - 12) / layout.width)));
+    if (w) setZoom(clamp((w - 12) / layout.width));
   };
 
   return (
@@ -206,6 +249,7 @@ function BracketCanvas({ rounds, editable = false, onEdit, mineReg = null }) {
                   y={layout.pos.get(m.id)?.y ?? 0}
                   label={layout.label}
                   mineReg={mineReg}
+                  onScore={onScore}
                 />
               )),
             )}

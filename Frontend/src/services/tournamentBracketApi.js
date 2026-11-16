@@ -34,6 +34,7 @@ function mapMatch(m) {
     loserNextId: num(m.id_pertandingan_kalah_selanjutnya),
     loserNextSlot: String(m.posisi_kalah_selanjutnya ?? "").toUpperCase(),
     mine: m.melibatkan_squad_saya === true,
+    canScore: m.bisa_update_skor === true, // pensil skor aktif (PB-18/19)
   };
 }
 
@@ -163,4 +164,21 @@ export async function getPlayerBracket(id) {
         }
       : null,
   };
+}
+
+// PUT /turnamen-kelolaan/{id}/pertandingan/{id_pertandingan}/skor  (PB-18 input & PB-19 revisi)
+// skor_a, skor_b: angka 0-999, tidak boleh seri. Respons: data bracket terbaru (pemenang sudah maju).
+export async function updateScore(id, matchId, { scoreA, scoreB }) {
+  const form = new FormData();
+  form.append("_method", "PUT");
+  form.append("skor_a", String(scoreA));
+  form.append("skor_b", String(scoreB));
+  const res = await apiRequest(
+    `/turnamen-kelolaan/${id}/pertandingan/${matchId}/skor`,
+    {
+      method: "POST",
+      body: form,
+    },
+  );
+  return wrap(res);
 }

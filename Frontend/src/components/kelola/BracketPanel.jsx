@@ -5,9 +5,11 @@ import {
   updateDescription,
   shuffleBracket,
   updateRound,
+  updateScore,
 } from "../../services/tournamentBracketApi";
 import BracketCanvas from "./BracketCanvas";
 import BracketIcon from "./BracketIcon";
+import ScoreDialog from "./ScoreDialog";
 import "../../styles/bracket.css";
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -455,6 +457,29 @@ function Skeleton() {
   );
 }
 
+// Popup sukses di tengah layar (sama gayanya dengan "Skor disimpan")
+function SuccessPopup({ title, text, onClose }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 2200);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  return (
+    <div
+      className="kl-ov"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="kl-dialog kl-sc-done" role="status">
+        <span className="kl-sc-done-ic">
+          <BracketIcon name="check" size={24} />
+        </span>
+        <b>{title}</b>
+        {text && <p>{text}</p>}
+      </div>
+    </div>
+  );
+}
+
 // id      : id turnamen
 // onChanged: dipanggil setelah acak/publikasi/edit agar header halaman (status) disegarkan
 function BracketPanel({ id, onChanged }) {
@@ -463,6 +488,7 @@ function BracketPanel({ id, onChanged }) {
   const [busy, setBusy] = useState(false);
   const [dlgError, setDlgError] = useState("");
   const [toast, setToast] = useState("");
+  const [done, setDone] = useState(null); // { title, text } popup sukses
 
   const load = useCallback(
     () =>
@@ -538,7 +564,11 @@ function BracketPanel({ id, onChanged }) {
     run(async () => {
       const res = await publishBracket(id);
       await load();
-      setToast(res.message);
+      // Kalau BE menambahkan kalimat lain (mis. "Turnamen kini berlangsung."), tampil sebagai keterangan
+      const extra = (res.message || "")
+        .replace(/^Bracket berhasil dipublikasikan\.?\s*/i, "")
+        .trim();
+      setDone({ title: "Bracket dipublikasikan", text: extra });
       onChanged?.(); // status turnamen bisa berubah jadi "berlangsung"
     });
 
@@ -553,6 +583,14 @@ function BracketPanel({ id, onChanged }) {
     setState({ data: res, error: "" });
     setToast(res.message || "Babak berhasil diperbarui.");
     closeDialog();
+  };
+
+  // PB-18/19: simpan skor; BE mengembalikan bracket terbaru (pemenang sudah maju)
+  const doScore = async (match, scoreA, scoreB) => {
+    const res = await updateScore(id, match.id, { scoreA, scoreB });
+    setState({ data: res, error: "" });
+    onChanged?.(); // status turnamen bisa ikut berubah
+    return res;
   };
 
   if (state.error && !state.data)
@@ -671,6 +709,13 @@ function BracketPanel({ id, onChanged }) {
             setDlgError("");
             setDialog({ round });
           }}
+          onScore={
+            finished
+              ? undefined
+              : (match) => {
+                  if (match.a && match.b) setDialog({ score: match });
+                }
+          }
         />
       ) : (
         <p className="kl-empty">
@@ -718,6 +763,32 @@ function BracketPanel({ id, onChanged }) {
           dateHint={wibDate(t.matchDate)}
           onClose={closeDialog}
           onSave={doEditRound}
+        />
+      )}
+
+      {dialog?.score && (
+        <ScoreDialog
+          match={dialog.score}
+          nextNo={
+            b?.rounds
+              .flatMap((r) => r.matches)
+              .find((m) => m.id === dialog.score.nextId)?.number ?? null
+          }
+          loserNo={
+            b?.rounds
+              .flatMap((r) => r.matches)
+              .find((m) => m.id === dialog.score.loserNextId)?.number ?? null
+          }
+          onSave={(a, c) => doScore(dialog.score, a, c)}
+          onClose={closeDialog}
+        />
+      )}
+
+      {done && (
+        <SuccessPopup
+          title={done.title}
+          text={done.text}
+          onClose={() => setDone(null)}
         />
       )}
 
