@@ -43,7 +43,7 @@ function mapRound(r) {
     id: Number(r.id_babak),
     order: Number(r.urutan_babak),
     name: r.nama_babak ?? "",
-    startTime: r.waktu_mulai ?? null, // UTC ISO
+    startTime: r.waktu_mulai ?? null, // "HH:MM" (WIB) atau null; tanggal ikut jadwal_main turnamen
     isThirdPlace: r.is_perebutan_juara_3 === true,
     matches: (r.pertandingan ?? []).map(mapMatch),
   };
@@ -69,6 +69,7 @@ function mapBracketData(d) {
       autoSeconds: num(t.sisa_detik_publikasi_otomatis), // hitung mundur dari waktu server
       canPublish: t.bisa_dipublikasikan === true,
       cannotPublishReason: t.alasan_tidak_bisa_dipublikasikan ?? "",
+      pendingReports: Number(t.jumlah_laporan_menunggu ?? 0), // badge Inbox Verifikasi
     },
     reason: d?.alasan_belum_dibentuk ?? "", // alasan bracket belum terbentuk
     canShuffle: d?.bisa_diacak === true,
@@ -115,13 +116,13 @@ export async function publishBracket(id) {
 }
 
 // PUT /turnamen-kelolaan/{id}/bracket/babak/{id_babak}
-// name maks 50 (wajib); startTime "YYYY-MM-DD HH:mm" (opsional, WIB).
-// Dikirim sebagai FormData + _method=PUT (Laravel tidak membaca body multipart pada PUT asli).
-export async function updateRound(id, roundId, { name, startTime }) {
+// name maks 30 (wajib); time "HH:MM" 24 jam WIB (opsional, kosong = hapus jam).
+// Tanggal pertandingan tetap dari jadwal_main turnamen.
+export async function updateRound(id, roundId, { name, time }) {
   const form = new FormData();
   form.append("_method", "PUT");
   form.append("nama_babak", name);
-  if (startTime) form.append("waktu_mulai", startTime);
+  form.append("waktu_mulai", time || ""); // string kosong dibaca Laravel sebagai null
   const res = await apiRequest(
     `/turnamen-kelolaan/${id}/bracket/babak/${roundId}`,
     {

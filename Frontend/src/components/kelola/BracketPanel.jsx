@@ -10,6 +10,8 @@ import {
 import BracketCanvas from "./BracketCanvas";
 import BracketIcon from "./BracketIcon";
 import ScoreDialog from "./ScoreDialog";
+import ReportInboxDrawer from "./ReportInboxDrawer";
+import ActionDonePopup from "./ActionDonePopup";
 import "../../styles/bracket.css";
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -258,11 +260,13 @@ function TimePicker({ id, value, onChange }) {
   );
 }
 
-// Edit jadwal babak: judul (maks 50) + jam WIB (HH:mm)
-function EditRoundDialog({ round, dateHint, onClose, onSave }) {
+// Edit jadwal babak: judul (maks 30) + jam WIB (HH:MM). Tanggal mengikuti jadwal_main turnamen.
+function EditRoundDialog({ round, onClose, onSave }) {
   const [name, setName] = useState(round.name);
   const [time, setTime] = useState(
-    round.startTime ? wibTime(round.startTime) : "",
+    /^\d{2}:\d{2}/.test(round.startTime ?? "")
+      ? round.startTime.slice(0, 5)
+      : "",
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -277,14 +281,13 @@ function EditRoundDialog({ round, dateHint, onClose, onSave }) {
     e.preventDefault();
     const n = name.trim();
     if (!n) return setError("Judul babak wajib diisi.");
+    if (n.length > 30) return setError("Judul babak maksimal 30 karakter.");
     if (time && !TIME_RE.test(time))
-      return setError("Format jam babak tidak valid. Contoh: 10:00");
-    const day = (round.startTime && wibDate(round.startTime)) || dateHint;
-    if (time && !day) return setError("Tanggal babak belum tersedia.");
+      return setError("Format jam tidak valid. Gunakan format 24 jam (HH:MM).");
     setBusy(true);
     setError("");
     try {
-      await onSave({ name: n, startTime: time ? `${day} ${time}` : "" });
+      await onSave({ name: n, time });
     } catch (err) {
       setError(err.message || "Jadwal babak gagal disimpan.");
       setBusy(false);
@@ -322,11 +325,11 @@ function EditRoundDialog({ round, dateHint, onClose, onSave }) {
           <input
             id="kl-bk-name"
             autoFocus
-            maxLength={50}
+            maxLength={30}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <em>{name.length}/50</em>
+          <em>{name.length}/30</em>
         </div>
 
         <label htmlFor="kl-bk-time">Jam</label>
@@ -487,8 +490,9 @@ function BracketPanel({ id, onChanged }) {
   const [dialog, setDialog] = useState(null); // "acak" | "publikasi" | { round }
   const [busy, setBusy] = useState(false);
   const [dlgError, setDlgError] = useState("");
-  const [toast, setToast] = useState("");
+  const [popup, setPopup] = useState(null); // { title, text } popup sukses di tengah layar
   const [done, setDone] = useState(null); // { title, text } popup sukses
+  const [inboxOpen, setInboxOpen] = useState(false); // panel Laporan Hasil
 
   const load = useCallback(
     () =>
@@ -507,12 +511,6 @@ function BracketPanel({ id, onChanged }) {
     setState({ data: null, error: "" });
     load();
   }, [load]);
-
-  useEffect(() => {
-    if (!toast) return undefined;
-    const t = setTimeout(() => setToast(""), 3500);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   // Hitung mundur publikasi otomatis: sisa detik dari BE (waktu server), dikurangi tiap detik
   const autoSecs = state.data?.tournament.autoSeconds ?? null;
@@ -557,7 +555,10 @@ function BracketPanel({ id, onChanged }) {
     run(async () => {
       const res = await shuffleBracket(id);
       setState({ data: res, error: "" });
-      setToast(res.message || "Posisi squad pada bracket berhasil diacak.");
+      setPopup({
+        title: "Bracket diacak",
+        text: res.message || "Posisi squad pada bracket berhasil diacak.",
+      });
     });
 
   const doPublish = () =>
@@ -575,13 +576,19 @@ function BracketPanel({ id, onChanged }) {
   const doSaveDescription = async (text) => {
     const res = await updateDescription(id, text);
     setState({ data: res, error: "" });
-    setToast(res.message || "Deskripsi bracket berhasil disimpan.");
+    setPopup({
+      title: "Deskripsi disimpan",
+      text: res.message || "Deskripsi bracket berhasil disimpan.",
+    });
   };
 
-  const doEditRound = async ({ name, startTime }) => {
-    const res = await updateRound(id, dialog.round.id, { name, startTime });
+  const doEditRound = async ({ name, time }) => {
+    const res = await updateRound(id, dialog.round.id, { name, time });
     setState({ data: res, error: "" });
-    setToast(res.message || "Babak berhasil diperbarui.");
+    setPopup({
+      title: "Babak diperbarui",
+      text: res.message || "Babak berhasil diperbarui.",
+    });
     closeDialog();
   };
 
@@ -654,9 +661,15 @@ function BracketPanel({ id, onChanged }) {
 
           {published && (
             <div className="kl-bk-actions">
-              {/* Tampilan saja: fitur laporan hasil belum ada kontrak API-nya */}
-              <button type="button" className="kl-bk-btn report">
+              <button
+                type="button"
+                className="kl-bk-btn report"
+                onClick={() => setInboxOpen(true)}
+              >
                 <BracketIcon name="file" size={15} /> Laporan Hasil
+                {t.pendingReports > 0 && (
+                  <span className="kl-bk-badge">{t.pendingReports}</span>
+                )}
               </button>
             </div>
           )}
@@ -784,6 +797,17 @@ function BracketPanel({ id, onChanged }) {
         />
       )}
 
+      {inboxOpen && (
+        <ReportInboxDrawer
+          id={id}
+          onClose={() => setInboxOpen(false)}
+          onChanged={() => {
+            load();
+            onChanged?.();
+          }}
+        />
+      )}
+
       {done && (
         <SuccessPopup
           title={done.title}
@@ -792,7 +816,13 @@ function BracketPanel({ id, onChanged }) {
         />
       )}
 
-      {toast && <div className="kl-toast">{toast}</div>}
+      {popup && (
+        <ActionDonePopup
+          title={popup.title}
+          text={popup.text}
+          onClose={() => setPopup(null)}
+        />
+      )}
     </>
   );
 }
