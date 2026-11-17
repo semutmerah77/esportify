@@ -50,6 +50,8 @@ use App\Http\Controllers\Player\KelolaBracketController;
 use App\Http\Controllers\Player\BracketController;
 use App\Http\Controllers\Player\LaporanPertandinganController;
 use App\Http\Controllers\Player\KelolaLaporanPertandinganController;
+use App\Http\Controllers\Player\KelolaPengumumanController;
+use App\Http\Controllers\Player\PengumumanController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
 // ==========================================
@@ -578,6 +580,66 @@ Route::middleware('auth:sanctum')->group(function () {
                 KelolaLaporanPertandinganController::class,
                 'tolak'
             ])->whereNumber(['id', 'idLaporan']);
+
+        });
+
+        // ==========================================
+        // MODUL 4: PENGUMUMAN TURNAMEN (PB-20)
+        // ==========================================
+
+        // Penyelenggara (dicek di controller)
+        Route::middleware('permission:kelola_pengumuman')->group(function () {
+
+            Route::get('/turnamen-kelolaan/{id}/pengumuman', [
+                KelolaPengumumanController::class,
+                'index'
+            ])->whereNumber('id');
+
+            Route::post('/turnamen-kelolaan/{id}/pengumuman', [
+                KelolaPengumumanController::class,
+                'store'
+            ])->whereNumber('id');
+
+            Route::get('/turnamen-kelolaan/{id}/pengumuman/{idPengumuman}', [
+                KelolaPengumumanController::class,
+                'show'
+            ])->whereNumber(['id', 'idPengumuman']);
+
+            // Klik tombol Edit (batas 30 menit dari pembuatan)
+            Route::post('/turnamen-kelolaan/{id}/pengumuman/{idPengumuman}/mulai-edit', [
+                KelolaPengumumanController::class,
+                'mulaiEdit'
+            ])->whereNumber(['id', 'idPengumuman']);
+
+            Route::put('/turnamen-kelolaan/{id}/pengumuman/{idPengumuman}', [
+                KelolaPengumumanController::class,
+                'update'
+            ])->whereNumber(['id', 'idPengumuman']);
+
+            Route::post('/turnamen-kelolaan/{id}/pengumuman/{idPengumuman}/batal-edit', [
+                KelolaPengumumanController::class,
+                'batalEdit'
+            ])->whereNumber(['id', 'idPengumuman']);
+
+            Route::delete('/turnamen-kelolaan/{id}/pengumuman/{idPengumuman}', [
+                KelolaPengumumanController::class,
+                'destroy'
+            ])->whereNumber(['id', 'idPengumuman']);
+
+        });
+
+        // Peserta (anggota Squad yang pendaftarannya diterima, dicek di controller)
+        Route::middleware('permission:lihat_pengumuman')->group(function () {
+
+            Route::get('/turnamen/{id}/pengumuman', [
+                PengumumanController::class,
+                'index'
+            ])->whereNumber('id');
+
+            Route::get('/turnamen/{id}/pengumuman/{idPengumuman}', [
+                PengumumanController::class,
+                'show'
+            ])->whereNumber(['id', 'idPengumuman']);
 
         });
         
