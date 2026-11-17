@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Pengumuman turnamen (PB-20, US56 & US57).
+ */
 class Pengumuman extends Model
 {
     protected $table = 'pengumuman';
-
     protected $primaryKey = 'id_pengumuman';
 
     protected $fillable = [
@@ -28,3 +30,4 @@ class Pengumuman extends Model
         return $this->belongsTo(Penyelenggara::class, 'id_penyelenggara', 'id_penyelenggara');
     }
 }
+?>
