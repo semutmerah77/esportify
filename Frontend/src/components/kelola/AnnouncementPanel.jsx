@@ -66,9 +66,31 @@ function AnnouncementPanel({ id, organizerName = "" }) {
   );
 
   useEffect(() => {
+    let off = false;
     setState({ items: null, canCreate: false, reason: "", error: "" });
-    load();
-  }, [load]);
+    getOrganizerAnnouncements(id)
+      .then(
+        (d) =>
+          !off &&
+          setState({
+            items: d.items,
+            canCreate: d.canCreate,
+            reason: d.cannotCreateReason,
+            error: "",
+          }),
+      )
+      .catch(
+        (err) =>
+          !off &&
+          setState((s) => ({
+            ...s,
+            error: err.message || "Pengumuman tidak dapat dimuat.",
+          })),
+      );
+    return () => {
+      off = true;
+    };
+  }, [id]);
 
   // Tombol Edit hilang tepat saat batas 30 menit habis: satu timer ke batas terdekat (tanpa polling)
   const items = state.items;

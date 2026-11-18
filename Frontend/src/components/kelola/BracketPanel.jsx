@@ -508,9 +508,22 @@ function BracketPanel({ id, onChanged }) {
   );
 
   useEffect(() => {
+    let off = false;
     setState({ data: null, error: "" });
-    load();
-  }, [load]);
+    getBracket(id)
+      .then((data) => !off && setState({ data, error: "" }))
+      .catch(
+        (err) =>
+          !off &&
+          setState((s) => ({
+            ...s,
+            error: err.message || "Bracket tidak dapat dimuat.",
+          })),
+      );
+    return () => {
+      off = true;
+    };
+  }, [id]);
 
   // Hitung mundur publikasi otomatis: sisa detik dari BE (waktu server), dikurangi tiap detik
   const autoSecs = state.data?.tournament.autoSeconds ?? null;

@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useLocation } from "react-router-dom";
@@ -12,8 +13,8 @@ import { isPriority, toMs, waitingSince } from "../utils/priority";
 
 const Ctx = createContext(null);
 
-const TICK_MS = 5000; // geser jam (di browser saja)
-const REFRESH_MS = 30000; // muat ulang daftar dari server
+const TICK_MS = 5000; // geser jam (di browser saja, tanpa request)
+const MIN_GAP_MS = 15000; // jarak minimal muat ulang saat tab kembali aktif
 
 export function AdminPriorityProvider({ children }) {
   const { pathname } = useLocation();
@@ -22,18 +23,28 @@ export function AdminPriorityProvider({ children }) {
   const [error, setError] = useState("");
   const [now, setNow] = useState(Date.now());
 
+  const requestNo = useRef(0); // hasil muat ulang yang lebih lama tidak boleh menimpa yang lebih baru
+  const lastLoadAt = useRef(0);
+
   const refresh = useCallback(async () => {
+    const mine = ++requestNo.current;
     try {
-      setItems(await getAdminSubmissions());
+      const list = await getAdminSubmissions();
+      if (mine !== requestNo.current) return;
+      setItems(list);
       setError("");
     } catch (err) {
+      if (mine !== requestNo.current) return;
       setError(
         err.status === 403
           ? err.message || "Kamu tidak punya izin melihat pengajuan."
           : err.message,
       );
     } finally {
-      setLoading(false);
+      if (mine === requestNo.current) {
+        lastLoadAt.current = Date.now();
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -42,26 +53,29 @@ export function AdminPriorityProvider({ children }) {
     refresh();
   }, [pathname, refresh]);
 
-  // Jam: supaya popup muncul tepat waktu tanpa menunggu muat ulang
+  // Provider ditutup: abaikan hasil yang masih berjalan
+  useEffect(
+    () => () => {
+      requestNo.current += 1;
+    },
+    [],
+  );
+
+  // Jam: supaya popup muncul tepat waktu tanpa menunggu muat ulang (hanya di browser)
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(t);
   }, []);
 
-  // Daftar: berkala, dan saat tab kembali aktif
+  // Saat tab kembali aktif: geser jam, dan muat ulang kalau data sudah agak lama
   useEffect(() => {
-    const r = setInterval(refresh, REFRESH_MS);
     const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        setNow(Date.now());
-        refresh();
-      }
+      if (document.visibilityState !== "visible") return;
+      setNow(Date.now());
+      if (Date.now() - lastLoadAt.current >= MIN_GAP_MS) refresh();
     };
     document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      clearInterval(r);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [refresh]);
 
   // Prioritas, yang paling lama menunggu di atas.

@@ -37,6 +37,8 @@ function ResultCard({ item, onOpen }) {
           <img
             src={item.poster}
             alt={item.name}
+            loading="lazy"
+            decoding="async"
             className="ct-poster-img"
             onError={() => setImgFailed(true)}
           />
