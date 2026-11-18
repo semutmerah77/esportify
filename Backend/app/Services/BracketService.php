@@ -45,8 +45,28 @@ class BracketService
         return $jadwalMain !== null && now()->gte(Carbon::parse($jadwalMain));
     }
 
+    /**
+     * Untuk endpoint daftar (Turnamen Kelolaan, Turnamen Saya):
+     * muat bracket dan hitungan pendaftaran untuk semua turnamen sekaligus,
+     * supaya infoPersiapan() dan slotTerisi() tidak query per turnamen.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\Relation  $query
+     */
+    public function muatInfoPersiapan($query)
+    {
+        return $query->with('bracket')->withCount([
+            'pendaftaran as info_jumlah_menunggu' => fn ($q) => $q->where('status_pendaftaran', 'menunggu'),
+            'pendaftaran as info_jumlah_diterima' => fn ($q) => $q->where('status_pendaftaran', 'diterima'),
+            'pendaftaran as slot_terisi' => fn ($q) => $q->aktif(),
+        ]);
+    }
+
     public function jumlahMenunggu(Turnamen $turnamen): int
     {
+        if (array_key_exists('info_jumlah_menunggu', $turnamen->getAttributes())) {
+            return (int) $turnamen->getAttributes()['info_jumlah_menunggu'];
+        }
+
         return PendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
             ->where('status_pendaftaran', 'menunggu')
             ->count();
@@ -54,6 +74,10 @@ class BracketService
 
     public function jumlahDiterima(Turnamen $turnamen): int
     {
+        if (array_key_exists('info_jumlah_diterima', $turnamen->getAttributes())) {
+            return (int) $turnamen->getAttributes()['info_jumlah_diterima'];
+        }
+
         return PendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
             ->where('status_pendaftaran', 'diterima')
             ->count();
@@ -61,6 +85,11 @@ class BracketService
 
     public function bracketDari(Turnamen $turnamen): ?BracketTurnamen
     {
+        // Sudah dimuat lewat muatInfoPersiapan()
+        if ($turnamen->relationLoaded('bracket')) {
+            return $turnamen->getRelation('bracket');
+        }
+
         return BracketTurnamen::where('id_turnamen', $turnamen->id_turnamen)->first();
     }
 
