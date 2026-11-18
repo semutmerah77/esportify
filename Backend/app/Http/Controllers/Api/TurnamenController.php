@@ -397,4 +397,3 @@ class TurnamenController extends Controller
         ];
     }
 }
-?>
