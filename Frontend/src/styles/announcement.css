@@ -1,0 +1,428 @@
+/* Pengumuman turnamen (PB-20): daftar, kartu, dialog buat/edit. Prefix an-.
+   Dialog memakai kelas rp- dari match-report.css (overlay, tombol, popup keputusan). */
+
+/* ---------- panel ---------- */
+.an-panel {
+  box-sizing: border-box;
+  padding: 18px 24px 22px;
+  border: 1px solid #1f2a44;
+  border-radius: 14px;
+  color: #e6ecf8;
+}
+.an-panel * {
+  box-sizing: border-box;
+}
+.an-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #1f2a44;
+  font-size: 12.5px;
+  color: #8a97b4;
+}
+.an-top.player {
+  font-size: 12px;
+}
+.an-top-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+}
+.an-top-title svg {
+  color: #60a5fa;
+}
+.an-top-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.an-btn-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.an-btn-new:hover {
+  background: #1d4fd8;
+}
+.an-btn-new:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+.an-notice {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.an-notice svg {
+  flex: none;
+  margin-top: 3px;
+}
+.an-notice.warn {
+  border-color: #5a4318;
+  background: #2a2112;
+  color: #fbbf24;
+}
+.an-notice.bad {
+  border-color: #7f1d1d;
+  background: rgba(127, 29, 29, 0.25);
+  color: #fca5a5;
+}
+
+/* ---------- timeline ---------- */
+.an-timeline {
+  padding-top: 6px;
+}
+.an-day {
+  display: flex;
+  justify-content: center;
+  margin: 22px 0 14px;
+}
+.an-day span {
+  padding: 4px 14px;
+  border: 1px solid #2a3756;
+  border-radius: 999px;
+  background: #101827;
+  font-size: 12px;
+  color: #8a97b4;
+}
+
+/* ---------- kartu ---------- */
+.an-card {
+  position: relative;
+  margin-bottom: 16px;
+  padding: 16px 20px 14px;
+  border: 1px solid #1f2a44;
+  border-radius: 12px;
+  background: #151e30;
+}
+.an-card-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+.an-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #4f46e5;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.an-author {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #fff;
+}
+.an-role {
+  padding: 2px 9px;
+  border: 1px solid #6b4e1d;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.08);
+  font-size: 11px;
+  color: #fbbf24;
+}
+.an-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+.an-body {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #cbd5e1;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.an-body.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.an-body a {
+  color: #60a5fa;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.an-body a:hover {
+  color: #93c5fd;
+}
+.an-more-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  color: #60a5fa;
+  cursor: pointer;
+}
+.an-more-text:hover {
+  color: #93c5fd;
+}
+.an-time {
+  display: block;
+  margin-top: 10px;
+  text-align: right;
+  font-size: 12px;
+  color: #8a97b4;
+}
+
+/* ---------- menu titik tiga ---------- */
+.an-menu-wrap {
+  position: relative;
+  margin-left: auto;
+}
+.an-more {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #8a97b4;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.an-more:hover,
+.an-more[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+.an-menu {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  z-index: 30;
+  min-width: 210px;
+  padding: 6px;
+  border: 1px solid #2a3756;
+  border-radius: 10px;
+  background: #101827;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+.an-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: #e6ecf8;
+  cursor: pointer;
+}
+.an-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.an-menu-item.danger {
+  color: #f87171;
+}
+.an-menu-item.danger:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+.an-menu-hint {
+  display: block;
+  padding: 0 10px 6px 34px;
+  font-size: 11.5px;
+  color: #8a97b4;
+}
+.an-menu-line {
+  display: block;
+  height: 1px;
+  margin: 2px 4px 4px;
+  background: #1f2a44;
+}
+
+/* ---------- dialog buat / edit ---------- */
+.rp-dialog.an-form-dialog {
+  max-width: 520px;
+  padding: 22px 24px;
+}
+.an-form-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.an-form-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+.an-form-sub {
+  margin: 6px 0 14px;
+  font-size: 12.5px;
+  color: #8a97b4;
+}
+.an-label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #e6ecf8;
+}
+.an-field {
+  position: relative;
+}
+.an-field input,
+.an-field textarea {
+  display: block;
+  width: 100%;
+  border: 1px solid #1f2a44;
+  border-radius: 10px;
+  background: #0b1020;
+  font: inherit;
+  font-size: 13.5px;
+  color: #fff;
+}
+.an-field input {
+  height: 42px;
+  padding: 0 64px 0 14px;
+}
+.an-field textarea {
+  padding: 12px 14px 28px;
+  line-height: 1.55;
+  resize: vertical;
+  min-height: 150px;
+}
+.an-field input::placeholder,
+.an-field textarea::placeholder {
+  color: #5d6a87;
+}
+.an-field input:focus,
+.an-field textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+.an-count {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-style: normal;
+  color: #5d6a87;
+  pointer-events: none;
+}
+.an-field.area .an-count {
+  top: auto;
+  bottom: 9px;
+  transform: none;
+}
+.an-strong {
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- kosong & skeleton ---------- */
+.an-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px;
+  padding: 42px 20px;
+  border: 1px dashed #1f2a44;
+  border-radius: 14px;
+  text-align: center;
+  color: #5d6a87;
+}
+.an-empty b {
+  margin-top: 6px;
+  font-size: 15px;
+  color: #e6ecf8;
+}
+.an-empty p {
+  max-width: 340px;
+  margin: 0;
+  font-size: 13px;
+  color: #8a97b4;
+}
+.an-skel {
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border: 1px solid #1f2a44;
+  border-radius: 12px;
+  background: #151e30;
+}
+.an-skel i {
+  display: block;
+  height: 12px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #1b2640 25%, #243253 50%, #1b2640 75%);
+  background-size: 200% 100%;
+  animation: an-pulse 1.4s ease-in-out infinite;
+}
+.an-skel i.w30 {
+  width: 30%;
+}
+.an-skel i.w50 {
+  width: 50%;
+}
+.an-skel i.w90 {
+  width: 90%;
+  margin-bottom: 0;
+}
+@keyframes an-pulse {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .an-panel {
+    padding: 14px;
+  }
+  .an-card {
+    padding: 14px;
+  }
+  .rp-dialog.an-form-dialog {
+    padding: 18px;
+  }
+}

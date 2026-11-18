@@ -6,6 +6,7 @@ import { RegistrantRow } from "../../components/kelola/KlParts";
 import ParticipantDetailModal from "../../components/kelola/ParticipantDetailModal";
 import ParticipantsPanel from "../../components/kelola/ParticipantsPanel";
 import ReviewDrawer from "../../components/kelola/ReviewDrawer";
+import AnnouncementPanel from "../../components/kelola/AnnouncementPanel";
 import { longDate } from "../../utils/date";
 import {
   getManageHeader,
@@ -293,9 +294,7 @@ function KelolaTurnamen() {
 
         {tab === "bracket" && <BracketPanel id={id} onChanged={loadHead} />}
 
-        {tab === "pengumuman" && (
-          <p className="kl-empty">Fitur Pengumuman akan segera tersedia.</p>
-        )}
+        {tab === "pengumuman" && <AnnouncementPanel id={id} />}
       </section>
 
       {detailOf && (
