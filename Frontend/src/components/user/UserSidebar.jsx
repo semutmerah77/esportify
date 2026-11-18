@@ -139,6 +139,15 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
       /^\/turnamen\/[^/]+\/kelola/.test(pathname)
     )
       return true;
+    // Ruang Turnamen peserta (/turnamen/{id}/...): alurnya Turnamen Saya -> klik turnamen -> Ruang Turnamen,
+    // jadi menu Turnamen Saya tetap menyala. Alamat kelola/daftar dan halaman turnamen lain dikecualikan.
+    if (
+      item.to === "/turnamen/saya" &&
+      /^\/turnamen\/(?!cari|saya|kelola|buat|detail|status-pengajuan|pengajuan)[^/]+\/(?!kelola|daftar)[^/]+/.test(
+        pathname,
+      )
+    )
+      return true;
     return (
       pathname === item.to ||
       (item.also ?? []).some((path) => pathname.startsWith(path))

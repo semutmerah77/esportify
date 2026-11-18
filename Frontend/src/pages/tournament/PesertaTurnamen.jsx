@@ -8,6 +8,7 @@ import PlayerBracketPanel from "../../components/kelola/PlayerBracketPanel";
 import { longDate } from "../../utils/date";
 import { getManageHeader } from "../../services/tournamentManageApi";
 import { getTournamentParticipants } from "../../services/tournamentParticipantsApi";
+import PlayerAnnouncementPanel from "../../components/kelola/PlayerAnnouncementPanel";
 import { getRegistration } from "../../services/tournamentRegApi";
 import "../../styles/kelola.css";
 
@@ -207,9 +208,7 @@ function PesertaTurnamen() {
 
         {tab === "bracket" && <PlayerBracketPanel id={id} />}
 
-        {tab === "pengumuman" && (
-          <p className="kl-empty">Fitur Pengumuman akan segera tersedia.</p>
-        )}
+        {tab === "pengumuman" && <PlayerAnnouncementPanel id={id} />}
       </section>
 
       {detailOf && (
