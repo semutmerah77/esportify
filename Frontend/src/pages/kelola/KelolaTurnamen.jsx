@@ -91,11 +91,14 @@ function KelolaTurnamen() {
     [id],
   );
 
-  // Header dulu: jenis biaya menentukan tab yang tampil
+  // Header dan peserta dimuat paralel (peserta tidak bergantung pada header).
+  // Hasil lama tidak menimpa state kalau id berganti atau halaman ditutup.
   useEffect(() => {
     let off = false;
     setHead(null);
     setHeadError("");
+    setPart({ items: [], ready: false, error: "" });
+
     getManageHeader(id)
       .then((h) => {
         if (off) return;
@@ -105,15 +108,29 @@ function KelolaTurnamen() {
       .catch(
         (err) => !off && setHeadError(err.message || "Gagal memuat turnamen."),
       );
+
+    getParticipants(id)
+      .then(
+        (res) => !off && setPart({ items: res.items, ready: true, error: "" }),
+      )
+      .catch(
+        (err) =>
+          !off &&
+          setPart((p) => ({
+            ...p,
+            ready: true,
+            error: err.message || "Gagal memuat peserta.",
+          })),
+      );
+
     return () => {
       off = true;
     };
   }, [id]);
 
+  // Pendaftar hanya dimuat setelah header, karena hanya turnamen berbayar yang punya tab verifikasi
   useEffect(() => {
-    if (!head) return;
-    if (paid) loadRegs();
-    loadPart();
+    if (head && paid) loadRegs();
   }, [head?.id, paid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const back = (

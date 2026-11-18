@@ -39,7 +39,11 @@ const initials = (name = "") =>
 function SquadAvatar({ squad, tone }) {
   return (
     <span className={`rp-av ${tone}`}>
-      {squad.logo ? <img src={squad.logo} alt="" /> : initials(squad.name)}
+      {squad.logo ? (
+        <img src={squad.logo} alt="" loading="lazy" decoding="async" />
+      ) : (
+        initials(squad.name)
+      )}
     </span>
   );
 }

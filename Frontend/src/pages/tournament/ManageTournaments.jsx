@@ -37,10 +37,14 @@ function ManageTournaments() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let off = false;
     getManagedTournaments()
-      .then(setItems)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .then((list) => !off && setItems(list))
+      .catch((err) => !off && setError(err.message))
+      .finally(() => !off && setLoading(false));
+    return () => {
+      off = true;
+    };
   }, []);
 
   // Pencarian dan filter dikerjakan di klien, sementara.
