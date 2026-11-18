@@ -62,6 +62,11 @@ class Turnamen extends Model
      */
     public function slotTerisi(): int
     {
+        // Sudah dihitung di query daftar (withCount 'pendaftaran as slot_terisi')
+        if (array_key_exists('slot_terisi', $this->attributes)) {
+            return (int) $this->attributes['slot_terisi'];
+        }
+
         return $this->pendaftaran()->aktif()->count();
     }
 }

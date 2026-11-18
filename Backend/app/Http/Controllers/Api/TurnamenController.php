@@ -185,6 +185,9 @@ class TurnamenController extends Controller
                 'pengajuan:id_pengajuan,id_game,nama_turnamen,nama_penyelenggara,nama_instansi,poster,tipe_turnamen,slot,jadwal_pendaftaran_tutup,jadwal_main,deskripsi_lokasi',
                 'pengajuan.game:id_game,nama_game',
             ])
+            // Bracket, jumlah menunggu/diterima, dan slot terisi dimuat sekaligus
+            // (tidak query per turnamen).
+            ->tap(fn ($q) => app(BracketService::class)->muatInfoPersiapan($q))
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($item) {
@@ -204,6 +207,7 @@ class TurnamenController extends Controller
                         'poster' => $pengajuan->poster,
                         'tipe_turnamen' => $pengajuan->tipe_turnamen,
                         'slot' => $pengajuan->slot,
+                        'slot_terisi' => $item->slotTerisi(),
                         'jadwal_pendaftaran_tutup' => $pengajuan->jadwal_pendaftaran_tutup,
                         'jadwal_main' => $pengajuan->jadwal_main,
                         'deskripsi_lokasi' => $pengajuan->deskripsi_lokasi,

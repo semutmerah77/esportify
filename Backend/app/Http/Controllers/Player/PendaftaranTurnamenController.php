@@ -392,6 +392,8 @@ class PendaftaranTurnamenController extends Controller
         $idPlayer = $player->id_player;
 
         $data = PendaftaranTurnamen::with([
+                // Bracket & hitungan pendaftaran dimuat sekaligus (tidak query per turnamen)
+                'turnamen' => fn ($q) => app(\App\Services\BracketService::class)->muatInfoPersiapan($q),
                 'turnamen.pengajuan.game',
                 'squad',
                 // hanya baris roster milik player login (untuk status kunci miliknya)

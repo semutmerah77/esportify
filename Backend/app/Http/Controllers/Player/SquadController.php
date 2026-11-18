@@ -37,6 +37,8 @@ class SquadController extends Controller
             })
             ->with('leader')
             ->withCount('anggotaAktif')
+            // Keanggotaan Player login untuk semua squad dalam 1 query
+            ->withExists(['anggotaAktif as saya_anggota' => fn ($q) => $q->where('id_player', $player?->id_player)])
             ->orderBy('nama_squad')
             ->get()
             ->map(fn (Squad $squad) => $this->formatSquadRingkas($squad, $player));
@@ -68,6 +70,8 @@ class SquadController extends Controller
             })
             ->with('leader')
             ->withCount('anggotaAktif')
+            // Keanggotaan Player login untuk semua squad dalam 1 query
+            ->withExists(['anggotaAktif as saya_anggota' => fn ($q) => $q->where('id_player', $player?->id_player)])
             ->latest()
             ->get()
             ->map(fn (Squad $squad) => $this->formatSquadRingkas($squad, $player));
@@ -610,7 +614,11 @@ class SquadController extends Controller
 
     private function peranPlayer(Squad $squad, $player): ?string
     {
-        if (!$player || !$squad->isAnggotaAktif($player)) {
+        $anggota = array_key_exists('saya_anggota', $squad->getAttributes())
+            ? (bool) $squad->getAttributes()['saya_anggota']
+            : ($player && $squad->isAnggotaAktif($player));
+
+        if (!$player || !$anggota) {
             return null;
         }
 
