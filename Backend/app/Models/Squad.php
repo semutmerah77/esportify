@@ -127,6 +127,25 @@ class Squad extends Model
     }
 
     /**
+     * R1.03: setiap Player maksimal tergabung aktif di 10 Squad
+     * (termasuk Squad buatannya). Squad yang ditinggalkan/diarsipkan tidak dihitung.
+     */
+    public const MAKS_SQUAD_PER_PLAYER = 10;
+
+    public static function jumlahSquadAktifPlayer(int $idPlayer): int
+    {
+        return AnggotaSquad::where('id_player', $idPlayer)
+            ->where('status_anggota', 'aktif')
+            ->whereHas('squad', fn ($q) => $q->where('status_squad', 'aktif'))
+            ->count();
+    }
+
+    public static function playerMencapaiBatasSquad(int $idPlayer): bool
+    {
+        return self::jumlahSquadAktifPlayer($idPlayer) >= self::MAKS_SQUAD_PER_PLAYER;
+    }
+
+    /**
      * Mencari Squad berdasarkan id_squad (angka) atau kode_squad (contoh: SQD-7K2M9Q).
      */
     public static function cariDenganKunci($key): ?self
@@ -184,4 +203,3 @@ class Squad extends Model
         return $kode;
     }
 }
-?>

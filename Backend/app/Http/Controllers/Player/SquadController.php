@@ -80,6 +80,12 @@ class SquadController extends Controller
             'success' => true,
             'message' => 'Daftar Squad saya berhasil ditampilkan.',
             'data' => $squads,
+            // R1.03: untuk menonaktifkan tombol Buat Squad di FE
+            'meta' => [
+                'jumlah_squad_aktif' => $squads->count(),
+                'maks_squad' => Squad::MAKS_SQUAD_PER_PLAYER,
+                'bisa_buat_squad' => $squads->count() < Squad::MAKS_SQUAD_PER_PLAYER,
+            ],
         ], 200);
     }
 
@@ -94,6 +100,14 @@ class SquadController extends Controller
 
         if (!$player) {
             return $this->playerNotFound();
+        }
+
+        // R1.03: maksimal 10 Squad aktif
+        if (Squad::playerMencapaiBatasSquad($player->id_player)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu sudah tergabung di 10 Squad. Keluar dari salah satu Squad untuk membuat Squad baru.',
+            ], 422);
         }
 
         $validated = $request->validate([
@@ -661,4 +675,3 @@ class SquadController extends Controller
         ], 404);
     }
 }
-?>

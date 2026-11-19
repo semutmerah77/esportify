@@ -43,6 +43,11 @@ class LaporanPertandinganController extends Controller
             return $this->tolakAkses();
         }
 
+        // R6.29: selama bracket draft, data pertandingan (identitas lawan) tidak dikirim
+        if ($pertandingan->bracket?->isDraft()) {
+            return $this->gagal('Laporan hasil pertandingan dapat dikirim setelah bracket dipublikasikan.');
+        }
+
         $terakhir = $this->laporan->laporanTerakhirSquad($pertandingan, $pendaftaranSaya->id_squad);
         $alasan = $this->laporan->alasanTidakBisaLapor($turnamen, $pertandingan, $pendaftaranSaya);
 
@@ -287,4 +292,3 @@ class LaporanPertandinganController extends Controller
         ], 422);
     }
 }
-?>
