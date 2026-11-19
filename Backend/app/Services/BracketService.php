@@ -99,8 +99,8 @@ class BracketService
      */
     public function alasanTidakBisaDipublikasikan(Turnamen $turnamen, ?BracketTurnamen $bracket): ?string
     {
-        if ($turnamen->status === 'selesai') {
-            return 'Turnamen sudah selesai.';
+        if ($turnamen->sudahBerakhir()) {
+            return $turnamen->pesanBerakhir();
         }
 
         if ($bracket && !$bracket->isDraft()) {
@@ -254,7 +254,7 @@ class BracketService
 
         $bracket = $this->bracketDari($turnamen);
 
-        if ($turnamen->status === 'selesai' || ($bracket && !$bracket->isDraft())) {
+        if ($turnamen->sudahBerakhir() || ($bracket && !$bracket->isDraft())) {
             return $bracket;
         }
 
@@ -606,8 +606,8 @@ class BracketService
      */
     public function alasanTidakBisaUbahSkor(Turnamen $turnamen, Pertandingan $pertandingan): ?string
     {
-        if ($turnamen->status === 'selesai') {
-            return 'Turnamen sudah selesai.';
+        if ($turnamen->sudahBerakhir()) {
+            return $turnamen->pesanBerakhir();
         }
 
         if ($pertandingan->bracket?->isDraft()) {

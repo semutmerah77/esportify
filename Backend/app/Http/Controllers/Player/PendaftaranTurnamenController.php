@@ -634,7 +634,8 @@ class PendaftaranTurnamenController extends Controller
         // Status disimpan di turnamen.status (keputusan SA Sprint 2):
         // "berlangsung" diset BracketService::mulaiJikaSiap,
         // "selesai" saat hasil akhir ditetapkan.
-        return in_array($statusTersimpan, ['berlangsung', 'selesai'], true)
+        // R4.12: turnamen dibatalkan tetap tampil di Turnamen Saya dengan status Dibatalkan
+        return in_array($statusTersimpan, ['berlangsung', 'selesai', 'dibatalkan'], true)
             ? $statusTersimpan
             : 'pendaftaran';
     }

@@ -138,8 +138,8 @@ class KelolaBracketController extends Controller
             return $error;
         }
 
-        if ($turnamen->status === 'selesai') {
-            return $this->gagal('Turnamen sudah selesai.');
+        if ($turnamen->sudahBerakhir()) {
+            return $this->gagal($turnamen->pesanBerakhir());
         }
 
         $validator = Validator::make($request->all(), [
@@ -193,8 +193,8 @@ class KelolaBracketController extends Controller
             return $error;
         }
 
-        if ($turnamen->status === 'selesai') {
-            return $this->gagal('Turnamen sudah selesai.');
+        if ($turnamen->sudahBerakhir()) {
+            return $this->gagal($turnamen->pesanBerakhir());
         }
 
         $validator = Validator::make($request->all(), [
@@ -384,4 +384,3 @@ class KelolaBracketController extends Controller
         ], 422);
     }
 }
-?>

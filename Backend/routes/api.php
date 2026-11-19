@@ -52,6 +52,8 @@ use App\Http\Controllers\Player\LaporanPertandinganController;
 use App\Http\Controllers\Player\KelolaLaporanPertandinganController;
 use App\Http\Controllers\Player\KelolaPengumumanController;
 use App\Http\Controllers\Player\PengumumanController;
+use App\Http\Controllers\Player\KelolaPembatalanTurnamenController;
+use App\Http\Controllers\Admin\PembatalanTurnamenController as AdminPembatalanTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
 // ==========================================
@@ -642,6 +644,31 @@ Route::middleware('auth:sanctum')->group(function () {
             ])->whereNumber(['id', 'idPengumuman']);
 
         });
+
+
+        // ==========================================
+        // MODUL 4: PEMBATALAN TURNAMEN (PB-25)
+        // ==========================================
+
+        // Penyelenggara (dicek di controller)
+        Route::middleware('permission:ajukan_pembatalan_turnamen')->group(function () {
+
+            Route::get('/turnamen-kelolaan/{id}/pembatalan', [
+                KelolaPembatalanTurnamenController::class,
+                'index'
+            ])->whereNumber('id');
+
+            Route::post('/turnamen-kelolaan/{id}/pembatalan', [
+                KelolaPembatalanTurnamenController::class,
+                'store'
+            ])->whereNumber('id');
+
+            Route::get('/turnamen-kelolaan/pembatalan/{idPengajuan}/bukti/{idBukti}', [
+                KelolaPembatalanTurnamenController::class,
+                'lihatBukti'
+            ])->whereNumber(['idPengajuan', 'idBukti']);
+
+        });
         
 
         // NONAKTIF SEMENTARA: status "selesai" ditetapkan saat bracket
@@ -732,13 +759,47 @@ Route::middleware(['auth:sanctum', 'role:admin'])
     ])->middleware('permission:lihat_semua_pengajuan_turnamen');
 
 
+    // ==========================================
+    // VERIFIKASI PEMBATALAN TURNAMEN (PB-25)
+    // TETAP BISA DIAKSES MESKIPUN TENGGAT HABIS
+    // ==========================================
+
+    Route::middleware('permission:verifikasi_pembatalan_turnamen')->group(function () {
+
+        Route::get('/pembatalan-turnamen', [
+            AdminPembatalanTurnamenController::class,
+            'index'
+        ]);
+
+        Route::get('/pembatalan-turnamen/{id}', [
+            AdminPembatalanTurnamenController::class,
+            'show'
+        ])->whereNumber('id');
+
+        Route::get('/pembatalan-turnamen/{id}/bukti/{idBukti}', [
+            AdminPembatalanTurnamenController::class,
+            'lihatBukti'
+        ])->whereNumber(['id', 'idBukti']);
+
+        Route::post('/pembatalan-turnamen/{id}/setujui', [
+            AdminPembatalanTurnamenController::class,
+            'setujui'
+        ])->whereNumber('id');
+
+        Route::post('/pembatalan-turnamen/{id}/tolak', [
+            AdminPembatalanTurnamenController::class,
+            'tolak'
+        ])->whereNumber('id');
+
+    });
+
 
         // ==========================================
         // ADMIN PANEL LAINNYA
         // AKAN TERKUNCI JIKA ADA PENGAJUAN TERLAMBAT
         // ==========================================
 
-        Route::middleware('admin.pengajuan.deadline')->group(function () {
+        Route::middleware(['admin.pengajuan.deadline', 'admin.pembatalan.deadline'])->group(function () {
 
             // ==========================================
             // ADMIN PROFILE

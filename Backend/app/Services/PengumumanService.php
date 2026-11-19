@@ -44,6 +44,10 @@ class PengumumanService
             return 'Pengumuman tidak dapat dibuat karena turnamen sudah selesai.';
         }
 
+        if ($turnamen->status === Turnamen::STATUS_DIBATALKAN) {
+            return 'Pengumuman tidak dapat dibuat karena turnamen sudah dibatalkan.';
+        }
+
         if (!in_array($turnamen->status, self::STATUS_BOLEH_BUAT, true)) {
             return 'Pengumuman hanya dapat dibuat saat turnamen berstatus Pendaftaran atau Berlangsung.';
         }
@@ -215,4 +219,3 @@ class PengumumanService
         return 'pengumuman:sesi-edit:' . $pengumuman->id_pengumuman;
     }
 }
-?>
