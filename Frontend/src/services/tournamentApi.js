@@ -3,7 +3,6 @@ import { toMediaUrl } from "../utils/media";
 import { newSponsor } from "../utils/sponsor";
 import { newRincian, newRincianRows } from "../utils/rincian";
 import { newHadiah } from "../utils/hadiah";
-import { getRegistrationMeta } from "./tournamentManageApi";
 
 // Semua fungsi di file ini SELALU memakai backend (tanpa mock).
 // Respons player: { success, message, data }.
@@ -15,7 +14,8 @@ const listOf = (response) => {
 // ASSUMPTION: ID sumber pendanaan. Hanya Dana Pribadi = 2 yang terkonfirmasi.
 const FUNDING_IDS = { sponsor: 1, dana_pribadi: 2, biaya_peserta: 3 };
 
-const toNum = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+const toNum = (v) =>
+  v === null || v === undefined || v === "" ? null : Number(v);
 
 // ----- Kelola Turnamen -----
 // GET /turnamen-kelolaan. Tiap item membawa indikator persiapan (sejajar "status"):
@@ -50,20 +50,6 @@ export async function getManagedTournaments() {
       pendingVerify: toNum(t.jumlah_menunggu),
     };
   });
-
-  // Cadangan: kalau BE belum mengirim angkanya, ambil dari tab pendaftaran per turnamen
-  const missing = list.filter(
-    (t) => t.filled === null || t.pendingVerify === null,
-  );
-  if (missing.length > 0) {
-    const metas = await Promise.all(
-      missing.map((t) => getRegistrationMeta(t.id)),
-    );
-    missing.forEach((t, i) => {
-      if (t.filled === null) t.filled = metas[i]?.filled ?? null;
-      if (t.pendingVerify === null) t.pendingVerify = metas[i]?.waiting ?? null;
-    });
-  }
   return list;
 }
 

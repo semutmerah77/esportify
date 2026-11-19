@@ -15,6 +15,7 @@ function mapSquad(s) {
     code: s.kode_squad ?? "",
     name: s.nama_squad ?? "-",
     logo: s.logo_url ?? "",
+    hidden: s.tersembunyi === true, // squad lain saat bracket masih draft
   };
 }
 
@@ -157,6 +158,7 @@ export async function getPlayerBracket(id) {
     ...mapBracketData(d),
     published: d?.dipublikasikan === true,
     note: d?.keterangan ?? "",
+    masked: d?.disamarkan === true, // true = draft dilihat peserta
     mySquad: me
       ? {
           regId: num(me.id_pendaftaran),

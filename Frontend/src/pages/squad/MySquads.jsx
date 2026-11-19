@@ -8,8 +8,9 @@ import InviteInboxModal from "../../components/squad/InviteInboxModal";
 import SuccessDialog from "../../components/squad/SuccessDialog";
 import {
   MY_PAGE_SIZE,
+  SQUAD_LIMIT_MESSAGE,
   getInvitations,
-  getMySquads,
+  getMySquadsOverview,
 } from "../../services/squadApi";
 import "../../styles/squad.css";
 
@@ -22,6 +23,7 @@ function MySquads() {
   const [creating, setCreating] = useState(false);
   const [invites, setInvites] = useState([]);
   const [inboxOpen, setInboxOpen] = useState(false);
+  const [limit, setLimit] = useState({ count: 0, max: 10, canCreate: true });
   const navigate = useNavigate();
   const location = useLocation();
   const [notice, setNotice] = useState(location.state?.notice || "");
@@ -34,8 +36,17 @@ function MySquads() {
 
   useEffect(() => {
     let off = false;
-    getMySquads()
-      .then((data) => !off && (setItems(data), setReady(true)))
+    getMySquadsOverview()
+      .then((d) => {
+        if (off) return;
+        setItems(d.items);
+        setLimit({
+          count: d.activeCount,
+          max: d.maxSquads,
+          canCreate: d.canCreate,
+        });
+        setReady(true);
+      })
       .catch(
         (err) =>
           !off &&
@@ -73,6 +84,10 @@ function MySquads() {
 
   const handleCreated = (squad) => {
     setItems((prev) => [squad, ...prev]);
+    setLimit((l) => {
+      const count = l.count + 1;
+      return { ...l, count, canCreate: count < l.max };
+    });
     setSearch("");
     setPage(1);
     setCreating(false);
@@ -120,6 +135,8 @@ function MySquads() {
             type="button"
             className="sq-btn outline"
             onClick={() => setCreating(true)}
+            disabled={!limit.canCreate}
+            title={!limit.canCreate ? SQUAD_LIMIT_MESSAGE : undefined}
           >
             <Icon name="plus" size={16} /> Buat Squad Kamu
           </button>

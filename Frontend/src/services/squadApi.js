@@ -52,6 +52,23 @@ export async function getMySquads() {
   return (res?.data ?? []).map(mapSquad);
 }
 
+// GET /api/squad-saya lengkap dengan meta (R1.03: maks 10 Squad aktif per Player).
+// Satu request yang sama dengan getMySquads, hanya meta ikut dibaca.
+export async function getMySquadsOverview() {
+  const res = await apiRequest("/squad-saya");
+  const meta = res?.meta ?? {};
+  const items = (res?.data ?? []).map(mapSquad);
+  return {
+    items,
+    activeCount: Number(meta.jumlah_squad_aktif ?? items.length),
+    maxSquads: Number(meta.maks_squad ?? 10),
+    canCreate: meta.bisa_buat_squad !== false, // default boleh kalau meta belum ada
+  };
+}
+
+export const SQUAD_LIMIT_MESSAGE =
+  "Kamu sudah tergabung di 10 Squad. Keluar dari salah satu Squad untuk membuat Squad baru.";
+
 // POST /api/squad (multipart). Nama, deskripsi, dan logo wajib.
 export async function createSquad({ name, description, logoFile }) {
   const form = new FormData();
