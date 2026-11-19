@@ -19,6 +19,26 @@ class Turnamen extends Model
         'status',
     ];
 
+    public const STATUS_DIBATALKAN = 'dibatalkan';
+
+    /** Turnamen sudah berakhir (selesai atau dibatalkan): tidak ada aksi operasional lagi. */
+    public function sudahBerakhir(): bool
+    {
+        return in_array($this->status, ['selesai', self::STATUS_DIBATALKAN], true);
+    }
+
+    public function pesanBerakhir(): string
+    {
+        return $this->status === self::STATUS_DIBATALKAN
+            ? 'Turnamen sudah dibatalkan.'
+            : 'Turnamen sudah selesai.';
+    }
+
+    public function pengajuanPembatalan(): HasMany
+    {
+        return $this->hasMany(PengajuanPembatalanTurnamen::class, 'id_turnamen', 'id_turnamen');
+    }
+
     public function pengajuan(): BelongsTo
     {
         return $this->belongsTo(
@@ -70,4 +90,3 @@ class Turnamen extends Model
         return $this->pendaftaran()->aktif()->count();
     }
 }
-?>

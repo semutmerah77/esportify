@@ -47,6 +47,9 @@ class RolePermissionSeeder extends Seeder
             'setujui_pengajuan_turnamen',
             'tolak_pengajuan_turnamen',
             'berikan_revisi_pengajuan_turnamen',
+            
+            // Pembatalan Turnamen (PB-25)
+            'verifikasi_pembatalan_turnamen',
         ];
 
         // Permission untuk Player
@@ -91,6 +94,7 @@ class RolePermissionSeeder extends Seeder
             'verifikasi_hasil_pertandingan',
             'kelola_pengumuman',
             'lihat_pengumuman',
+            'ajukan_pembatalan_turnamen',
         ];
 
         $admin = Role::findByName('admin', 'web');

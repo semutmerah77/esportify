@@ -10,6 +10,7 @@ use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
 use App\Http\Middleware\CheckAdminPengajuanDeadline;
+use App\Http\Middleware\CheckAdminPembatalanDeadline;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -33,6 +34,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // Pemeriksaan tenggat keputusan pengajuan Admin.
             'admin.pengajuan.deadline' => CheckAdminPengajuanDeadline::class,
+            
+            // PB-25: pengajuan pembatalan turnamen > 3 hari belum diproses.
+            'admin.pembatalan.deadline' => CheckAdminPembatalanDeadline::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

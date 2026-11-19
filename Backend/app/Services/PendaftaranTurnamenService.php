@@ -272,8 +272,8 @@ class PendaftaranTurnamenService
     {
         $pengajuan = $turnamen->pengajuan;
 
-        if ($turnamen->status === 'selesai') {
-            return 'Turnamen sudah selesai.';
+        if ($turnamen->sudahBerakhir()) {
+            return $turnamen->pesanBerakhir();
         }
 
         if ($pengajuan->jadwal_main && now()->gte(Carbon::parse($pengajuan->jadwal_main))) {
@@ -369,8 +369,8 @@ class PendaftaranTurnamenService
             return 'Pendaftaran sudah diverifikasi sebelumnya.';
         }
 
-        if ($turnamen->status === 'selesai') {
-            return 'Turnamen sudah selesai.';
+        if ($turnamen->sudahBerakhir()) {
+            return $turnamen->pesanBerakhir();
         }
 
         // Verifikasi tetap dibuka setelah pendaftaran ditutup dan setelah
@@ -438,6 +438,10 @@ class PendaftaranTurnamenService
             return 'Turnamen sudah diselesaikan.';
         }
 
+        if ($turnamen->status === Turnamen::STATUS_DIBATALKAN) {
+            return 'Turnamen sudah dibatalkan.';
+        }
+
         $jadwalMain = $turnamen->pengajuan?->jadwal_main;
         if ($jadwalMain && now()->lt(Carbon::parse($jadwalMain))) {
             return 'Turnamen belum dimulai, sehingga belum dapat diselesaikan.';
@@ -484,4 +488,3 @@ class PendaftaranTurnamenService
         ];
     }
 }
-?>

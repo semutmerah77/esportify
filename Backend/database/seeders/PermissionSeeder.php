@@ -60,6 +60,8 @@ class PermissionSeeder extends Seeder
             'setujui_pengajuan_turnamen',
             'tolak_pengajuan_turnamen',
             'berikan_revisi_pengajuan_turnamen',
+            // Pembatalan Turnamen (PB-25)
+            'verifikasi_pembatalan_turnamen',
 
             // Modul 3: Squad
             'lihat_squad',
@@ -84,6 +86,7 @@ class PermissionSeeder extends Seeder
             'verifikasi_hasil_pertandingan',
             'kelola_pengumuman',
             'lihat_pengumuman',
+            'ajukan_pembatalan_turnamen',
         ];
 
         foreach ($permissions as $permission) {

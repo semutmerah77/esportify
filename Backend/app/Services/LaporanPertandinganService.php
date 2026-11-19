@@ -109,8 +109,8 @@ class LaporanPertandinganService
      */
     public function alasanTidakBisaLapor(Turnamen $turnamen, Pertandingan $pertandingan, ?PendaftaranTurnamen $pendaftaranSaya): ?string
     {
-        if ($turnamen->status === 'selesai') {
-            return 'Turnamen sudah selesai.';
+        if ($turnamen->sudahBerakhir()) {
+            return $turnamen->pesanBerakhir();
         }
 
         if ($pertandingan->bracket?->isDraft() || $turnamen->status !== 'berlangsung') {
@@ -216,8 +216,8 @@ class LaporanPertandinganService
             return 'Laporan sudah diverifikasi sebelumnya.';
         }
 
-        if ($turnamen->status === 'selesai') {
-            return 'Turnamen sudah selesai.';
+        if ($turnamen->sudahBerakhir()) {
+            return $turnamen->pesanBerakhir();
         }
 
         if ($setujui) {
@@ -372,4 +372,3 @@ class LaporanPertandinganService
             ->count();
     }
 }
-?>
