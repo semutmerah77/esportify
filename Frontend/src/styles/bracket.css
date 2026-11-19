@@ -1027,6 +1027,30 @@
   outline-offset: 2px;
 }
 
+.kl-bk-slot.hidden .kl-bk-name {
+  font-style: italic;
+  opacity: 0.6;
+}
+.kl-bk-slot.hidden .kl-bk-seed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+}
+.kl-bk-note {
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.kl-bk-note b {
+  display: block;
+  font-size: 13px;
+}
+.kl-bk-note p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
 @keyframes kl-bk-shimmer {
   to {
     background-position: -200% 0;

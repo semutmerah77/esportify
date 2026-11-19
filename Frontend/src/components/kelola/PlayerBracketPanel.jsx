@@ -17,10 +17,11 @@ function Skeleton() {
 }
 
 // Tab Bracket untuk peserta/player. id = id turnamen.
-// Pensil di kartu pertandingan squad sendiri membuka dialog lapor hasil (PB-15/17).
+// Draft: struktur tampil, squad lain disamarkan, tanpa tombol lapor (PB-14 revisi).
+// 403 (bukan peserta): pesan BE ditampilkan, tanpa retry otomatis.
 function PlayerBracketPanel({ id }) {
   const [state, setState] = useState({ data: null, error: "" });
-  const [reporting, setReporting] = useState(null); // pertandingan yang sedang dilaporkan
+  const [reporting, setReporting] = useState(null);
 
   useEffect(() => {
     let off = false;
@@ -55,16 +56,24 @@ function PlayerBracketPanel({ id }) {
 
   const { data } = state;
   const b = data.bracket;
+  const masked = data.masked || !data.published;
 
-  // Belum dipublikasikan: tampilkan keterangan dari BE
-  if (!data.published || !b) {
-    return (
-      <p className="kl-empty">{data.note || "Bracket belum dipublikasikan."}</p>
-    );
+  // Belum ada bracket sama sekali
+  if (!b) {
+    return <p className="kl-empty">{data.note || "Bracket belum tersedia."}</p>;
   }
 
   return (
     <>
+      {masked && (
+        <div className="kl-bk-card kl-bk-note">
+          <b>Bracket belum dipublikasikan</b>
+          <p>
+            {data.note ||
+              "Identitas Squad lain masih disamarkan dan posisi dapat berubah."}
+          </p>
+        </div>
+      )}
       {b.description && (
         <div className="kl-bk-card kl-bk-desc">
           <div className="kl-bk-desc-top">
@@ -76,9 +85,9 @@ function PlayerBracketPanel({ id }) {
       <BracketCanvas
         rounds={b.rounds}
         mineReg={data.mySquad?.regId ?? null}
-        onReport={setReporting}
+        onReport={masked ? undefined : setReporting}
       />
-      {reporting && (
+      {reporting && !masked && (
         <PlayerReportDialog
           tournamentId={id}
           match={reporting}

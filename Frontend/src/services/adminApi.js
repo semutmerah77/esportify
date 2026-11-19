@@ -537,20 +537,12 @@ export async function getRolesWithPermissions() {
     return copy(mockRoleList);
   }
   const response = await apiRequest("/admin/roles");
-  const roles = toList(response).map((r) => ({
+  // BE sudah menyertakan permissions tiap role: cukup 1 request.
+  return toList(response).map((r) => ({
     id: Number(r.id),
     name: roleName(r),
+    permissions: (r.permissions ?? []).map(permName),
   }));
-
-  // Satu request per role. Kalau role banyak, minta backend menyertakan permissions di /roles.
-  return Promise.all(
-    roles.map(async (role) => {
-      const res = await apiRequest(`/admin/roles/${role.id}/permissions`);
-      const inner = res?.data ?? res;
-      const list = Array.isArray(inner) ? inner : (inner?.permissions ?? []);
-      return { ...role, permissions: list.map(permName) };
-    }),
-  );
 }
 
 export async function createRole(name) {
