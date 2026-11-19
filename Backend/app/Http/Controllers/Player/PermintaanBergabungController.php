@@ -58,6 +58,11 @@ class PermintaanBergabungController extends Controller
             return $this->gagal('Squad sudah penuh.', 422);
         }
 
+        // R1.03
+        if (Squad::playerMencapaiBatasSquad($player->id_player)) {
+            return $this->gagal('Kamu sudah tergabung di 10 Squad. Keluar dari salah satu Squad untuk bergabung ke Squad lain.', 422);
+        }
+
         $permintaan = PermintaanBergabung::create([
 
             'id_squad' => $squad->id_squad,
@@ -145,6 +150,11 @@ class PermintaanBergabungController extends Controller
                     return 'penuh';
                 }
 
+                // R1.03
+                if (Squad::playerMencapaiBatasSquad($permintaan->id_player)) {
+                    return 'batas';
+                }
+
                 AnggotaSquad::create([
                     'id_squad' => $squad->id_squad,
                     'id_player' => $permintaan->id_player,
@@ -170,6 +180,10 @@ class PermintaanBergabungController extends Controller
 
         if ($hasil === 'penuh') {
             return $this->gagal('Squad sudah penuh.', 422);
+        }
+
+        if ($hasil === 'batas') {
+            return $this->gagal('Player ini sudah tergabung di 10 Squad, permintaan belum dapat diterima.', 422);
         }
 
         return response()->json([
@@ -266,4 +280,3 @@ class PermintaanBergabungController extends Controller
         ], $status);
     }
 }
-?>

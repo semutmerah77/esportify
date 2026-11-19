@@ -78,6 +78,11 @@ class UndanganSquadController extends Controller
             return $this->gagal('Squad sudah penuh.', 422);
         }
 
+        // R1.03
+        if (Squad::playerMencapaiBatasSquad($target->id_player)) {
+            return $this->gagal('Player ini sudah tergabung di 10 Squad.', 422);
+        }
+
         $undangan = UndanganSquad::create([
             'id_squad' => $squad->id_squad,
             'id_leader_squad' => $squad->leader?->id_leader_squad,
@@ -225,6 +230,11 @@ class UndanganSquadController extends Controller
                     return 'penuh';
                 }
 
+                // R1.03 (undangan tetap disimpan, bisa diterima setelah keluar dari Squad lain)
+                if (Squad::playerMencapaiBatasSquad($player->id_player)) {
+                    return 'batas';
+                }
+
                 AnggotaSquad::create([
                     'id_squad' => $squad->id_squad,
                     'id_player' => $player->id_player,
@@ -249,6 +259,10 @@ class UndanganSquadController extends Controller
 
         if ($hasil === 'penuh') {
             return $this->gagal('Squad sudah penuh. Undangan dihapus.', 422);
+        }
+
+        if ($hasil === 'batas') {
+            return $this->gagal('Kamu sudah tergabung di 10 Squad. Keluar dari salah satu Squad untuk menerima undangan ini.', 422);
         }
 
         return response()->json([
@@ -317,4 +331,3 @@ class UndanganSquadController extends Controller
         ], $status);
     }
 }
-?>

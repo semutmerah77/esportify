@@ -687,8 +687,14 @@ class BracketService
      * Bracket lengkap per babak. $idPendaftaranSaya dipakai untuk
      * menandai pertandingan Squad milik user (PB-14).
      */
-    public function formatBracket(BracketTurnamen $bracket, ?int $idPendaftaranSaya = null, bool $untukPenyelenggara = false): array
+    /**
+     * @param  int|int[]|null  $idPendaftaranSaya  pendaftaran Squad milik Player login (penanda & tidak disamarkan)
+     * @param  bool  $samarkan  R6.29: bracket draft untuk peserta, identitas Squad lain disamarkan
+     */
+    public function formatBracket(BracketTurnamen $bracket, int|array|null $idPendaftaranSaya = null, bool $untukPenyelenggara = false, bool $samarkan = false): array
     {
+        $idSaya = array_values(array_map('intval', array_filter((array) $idPendaftaranSaya)));
+
         $turnamen = $untukPenyelenggara ? $bracket->turnamen()->with('pengajuan')->first() : null;
 
         $bracket->load([
@@ -726,11 +732,13 @@ class BracketService
                     'nomor_pertandingan' => $p->nomor_pertandingan,
                     'status_pertandingan' => $p->status_pertandingan,
                     'is_bye' => $p->is_bye,
-                    'squad_a' => $this->formatSlot($p->pendaftaranA),
-                    'squad_b' => $this->formatSlot($p->pendaftaranB),
+                    'squad_a' => $this->formatSlot($p->pendaftaranA, $samarkan, $idSaya),
+                    'squad_b' => $this->formatSlot($p->pendaftaranB, $samarkan, $idSaya),
                     'skor_a' => $p->skor_a,
                     'skor_b' => $p->skor_b,
-                    'id_pendaftaran_pemenang' => $p->id_pendaftaran_pemenang,
+                    'id_pendaftaran_pemenang' => $samarkan && !in_array((int) $p->id_pendaftaran_pemenang, $idSaya, true)
+                        ? null
+                        : $p->id_pendaftaran_pemenang,
                     'id_pertandingan_selanjutnya' => $p->id_pertandingan_selanjutnya,
                     'posisi_pemenang_selanjutnya' => $p->posisi_pemenang_selanjutnya,
                     'id_pertandingan_kalah_selanjutnya' => $p->id_pertandingan_kalah_selanjutnya,
@@ -738,23 +746,36 @@ class BracketService
                     // Penyelenggara: ikon pensil (update/koreksi skor) aktif atau tidak
                     'bisa_update_skor' => $turnamen !== null
                         && $this->alasanTidakBisaUbahSkor($turnamen, $p->setRelation('bracket', $bracket)) === null,
-                    'melibatkan_squad_saya' => $idPendaftaranSaya !== null && in_array(
-                        $idPendaftaranSaya,
-                        [(int) $p->id_pendaftaran_a, (int) $p->id_pendaftaran_b],
-                        true
-                    ),
+                    'melibatkan_squad_saya' => array_intersect(
+                        $idSaya,
+                        [(int) $p->id_pendaftaran_a, (int) $p->id_pendaftaran_b]
+                    ) !== [],
                 ])->values(),
             ])->values(),
         ];
     }
 
-    private function formatSlot(?PendaftaranTurnamen $p): ?array
+    private function formatSlot(?PendaftaranTurnamen $p, bool $samarkan = false, array $idSaya = []): ?array
     {
         if (!$p) {
             return null;
         }
 
+        // R6.29: identitas Squad lain tidak dikirim sama sekali (bukan hanya disembunyikan di FE)
+        if ($samarkan && !in_array((int) $p->id_pendaftaran, $idSaya, true)) {
+            return [
+                'tersembunyi' => true,
+                'id_pendaftaran' => null,
+                'nomor_seed' => null,
+                'id_squad' => null,
+                'kode_squad' => null,
+                'nama_squad' => 'Squad tersembunyi',
+                'logo_url' => null,
+            ];
+        }
+
         return [
+            'tersembunyi' => false,
             'id_pendaftaran' => $p->id_pendaftaran,
             'nomor_seed' => $p->nomor_seed,
             'id_squad' => $p->id_squad,
@@ -767,6 +788,27 @@ class BracketService
     // ==========================================
     // HELPER
     // ==========================================
+
+    /**
+     * Pendaftaran diterima milik Player login: Squad yang roster-nya memuat Player
+     * didahulukan, lalu Squad lain tempat Player menjadi anggota aktif.
+     * Kosong = bukan peserta (tidak boleh melihat bracket).
+     *
+     * @return \Illuminate\Support\Collection<int, PendaftaranTurnamen>
+     */
+    public function pendaftaranPesertaPlayer(Turnamen $turnamen, int $idPlayer): Collection
+    {
+        return PendaftaranTurnamen::with('squad')
+            ->where('id_turnamen', $turnamen->id_turnamen)
+            ->where('status_pendaftaran', 'diterima')
+            ->where(fn ($q) => $q
+                ->whereHas('anggota', fn ($a) => $a->where('id_player', $idPlayer))
+                ->orWhereHas('squad.anggotaAktif', fn ($a) => $a->where('id_player', $idPlayer)))
+            ->withExists(['anggota as di_roster' => fn ($a) => $a->where('id_player', $idPlayer)])
+            ->get()
+            ->sortByDesc('di_roster')
+            ->values();
+    }
 
     /**
      * @return \Illuminate\Support\Collection<int, PendaftaranTurnamen>
@@ -824,4 +866,3 @@ class BracketService
         };
     }
 }
-?>

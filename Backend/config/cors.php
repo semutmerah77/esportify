@@ -32,10 +32,9 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    // Browser menyimpan izin preflight 2 jam, jadi OPTIONS tidak dikirim di setiap request
+    'max_age' => 7200,
 
     'supports_credentials' => true,
 
 ];
-
-?>
