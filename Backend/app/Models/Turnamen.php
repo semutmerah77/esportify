@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,7 +18,66 @@ class Turnamen extends Model
         'id_pengajuan',
         'id_penyelenggara',
         'status',
+        'jadwal_pendaftaran_tutup',
+        'jadwal_main',
+        'jadwal_pendaftaran_tutup_baru',
+        'jadwal_main_baru',
     ];
+
+    protected $casts = [
+        'jadwal_pendaftaran_tutup' => 'datetime',
+        'jadwal_main' => 'datetime',
+        'jadwal_pendaftaran_tutup_baru' => 'datetime',
+        'jadwal_main_baru' => 'datetime',
+    ];
+
+    /**
+     * PB-24: jadwal awal disalin dari pengajuan saat turnamen dibuat
+     * (Admin menyetujui pengajuan), supaya controller Admin tidak perlu diubah.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Turnamen $turnamen) {
+            if ($turnamen->jadwal_pendaftaran_tutup !== null && $turnamen->jadwal_main !== null) {
+                return;
+            }
+
+            $pengajuan = PengajuanTurnamen::find($turnamen->id_pengajuan);
+            $turnamen->jadwal_pendaftaran_tutup ??= $pengajuan?->jadwal_pendaftaran_tutup;
+            $turnamen->jadwal_main ??= $pengajuan?->jadwal_main;
+        });
+    }
+
+    // ==========================================
+    // JADWAL (PB-24)
+    // Aktif = hasil perpanjangan kalau ada, kalau tidak jadwal awal.
+    // Selalu pakai *Aktif() untuk logika & tampilan operasional.
+    // ==========================================
+
+    public function jadwalPendaftaranTutupAwal(): ?Carbon
+    {
+        return $this->jadwal_pendaftaran_tutup ?? $this->pengajuan?->jadwal_pendaftaran_tutup;
+    }
+
+    public function jadwalMainAwal(): ?Carbon
+    {
+        return $this->jadwal_main ?? $this->pengajuan?->jadwal_main;
+    }
+
+    public function jadwalPendaftaranTutupAktif(): ?Carbon
+    {
+        return $this->jadwal_pendaftaran_tutup_baru ?? $this->jadwalPendaftaranTutupAwal();
+    }
+
+    public function jadwalMainAktif(): ?Carbon
+    {
+        return $this->jadwal_main_baru ?? $this->jadwalMainAwal();
+    }
+
+    public function sudahDiperpanjang(): bool
+    {
+        return $this->jadwal_pendaftaran_tutup_baru !== null || $this->jadwal_main_baru !== null;
+    }
 
     public const STATUS_DIBATALKAN = 'dibatalkan';
 
