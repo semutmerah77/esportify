@@ -164,6 +164,8 @@ class PembatalanTurnamenService
         AnggotaPendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
             ->where('status_roster', 'terkunci')
             ->update(['status_roster' => 'terbuka', 'tanggal_pembukaan' => now()]);
+            // PB-26: data refund untuk setiap peserta diterima (hanya turnamen berbayar)
+            app(RefundTurnamenService::class)->buatUntukTurnamen($turnamen);
     }
 
     public function tolak(PengajuanPembatalanTurnamen $pengajuan, Admin $admin, string $catatan): void
