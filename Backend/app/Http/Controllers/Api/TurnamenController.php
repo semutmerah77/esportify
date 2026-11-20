@@ -61,7 +61,7 @@ class TurnamenController extends Controller
 
                 return [
                     'id_turnamen' => $item->id_turnamen,
-                    'status' => $this->hitungStatus($pengajuan->jadwal_main, $item->status),
+                    'status' => $this->hitungStatus($item->jadwalMainAktif(), $item->status),
                     'created_at' => $item->created_at,
 
                     'pengajuan' => [
@@ -73,12 +73,15 @@ class TurnamenController extends Controller
                         'tipe_turnamen' => $pengajuan->tipe_turnamen,
                         'slot' => $pengajuan->slot,
                         'total_hadiah' => $pengajuan->total_hadiah,
-                        'jadwal_pendaftaran_tutup' => $pengajuan->jadwal_pendaftaran_tutup,
-                        'jadwal_main' => $pengajuan->jadwal_main,
+
+                        // Jadwal AKTIF (hasil perpanjangan kalau ada, PB-24)
+                        'jadwal_pendaftaran_tutup' => $item->jadwalPendaftaranTutupAktif(),
+                        'jadwal_main' => $item->jadwalMainAktif(),
+                        'jadwal_diperpanjang' => $item->sudahDiperpanjang(),
                         'deskripsi_lokasi' => $pengajuan->deskripsi_lokasi,
 
-                        'pendaftaran_terbuka' => $pengajuan->jadwal_pendaftaran_tutup
-                            ? now()->lt($pengajuan->jadwal_pendaftaran_tutup)
+                        'pendaftaran_terbuka' => $item->jadwalPendaftaranTutupAktif()
+                            ? now()->lt($item->jadwalPendaftaranTutupAktif())
                             : true,
 
                         'game' => $game
@@ -195,7 +198,7 @@ class TurnamenController extends Controller
 
                 return [
                     'id_turnamen' => $item->id_turnamen,
-                    'status' => $this->hitungStatus($pengajuan->jadwal_main, $item->status),
+                    'status' => $this->hitungStatus($item->jadwalMainAktif(), $item->status),
                     'created_at' => $item->created_at,
                  ] + app(BracketService::class)->infoPersiapan($item) + [
 
@@ -208,8 +211,10 @@ class TurnamenController extends Controller
                         'tipe_turnamen' => $pengajuan->tipe_turnamen,
                         'slot' => $pengajuan->slot,
                         'slot_terisi' => $item->slotTerisi(),
-                        'jadwal_pendaftaran_tutup' => $pengajuan->jadwal_pendaftaran_tutup,
-                        'jadwal_main' => $pengajuan->jadwal_main,
+                        // Jadwal AKTIF (hasil perpanjangan kalau ada, PB-24)
+                        'jadwal_pendaftaran_tutup' => $item->jadwalPendaftaranTutupAktif(),
+                        'jadwal_main' => $item->jadwalMainAktif(),
+                        'jadwal_diperpanjang' => $item->sudahDiperpanjang(),
                         'deskripsi_lokasi' => $pengajuan->deskripsi_lokasi,
 
                         'game' => $pengajuan->game
@@ -263,7 +268,7 @@ class TurnamenController extends Controller
         }
 
         // Status dihitung dengan aturan yang sama seperti list.
-        $status = $this->hitungStatus($pengajuan->jadwal_main, $turnamen->status);
+        $status = $this->hitungStatus($turnamen->jadwalMainAktif(), $turnamen->status);
         
         // US27: slot terisi = pendaftaran menunggu + diterima.
         // Pendaftaran ditolak tidak dihitung (slot kembali).
@@ -298,18 +303,20 @@ class TurnamenController extends Controller
                     'slot_penuh' => $sisaSlot <= 0,
                     'total_hadiah' => $pengajuan->total_hadiah,
                     'hadiah_lainnya' => $pengajuan->hadiahLainnya
-    ->map(fn ($h) => [
-        'nama_hadiah' => $h->nama_hadiah,
-        'keterangan' => $h->keterangan,
-    ])
-    ->values(),
-                    'jadwal_pendaftaran_tutup' => $pengajuan->jadwal_pendaftaran_tutup,
-                    'jadwal_main' => $pengajuan->jadwal_main,
+                        ->map(fn ($h) => [
+                            'nama_hadiah' => $h->nama_hadiah,
+                            'keterangan' => $h->keterangan,
+                        ])
+                        ->values(),
+                    // Jadwal AKTIF (hasil perpanjangan kalau ada, PB-24)
+                    'jadwal_pendaftaran_tutup' => $turnamen->jadwalPendaftaranTutupAktif(),
+                    'jadwal_main' => $turnamen->jadwalMainAktif(),
+                    'jadwal_diperpanjang' => $turnamen->sudahDiperpanjang(),
                     'deskripsi_turnamen' => $pengajuan->deskripsi_turnamen,
                     'deskripsi_lokasi' => $pengajuan->deskripsi_lokasi,
 
-                    'pendaftaran_terbuka' => $pengajuan->jadwal_pendaftaran_tutup
-                        ? now()->lt($pengajuan->jadwal_pendaftaran_tutup)
+                    'pendaftaran_terbuka' => $turnamen->jadwalPendaftaranTutupAktif()
+                        ? now()->lt($turnamen->jadwalPendaftaranTutupAktif())
                         : true,
 
                     'game' => $pengajuan->game

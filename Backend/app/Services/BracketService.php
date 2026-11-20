@@ -32,15 +32,13 @@ class BracketService
      */
     public function pendaftaranSudahTutup(Turnamen $turnamen): bool
     {
-        $pengajuan = $turnamen->pengajuan;
-        $tutup = $pengajuan?->jadwal_pendaftaran_tutup ?? $pengajuan?->jadwal_main;
-
+        $tutup = $turnamen->jadwalPendaftaranTutupAktif() ?? $turnamen->jadwalMainAktif();
         return $tutup !== null && now()->gte(Carbon::parse($tutup));
     }
 
     public function jadwalMainSudahTiba(Turnamen $turnamen): bool
     {
-        $jadwalMain = $turnamen->pengajuan?->jadwal_main;
+        $jadwalMain = $turnamen->jadwalMainAktif();
 
         return $jadwalMain !== null && now()->gte(Carbon::parse($jadwalMain));
     }
@@ -137,7 +135,7 @@ class BracketService
             return null;
         }
 
-        $jadwalMain = Carbon::parse($turnamen->pengajuan->jadwal_main);
+        $jadwalMain = Carbon::parse($turnamen->jadwalMainAktif());
 
         $verifikasiTerakhir = PendaftaranTurnamen::where('id_turnamen', $turnamen->id_turnamen)
             ->whereIn('status_pendaftaran', ['diterima', 'ditolak'])
@@ -205,7 +203,7 @@ class BracketService
      */
     private function pengingatH1(Turnamen $turnamen, ?BracketTurnamen $bracket, int $menunggu): ?array
     {
-        $jadwalMain = $turnamen->pengajuan?->jadwal_main;
+        $jadwalMain = $turnamen->jadwalMainAktif();
 
         if ($turnamen->status !== 'pendaftaran' || !$jadwalMain) {
             return null;

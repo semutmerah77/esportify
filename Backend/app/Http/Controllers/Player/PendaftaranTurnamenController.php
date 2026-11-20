@@ -362,7 +362,7 @@ class PendaftaranTurnamenController extends Controller
                 'turnamen' => [
                     'id_turnamen' => $p->id_turnamen,
                     'nama_turnamen' => $p->turnamen?->pengajuan?->nama_turnamen,
-                    'jadwal_main' => $p->turnamen?->pengajuan?->jadwal_main,
+                    'jadwal_main' => $p->turnamen?->jadwalMainAktif(),
                 ],
                 'pendaftar' => [
                     'id_player' => $p->id_player,
@@ -423,8 +423,8 @@ class PendaftaranTurnamenController extends Controller
                     'turnamen' => [
                         'id_turnamen' => $p->id_turnamen,
                         'nama_turnamen' => $pengajuan?->nama_turnamen,
-                        'jadwal_main' => $pengajuan?->jadwal_main,
-                        'status' => $this->statusTurnamen($pengajuan?->jadwal_main, $turnamen?->status),
+                        'jadwal_main' => $turnamen?->jadwalMainAktif(),
+                        'status' => $this->statusTurnamen($turnamen?->jadwalMainAktif(), $turnamen?->status),
                         'persiapan_tertunda' => $turnamen
                             ? app(\App\Services\BracketService::class)->infoPersiapan($turnamen)['persiapan_tertunda']
                             : false,
@@ -586,7 +586,7 @@ class PendaftaranTurnamenController extends Controller
             'turnamen' => [
                 'id_turnamen' => $p->id_turnamen,
                 'nama_turnamen' => $pengajuan?->nama_turnamen,
-                'jadwal_main' => $pengajuan?->jadwal_main,
+                'jadwal_main' => $p->turnamen?->jadwalMainAktif(),
                 'jenis_biaya' => $pengajuan?->pendanaan?->jenis_biaya ?? 'gratis',
                 'biaya_pendaftaran' => $pengajuan?->pendanaan?->biaya_pendaftaran,
             ],

@@ -55,6 +55,7 @@ use App\Http\Controllers\Player\PengumumanController;
 use App\Http\Controllers\Player\KelolaPembatalanTurnamenController;
 use App\Http\Controllers\Admin\PembatalanTurnamenController as AdminPembatalanTurnamenController;
 use App\Http\Controllers\Player\RefundTurnamenController;
+use App\Http\Controllers\Player\KelolaPerpanjanganJadwalController;
 use App\Http\Controllers\Player\KelolaRefundTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
@@ -715,6 +716,26 @@ Route::middleware('auth:sanctum')->group(function () {
                 KelolaRefundTurnamenController::class,
                 'lihatFile'
             ])->whereNumber(['id', 'idRefund'])->whereIn('jenis', ['qris', 'bukti-transfer']);
+
+        });
+
+        
+        // ==========================================
+        // MODUL 4: PERPANJANGAN JADWAL (PB-24)
+        // ==========================================
+
+        // Penyelenggara (dicek di controller)
+        Route::middleware('permission:perpanjang_jadwal_turnamen')->group(function () {
+
+            Route::get('/turnamen-kelolaan/{id}/perpanjangan-jadwal', [
+                KelolaPerpanjanganJadwalController::class,
+                'show'
+            ])->whereNumber('id');
+
+            Route::put('/turnamen-kelolaan/{id}/perpanjangan-jadwal', [
+                KelolaPerpanjanganJadwalController::class,
+                'update'
+            ])->whereNumber('id');
 
         });
         

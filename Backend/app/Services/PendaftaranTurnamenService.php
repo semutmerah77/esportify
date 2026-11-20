@@ -270,18 +270,19 @@ class PendaftaranTurnamenService
      */
     public function alasanTurnamenTertutup(Turnamen $turnamen): ?string
     {
-        $pengajuan = $turnamen->pengajuan;
+        // Jadwal AKTIF (hasil perpanjangan kalau ada, PB-24)
+        $jadwalMain = $turnamen->jadwalMainAktif();
+        $jadwalTutup = $turnamen->jadwalPendaftaranTutupAktif();
 
         if ($turnamen->sudahBerakhir()) {
             return $turnamen->pesanBerakhir();
         }
 
-        if ($pengajuan->jadwal_main && now()->gte(Carbon::parse($pengajuan->jadwal_main))) {
+        if ($jadwalMain && now()->gte(Carbon::parse($jadwalMain))) {
             return 'Turnamen tidak sedang membuka pendaftaran.';
         }
 
-        if ($pengajuan->jadwal_pendaftaran_tutup && now()->gte(Carbon::parse($pengajuan->jadwal_pendaftaran_tutup))) {
-            return 'Pendaftaran turnamen sudah ditutup.';
+        if ($jadwalTutup && now()->gte(Carbon::parse($jadwalTutup))) {
         }
 
         if ($this->sisaSlot($turnamen) <= 0) {
@@ -442,7 +443,7 @@ class PendaftaranTurnamenService
             return 'Turnamen sudah dibatalkan.';
         }
 
-        $jadwalMain = $turnamen->pengajuan?->jadwal_main;
+        $jadwalMain = $turnamen->jadwalMainAktif();
         if ($jadwalMain && now()->lt(Carbon::parse($jadwalMain))) {
             return 'Turnamen belum dimulai, sehingga belum dapat diselesaikan.';
         }

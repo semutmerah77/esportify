@@ -324,8 +324,8 @@ class KelolaBracketController extends Controller
                 'id_turnamen' => $turnamen->id_turnamen,
                 'nama_turnamen' => $turnamen->pengajuan->nama_turnamen,
                 'status' => $turnamen->status,
-                'jadwal_pendaftaran_tutup' => $turnamen->pengajuan->jadwal_pendaftaran_tutup,
-                'jadwal_main' => $turnamen->pengajuan->jadwal_main,
+                'jadwal_pendaftaran_tutup' => $turnamen->jadwalPendaftaranTutupAktif(),
+                'jadwal_main' => $turnamen->jadwalMainAktif(),
                 'jumlah_diterima' => $this->bracket->jumlahDiterima($turnamen),
                 // Badge tombol Inbox (laporan hasil menunggu verifikasi)
                 'jumlah_laporan_menunggu' => app(\App\Services\LaporanPertandinganService::class)->jumlahMenunggu($turnamen),
