@@ -33,7 +33,11 @@ export async function getManagedTournaments() {
       status: String(t.status ?? "")
         .trim()
         .toLowerCase(),
-      closed: t.pendaftaran_ditutup === true,
+      // BE baru: pendaftaran_terbuka (false = "Pendaftaran Ditutup"); field lama tetap dipakai sebagai cadangan
+      closed:
+        (t.pendaftaran_terbuka ?? p.pendaftaran_terbuka) === false ||
+        t.pendaftaran_ditutup === true,
+      extended: (t.jadwal_diperpanjang ?? p.jadwal_diperpanjang) === true,
       delayed: t.persiapan_tertunda === true,
       delayReason: t.alasan_tertunda ?? "",
       reminder: h1
@@ -443,6 +447,8 @@ export async function getTournamentDetail(id) {
       .toLowerCase(),
     name: p.nama_turnamen ?? "-",
     game: p.game?.nama_game ?? "-",
+    extended: (t.jadwal_diperpanjang ?? p.jadwal_diperpanjang) === true, // badge "Jadwal diperpanjang"
+    closed: (t.pendaftaran_terbuka ?? p.pendaftaran_terbuka) === false,
     organizer:
       p.nama_penyelenggara ?? t.penyelenggara?.nama_penyelenggara ?? "-",
     agencyName: p.nama_instansi ?? "",

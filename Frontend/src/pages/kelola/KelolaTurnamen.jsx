@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Icon from "../../components/icon";
 import BracketPanel from "../../components/kelola/BracketPanel";
 import { RegistrantRow } from "../../components/kelola/KlParts";
@@ -31,6 +31,8 @@ const STATUS_LABEL = {
 function KelolaTurnamen() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // Tab awal dari tombol "Buat pengumuman" (setelah perpanjangan jadwal)
+  const startTab = useLocation().state?.tab ?? "";
 
   const [head, setHead] = useState(null);
   const [headError, setHeadError] = useState("");
@@ -109,9 +111,11 @@ function KelolaTurnamen() {
         if (off) return;
         setHead(h);
         setTab(
-          h.status !== "dibatalkan" && h.feeType === "berbayar"
-            ? "verifikasi"
-            : "peserta",
+          startTab === "pengumuman" && h.status !== "dibatalkan"
+            ? "pengumuman"
+            : h.status !== "dibatalkan" && h.feeType === "berbayar"
+              ? "verifikasi"
+              : "peserta",
         );
       })
       .catch(
@@ -135,6 +139,7 @@ function KelolaTurnamen() {
     return () => {
       off = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Pendaftar hanya dimuat setelah header, karena hanya turnamen berbayar yang punya tab verifikasi

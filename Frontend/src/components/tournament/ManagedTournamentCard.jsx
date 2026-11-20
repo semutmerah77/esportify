@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import Icon from "../icon";
-import { longDate } from "../../utils/date";
+import { formatWibDate } from "../../services/scheduleExtensionApi";
+import ScheduleIcon from "../kelola/ScheduleIcon";
+import "../../styles/schedule-extension.css";
 import CancellationIcon from "../kelola/CancellationIcon";
 import ManagedTournamentMenu from "./ManagedTournamentMenu";
 import { formatShortDate } from "../../services/tournamentCancellationApi";
@@ -53,7 +55,7 @@ function AlertIcon({ kind }) {
   );
 }
 
-function ManagedTournamentCard({ tournament: t }) {
+function ManagedTournamentCard({ tournament: t, onChanged }) {
   const filled = t.filled ?? null; // peserta terdaftar (slot_terisi)
   const pending = t.pendingVerify ?? null; // pendaftar menunggu verifikasi
 
@@ -97,6 +99,12 @@ function ManagedTournamentCard({ tournament: t }) {
         <div>
           <h3>{t.name}</h3>
           <p>{t.game}</p>
+          {t.extended && !cancelled && (
+            <span className="ext-badge">
+              <ScheduleIcon name="calendar-clock" size={13} /> Jadwal
+              diperpanjang
+            </span>
+          )}
         </div>
         <span className={`t-status ${phase}`}>
           <i></i> {STATUS_LABEL[phase] ?? phase}
@@ -106,11 +114,11 @@ function ManagedTournamentCard({ tournament: t }) {
       <dl className="t-stats t-stats-5">
         <div>
           <dt>Jadwal pendaftaran ditutup</dt>
-          <dd>{longDate(t.registrationCloses)}</dd>
+          <dd>{formatWibDate(t.registrationCloses)}</dd>
         </div>
         <div>
           <dt>Jadwal tanding</dt>
-          <dd>{longDate(t.matchDate)}</dd>
+          <dd>{formatWibDate(t.matchDate)}</dd>
         </div>
         <div>
           <dt>Tipe</dt>
@@ -209,9 +217,11 @@ function ManagedTournamentCard({ tournament: t }) {
         </Link>
         <ManagedTournamentMenu
           id={t.id}
+          name={t.name}
           status={t.status}
           cancellation={cancelRequest}
           pendingVerify={pending}
+          onChanged={onChanged}
         />
       </div>
     </article>

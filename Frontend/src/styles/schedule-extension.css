@@ -1,0 +1,388 @@
+/* PB-24 Perpanjangan jadwal: dialog "Perpanjang jadwal" dari menu ⋮ kartu Turnamen Kelolaan.
+   Prefix ext-. Lapisan dialog memakai .rp-ov / .rp-dialog dari match-report.css. */
+
+.t-more-ic.info {
+  color: #7ea6ff;
+}
+/* item menu berupa <button>: samakan dengan item <a> (.t-more-item) */
+button.t-more-item {
+  width: 100%;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+}
+button.t-more-item:hover {
+  background: #182238;
+}
+
+.rp-dialog.ext-dialog {
+  max-width: 520px;
+  padding: 24px 24px 22px;
+}
+.ext-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.ext-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+.ext-head p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: #8a97b4;
+}
+.ext-x {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: #8a97b4;
+  cursor: pointer;
+}
+.ext-x:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.ext-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 8px;
+}
+.ext-label-row label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+.ext-label-row span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9aa6c0;
+  text-align: right;
+}
+.ext-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  border: 1px solid #1b2640;
+  border-radius: 8px;
+  background: #0b1120;
+  color: #8a97b4;
+}
+.ext-input input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 40px 0 14px;
+  border: none;
+  background: none;
+  color: #e6ecf8;
+  font: inherit;
+  font-size: 14px;
+  color-scheme: dark;
+}
+.ext-input input:focus {
+  outline: none;
+}
+.ext-input:focus-within {
+  border-color: #3b82f6;
+}
+.ext-input.err {
+  border-color: #dc2626;
+}
+/* ikon kalender bawaan browser disembunyikan: ikon desain ada di kanan dan tetap membuka picker */
+.ext-input input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.ext-input svg {
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+}
+.ext-input input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.ext-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #8a97b4;
+}
+.ext-err {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: #f87171;
+}
+.ext-err.center {
+  text-align: center;
+}
+.ext-initial {
+  margin: 14px 0 0;
+  font-size: 12px;
+  font-style: italic;
+  color: #8a97b4;
+}
+.ext-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #14213d;
+  font-size: 13px;
+  color: #c7d6f5;
+}
+.ext-info svg {
+  flex: none;
+  color: #3b82f6;
+}
+.ext-info.warn {
+  border: 1px solid #5b4710;
+  background: #231d0e;
+  color: #f5d77a;
+}
+.ext-info.warn svg {
+  color: #facc15;
+}
+.ext-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 22px;
+}
+.ext-actions.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.ext-btn {
+  min-width: 96px;
+  height: 42px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ext-btn.dim {
+  background: #2a3345;
+  color: #e6ecf8;
+}
+.ext-btn.primary {
+  background: #4b86f7;
+}
+.ext-btn.primary:hover:not(:disabled) {
+  background: #3b76e6;
+}
+.ext-btn:disabled {
+  cursor: not-allowed;
+}
+.ext-btn.primary:disabled {
+  background: #1d3566;
+  color: #7f96c7;
+}
+
+/* ---------- Dialog konfirmasi dampak ---------- */
+.rp-dialog.ext-confirm {
+  max-width: 400px;
+  padding: 22px 24px 20px;
+  text-align: center;
+}
+.ext-confirm-ic {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  background: #2f2a1c;
+  color: #fbbf24;
+}
+.ext-confirm h2 {
+  margin: 0 0 14px;
+  font-size: 17px;
+  color: #fff;
+}
+.ext-summary {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid #1b2640;
+  border-radius: 10px;
+  background: #090e1d;
+  text-align: left;
+}
+.ext-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.ext-summary dt {
+  color: #8a97b4;
+}
+.ext-summary dd {
+  margin: 0;
+  font-weight: 600;
+  color: #fff;
+  text-align: right;
+}
+.ext-impact {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #5b4710;
+  border-radius: 8px;
+  background: #231d0e;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #f5d77a;
+}
+.ext-impact svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+/* ---------- Skeleton ---------- */
+.ext-skel {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #131b2d 25%, #1b2540 50%, #131b2d 75%);
+  background-size: 200% 100%;
+  animation: ext-shimmer 1.4s infinite;
+}
+.ext-skel.label {
+  width: 45%;
+  height: 16px;
+  margin: 16px 0 8px;
+}
+.ext-skel.input {
+  height: 44px;
+}
+.ext-skel.info {
+  height: 42px;
+  margin-top: 18px;
+}
+
+/* ---------- Badge "Jadwal diperpanjang" (kartu & detail turnamen) ---------- */
+.ext-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 3px 10px;
+  border: 1px solid #1f3a6e;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93bbff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Badge di atas poster kartu Cari Turnamen (kanan bawah, tidak mengubah tinggi kartu) */
+.ext-badge.on-poster {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  margin: 0;
+  background: rgba(11, 17, 32, 0.88);
+}
+
+/* Popup sukses perpanjangan: tombol di dalam .rp-done */
+.rp-dialog.ext-done {
+  max-width: 400px;
+}
+.ext-done .ext-actions {
+  margin-top: 18px;
+}
+
+/* Tanggal (kalender) + kotak jam HH:MM */
+.ext-when {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ext-when .ext-input {
+  flex: 1;
+  min-width: 0;
+}
+.ext-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #1b2640;
+  border-radius: 8px;
+  background: #0b1120;
+  color: #8a97b4;
+}
+.ext-time:focus-within {
+  border-color: #3b82f6;
+}
+.ext-time.err {
+  border-color: #dc2626;
+}
+.ext-time.off {
+  opacity: 0.6;
+}
+.ext-time input {
+  width: 26px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #e6ecf8;
+  font: inherit;
+  font-size: 14px;
+  text-align: center;
+}
+.ext-time input:focus {
+  outline: none;
+}
+.ext-time input:disabled {
+  cursor: not-allowed;
+}
+.ext-time span {
+  color: #8a97b4;
+  font-weight: 700;
+}
+
+@keyframes ext-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .ext-label-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ext-label-row span {
+    text-align: left;
+  }
+}

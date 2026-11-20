@@ -1,5 +1,7 @@
 import { useState } from "react";
 import Icon from "../icon";
+import ScheduleIcon from "../kelola/ScheduleIcon";
+import "../../styles/schedule-extension.css";
 import {
   formatDate,
   formatFee,
@@ -60,6 +62,11 @@ function ResultCard({ item, onOpen }) {
             className={`ct-tag ct-tag-status ${item.status === "berlangsung" ? "live" : ""}`}
           >
             {statusLabel}
+          </span>
+        )}
+        {item.extended && (
+          <span className="ext-badge on-poster">
+            <ScheduleIcon name="calendar-clock" size={13} /> Jadwal diperpanjang
           </span>
         )}
       </div>
