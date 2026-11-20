@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import Icon from "../icon";
-import { useAdminPriority } from "../../context/AdminPriorityContext";
 
 const navClass = ({ isActive }) =>
   isActive ? "admin-nav-item active" : "admin-nav-item";
@@ -28,7 +27,6 @@ function Locked({ icon, label }) {
 
 function AdminSidebar({ open, locked, onNavigate, onLogout }) {
   const { pathname } = useLocation();
-  const cancelWaiting = useAdminPriority()?.cancelWaiting ?? 0;
   const inUserMenu = [
     "/admin/users",
     "/admin/roles",
@@ -68,24 +66,6 @@ function AdminSidebar({ open, locked, onNavigate, onLogout }) {
 
       <NavLink to="/admin/pengajuan" className={navClass} onClick={onNavigate}>
         <Icon name="trophy" size={16} /> Pengajuan Turnamen
-        {cancelWaiting > 0 && (
-          <span
-            title={`${cancelWaiting} pembatalan menunggu verifikasi`}
-            style={{
-              marginLeft: "auto",
-              minWidth: 20,
-              padding: "1px 7px",
-              borderRadius: 999,
-              background: "#a78bfa",
-              color: "#0b101c",
-              fontSize: 11,
-              fontWeight: 700,
-              textAlign: "center",
-            }}
-          >
-            {cancelWaiting}
-          </span>
-        )}
       </NavLink>
 
       {locked ? (
