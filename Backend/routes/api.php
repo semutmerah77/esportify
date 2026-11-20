@@ -54,6 +54,8 @@ use App\Http\Controllers\Player\KelolaPengumumanController;
 use App\Http\Controllers\Player\PengumumanController;
 use App\Http\Controllers\Player\KelolaPembatalanTurnamenController;
 use App\Http\Controllers\Admin\PembatalanTurnamenController as AdminPembatalanTurnamenController;
+use App\Http\Controllers\Player\RefundTurnamenController;
+use App\Http\Controllers\Player\KelolaRefundTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
 // ==========================================
@@ -667,6 +669,52 @@ Route::middleware('auth:sanctum')->group(function () {
                 KelolaPembatalanTurnamenController::class,
                 'lihatBukti'
             ])->whereNumber(['idPengajuan', 'idBukti']);
+
+        });
+
+        
+        // ==========================================
+        // MODUL 4: PENGEMBALIAN DANA / REFUND (PB-26)
+        // ==========================================
+
+        // Peserta: lihat status refund (semua anggota squad peserta, dicek di controller)
+        Route::middleware('permission:lihat_pendaftaran_turnamen')->group(function () {
+
+            Route::get('/turnamen/{id}/refund', [
+                RefundTurnamenController::class,
+                'show'
+            ])->whereNumber('id');
+
+            Route::get('/turnamen/{id}/refund/file/{jenis}', [
+                RefundTurnamenController::class,
+                'lihatFile'
+            ])->whereNumber('id')->whereIn('jenis', ['qris', 'bukti-transfer']);
+
+        });
+
+        // Peserta: isi data refund (hanya pendaftar, dicek di controller)
+        Route::post('/turnamen/{id}/refund', [
+            RefundTurnamenController::class,
+            'store'
+        ])->whereNumber('id')->middleware('permission:isi_data_refund_turnamen');
+
+        // Penyelenggara (dicek di controller)
+        Route::middleware('permission:kelola_refund_turnamen')->group(function () {
+
+            Route::get('/turnamen-kelolaan/{id}/refund', [
+                KelolaRefundTurnamenController::class,
+                'index'
+            ])->whereNumber('id');
+
+            Route::post('/turnamen-kelolaan/{id}/refund/{idRefund}/bukti-transfer', [
+                KelolaRefundTurnamenController::class,
+                'unggahBukti'
+            ])->whereNumber(['id', 'idRefund']);
+
+            Route::get('/turnamen-kelolaan/{id}/refund/{idRefund}/file/{jenis}', [
+                KelolaRefundTurnamenController::class,
+                'lihatFile'
+            ])->whereNumber(['id', 'idRefund'])->whereIn('jenis', ['qris', 'bukti-transfer']);
 
         });
         

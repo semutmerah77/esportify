@@ -95,6 +95,9 @@ class RolePermissionSeeder extends Seeder
             'kelola_pengumuman',
             'lihat_pengumuman',
             'ajukan_pembatalan_turnamen',
+            // Refund Turnamen (PB-26)
+            'isi_data_refund_turnamen',
+            'kelola_refund_turnamen',
         ];
 
         $admin = Role::findByName('admin', 'web');
