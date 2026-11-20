@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useLocation } from "react-router-dom";
 import { getAdminSubmissions } from "../services/adminApi";
+import { getAdminCancellations } from "../services/adminCancellationApi";
 import { isPriority, toMs, waitingSince } from "../utils/priority";
 
 const Ctx = createContext(null);
@@ -22,6 +23,9 @@ export function AdminPriorityProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [now, setNow] = useState(Date.now());
+  // Pengajuan pembatalan turnamen (PB-25): jumlah menunggu (badge sidebar) + yang lewat batas (kunci)
+  const [cancelWaiting, setCancelWaiting] = useState(0);
+  const [cancelOverdue, setCancelOverdue] = useState([]);
 
   const requestNo = useRef(0); // hasil muat ulang yang lebih lama tidak boleh menimpa yang lebih baru
   const lastLoadAt = useRef(0);
@@ -29,9 +33,15 @@ export function AdminPriorityProvider({ children }) {
   const refresh = useCallback(async () => {
     const mine = ++requestNo.current;
     try {
-      const list = await getAdminSubmissions();
+      // Paralel. Kalau pembatalan gagal dimuat (mis. tanpa izin), pengajuan turnamen tetap jalan.
+      const [list, cancellation] = await Promise.all([
+        getAdminSubmissions(),
+        getAdminCancellations("menunggu").catch(() => null),
+      ]);
       if (mine !== requestNo.current) return;
       setItems(list);
+      setCancelWaiting(cancellation?.waiting ?? 0);
+      setCancelOverdue((cancellation?.items ?? []).filter((r) => r.overdue));
       setError("");
     } catch (err) {
       if (mine !== requestNo.current) return;
@@ -89,7 +99,18 @@ export function AdminPriorityProvider({ children }) {
   );
 
   return (
-    <Ctx.Provider value={{ items, priority, loading, error, now, refresh }}>
+    <Ctx.Provider
+      value={{
+        items,
+        priority,
+        loading,
+        error,
+        now,
+        refresh,
+        cancelWaiting,
+        cancelOverdue,
+      }}
+    >
       {children}
     </Ctx.Provider>
   );

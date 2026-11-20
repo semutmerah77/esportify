@@ -3,6 +3,7 @@ import { toMediaUrl } from "../utils/media";
 import { newSponsor } from "../utils/sponsor";
 import { newRincian, newRincianRows } from "../utils/rincian";
 import { newHadiah } from "../utils/hadiah";
+import { mapCancellationRequest } from "./tournamentCancellationApi";
 
 // Semua fungsi di file ini SELALU memakai backend (tanpa mock).
 // Respons player: { success, message, data }.
@@ -48,6 +49,7 @@ export async function getManagedTournaments() {
       capacity: p.slot ?? null,
       filled: toNum(p.slot_terisi),
       pendingVerify: toNum(t.jumlah_menunggu),
+      cancellation: mapCancellationRequest(t.pengajuan_pembatalan_terakhir),
     };
   });
   return list;

@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 import Icon from "../icon";
 import { longDate } from "../../utils/date";
+import CancellationIcon from "../kelola/CancellationIcon";
+import ManagedTournamentMenu from "./ManagedTournamentMenu";
+import { formatShortDate } from "../../services/tournamentCancellationApi";
+import "../../styles/tournament-cancellation.css";
 
 const STATUS_LABEL = {
   pendaftaran: "Pendaftaran",
@@ -8,6 +12,8 @@ const STATUS_LABEL = {
   tertunda: "Tertunda",
   berlangsung: "Berlangsung",
   selesai: "Selesai",
+  pembatalan: "Pembatalan Diajukan",
+  dibatalkan: "Dibatalkan",
 };
 const TYPE_LABEL = { online: "Online", offline: "Offline" };
 
@@ -53,11 +59,20 @@ function ManagedTournamentCard({ tournament: t }) {
 
   // Indikator tampilan dari BE (bukan nilai status): Tertunda menggantikan Berlangsung,
   // "Pendaftaran ditutup" hanya untuk status pendaftaran.
-  const phase = t.delayed
-    ? "tertunda"
-    : t.status === "pendaftaran" && t.closed
-      ? "ditutup"
-      : t.status;
+  const cancelRequest = t.cancellation ?? null; // pengajuan pembatalan terakhir (kalau BE mengirim)
+  const cancelled = t.status === "dibatalkan";
+  const cancelPending = !cancelled && cancelRequest?.status === "menunggu";
+  const cancelRejected = !cancelled && cancelRequest?.status === "ditolak";
+
+  const phase = cancelled
+    ? "dibatalkan"
+    : cancelPending
+      ? "pembatalan"
+      : t.delayed
+        ? "tertunda"
+        : t.status === "pendaftaran" && t.closed
+          ? "ditutup"
+          : t.status;
 
   const hasPending = pending !== null && pending > 0;
   const pendingText =
@@ -113,6 +128,58 @@ function ManagedTournamentCard({ tournament: t }) {
         </div>
       </dl>
 
+      {cancelPending && (
+        <div className="t-strip purple" role="status">
+          <CancellationIcon name="send" size={18} />
+          <div>
+            <b>
+              Pembatalan diajukan
+              {cancelRequest.submittedAt
+                ? ` · ${formatShortDate(cancelRequest.submittedAt)}`
+                : ""}
+            </b>
+            {cancelRequest.reasonLabel && (
+              <p>Alasan: {cancelRequest.reasonLabel}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {cancelRejected && (
+        <div className="t-strip plain" role="status">
+          <CancellationIcon name="x-circle" size={18} />
+          <div>
+            <b>
+              Pembatalan ditolak
+              {cancelRequest.decidedAt
+                ? ` · ${formatShortDate(cancelRequest.decidedAt)}`
+                : ""}
+            </b>
+            {cancelRequest.adminNote && (
+              <p>Catatan admin: {cancelRequest.adminNote}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {cancelled && (
+        <div className="t-strip danger" role="status">
+          <CancellationIcon name="stamp" size={18} />
+          <div>
+            <b>
+              Turnamen dibatalkan
+              {cancelRequest?.decidedAt
+                ? ` · ${formatShortDate(cancelRequest.decidedAt)}`
+                : ""}
+            </b>
+            <p>
+              Pembatalan disetujui admin Esportify. Seluruh peserta telah
+              menerima notifikasi resmi via aplikasi.
+            </p>
+          </div>
+        </div>
+      )}
+
       {phase === "tertunda" && (
         <div className="t-alert danger" role="alert">
           <strong>
@@ -123,7 +190,7 @@ function ManagedTournamentCard({ tournament: t }) {
         </div>
       )}
 
-      {phase !== "tertunda" && t.reminder && (
+      {phase !== "tertunda" && !cancelled && !cancelPending && t.reminder && (
         <div className="t-alert warn" role="status">
           <strong>
             <AlertIcon kind="warn" /> Persiapan turnamen - H-1
@@ -140,6 +207,12 @@ function ManagedTournamentCard({ tournament: t }) {
         <Link to={`/turnamen/detail/${t.id}`} className="t-btn-outline">
           Detail
         </Link>
+        <ManagedTournamentMenu
+          id={t.id}
+          status={t.status}
+          cancellation={cancelRequest}
+          pendingVerify={pending}
+        />
       </div>
     </article>
   );

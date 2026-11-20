@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Icon from "../../components/icon";
 import TournamentInfo from "../../components/tournament/TournamentInfo";
+import CancellationIcon from "../../components/kelola/CancellationIcon";
+import "../../styles/tournament-cancellation.css";
 import { getTournamentDetail } from "../../services/tournamentApi";
 import { getRegistrationInfo } from "../../services/tournamentRegApi";
 
@@ -59,6 +61,18 @@ function ManagedTournamentDetail() {
     <>
       {back}
       <h1 className="admin-title">Detail Turnamen</h1>
+      {d?.status === "dibatalkan" && (
+        <div className="cancel-banner danger" style={{ maxWidth: 900 }}>
+          <CancellationIcon name="stamp" size={20} />
+          <div>
+            <b>Turnamen dibatalkan</b>
+            <small>
+              Turnamen ini telah dibatalkan oleh penyelenggara dengan
+              persetujuan admin.
+            </small>
+          </div>
+        </div>
+      )}
       <TournamentInfo d={d} registered={filled} />
     </>
   );

@@ -136,14 +136,14 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
       );
     if (
       item.to === "/turnamen/kelola" &&
-      /^\/turnamen\/[^/]+\/kelola/.test(pathname)
+      /^\/turnamen\/[^/]+\/(kelola|pembatalan)/.test(pathname)
     )
       return true;
     // Ruang Turnamen peserta (/turnamen/{id}/...): alurnya Turnamen Saya -> klik turnamen -> Ruang Turnamen,
     // jadi menu Turnamen Saya tetap menyala. Alamat kelola/daftar dan halaman turnamen lain dikecualikan.
     if (
       item.to === "/turnamen/saya" &&
-      /^\/turnamen\/(?!cari|saya|kelola|buat|detail|status-pengajuan|pengajuan)[^/]+\/(?!kelola|daftar)[^/]+/.test(
+      /^\/turnamen\/(?!cari|saya|kelola|buat|detail|status-pengajuan|pengajuan)[^/]+\/(?!kelola|daftar|pembatalan)[^/]+/.test(
         pathname,
       )
     )

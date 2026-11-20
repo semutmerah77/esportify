@@ -10,6 +10,7 @@ const FILTERS = [
   { value: "pendaftaran", label: "Pendaftaran" },
   { value: "berlangsung", label: "Berlangsung" },
   { value: "selesai", label: "Selesai" },
+  { value: "dibatalkan", label: "Dibatalkan" },
 ];
 
 function CardSkeleton() {

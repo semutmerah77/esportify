@@ -11,6 +11,8 @@ import { getTournamentParticipants } from "../../services/tournamentParticipants
 import PlayerAnnouncementPanel from "../../components/kelola/PlayerAnnouncementPanel";
 import { getRegistration } from "../../services/tournamentRegApi";
 import "../../styles/kelola.css";
+import CancellationIcon from "../../components/kelola/CancellationIcon";
+import "../../styles/tournament-cancellation.css";
 
 // Judul halaman untuk peserta (desain memakai tampilan Kelola Turnamen yang sama)
 const PAGE_TITLE = "Ruang Turnamen";
@@ -21,6 +23,7 @@ const STATUS_LABEL = {
   tertunda: "Tertunda",
   berlangsung: "Berlangsung",
   selesai: "Selesai",
+  dibatalkan: "Dibatalkan",
 };
 
 // Halaman turnamen untuk peserta (anggota roster pendaftaran diterima): tab Peserta, Bracket, Pengumuman.
@@ -117,11 +120,14 @@ function PesertaTurnamen() {
   if (!head) return <div className="kl-page">{back}</div>;
 
   // Indikator tampilan dari BE (bukan nilai status): Tertunda menggantikan Berlangsung
-  const statusKey = head.delayed
-    ? "tertunda"
-    : head.status === "pendaftaran" && head.closed
-      ? "ditutup"
-      : head.status;
+  const cancelled = head.status === "dibatalkan";
+  const statusKey = cancelled
+    ? "dibatalkan"
+    : head.delayed
+      ? "tertunda"
+      : head.status === "pendaftaran" && head.closed
+        ? "ditutup"
+        : head.status;
 
   const percent = head.slot
     ? Math.min(100, Math.round(((head.filled ?? 0) / head.slot) * 100))
@@ -133,7 +139,7 @@ function PesertaTurnamen() {
 
   const tabs = [
     { key: "peserta", label: "Peserta" },
-    { key: "bracket", label: "Bracket" },
+    ...(cancelled ? [] : [{ key: "bracket", label: "Bracket" }]),
     { key: "pengumuman", label: "Pengumuman" },
   ];
 
@@ -179,6 +185,19 @@ function PesertaTurnamen() {
           </div>
         </div>
       </section>
+
+      {cancelled && (
+        <div className="cancel-banner danger">
+          <CancellationIcon name="stamp" size={20} />
+          <div>
+            <b>Turnamen dibatalkan</b>
+            <small>
+              Turnamen ini telah dibatalkan oleh penyelenggara dengan
+              persetujuan admin.
+            </small>
+          </div>
+        </div>
+      )}
 
       <nav className="kl-tabs" role="tablist">
         {tabs.map((t) => (

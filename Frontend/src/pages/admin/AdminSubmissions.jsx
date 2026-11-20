@@ -1,7 +1,9 @@
 import { useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Icon from "../../components/icon";
 import Pagination from "../../components/admin/Pagination";
+import SubmissionKindTabs from "../../components/admin/SubmissionKindTabs";
+import AdminCancellationList from "../../components/admin/AdminCancellationList";
 import SubmissionStatusBadge from "../../components/tournament/SubmissionStatusBadge";
 import { useAdminPriority } from "../../context/AdminPriorityContext";
 import {
@@ -40,6 +42,9 @@ function AdminSubmissions() {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const tableRef = useRef(null);
+  const [searchParams] = useSearchParams();
+  const tab =
+    searchParams.get("tab") === "pembatalan" ? "pembatalan" : "pembuatan";
 
   const priorityIds = useMemo(
     () => new Set(priority.map((s) => s.id)),
@@ -75,9 +80,21 @@ function AdminSubmissions() {
     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // Semua hook sudah dipanggil di atas, jadi aman return lebih awal di sini
+  if (tab === "pembatalan") {
+    return (
+      <>
+        <h1 className="admin-title">Pengajuan Turnamen</h1>
+        <SubmissionKindTabs active="pembatalan" />
+        <AdminCancellationList />
+      </>
+    );
+  }
+
   return (
     <>
       <h1 className="admin-title">Pengajuan Turnamen</h1>
+      <SubmissionKindTabs active="pembuatan" />
 
       {priority.length > 0 ? (
         <div className="sub-banner priority">
