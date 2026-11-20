@@ -1,0 +1,928 @@
+/* PB-26 Pengembalian dana: tab di Ruang Turnamen (peserta) dan Kelola Turnamen (penyelenggara).
+   Prefix refund-. Dialog memakai .rp-ov / .rp-dialog dari match-report.css. */
+
+.refund-wrap {
+  display: grid;
+  gap: 18px;
+}
+.refund-card {
+  padding: 24px 28px;
+  border: 1px solid #1b2640;
+  border-radius: 12px;
+  background: #0f1830;
+  color: #e6ecf8;
+}
+.refund-card h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+.refund-sub {
+  margin: 0 0 22px;
+  font-size: 13px;
+  color: #8a97b4;
+}
+.refund-card label,
+.refund-label {
+  display: block;
+  margin: 18px 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #c3cde2;
+}
+.refund-label em {
+  font-style: normal;
+  color: #f43f5e;
+}
+.refund-err {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: #f87171;
+}
+.refund-err.center {
+  text-align: center;
+}
+.refund-blue {
+  display: inline-flex;
+  color: #3b82f6;
+}
+.refund-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin: 0 6px;
+  border-radius: 50%;
+  background: #64748b;
+  vertical-align: middle;
+}
+
+/* ---------- Status pill & avatar ---------- */
+.refund-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 14px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.refund-pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.refund-pill.amber {
+  border-color: #6b4a0f;
+  background: rgba(245, 158, 11, 0.14);
+  color: #f59e0b;
+}
+.refund-pill.blue {
+  border-color: #1f3a6e;
+  background: rgba(59, 130, 246, 0.2);
+  color: #93bbff;
+}
+.refund-pill.green {
+  border-color: #14532d;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+}
+.refund-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Kartu squad (peserta) ---------- */
+.refund-squad {
+  padding: 18px 24px 14px;
+}
+.refund-squad-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #1b2640;
+}
+.refund-squad-main {
+  flex: 1;
+  min-width: 0;
+}
+.refund-squad-main b {
+  display: block;
+  font-size: 17px;
+  color: #fff;
+}
+.refund-squad-main small {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+  color: #8a97b4;
+}
+.refund-squad-main small span {
+  color: #e6ecf8;
+  font-weight: 600;
+}
+.refund-squad-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #9aa6c0;
+}
+
+/* ---------- Formulir ---------- */
+.refund-methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.refund-method {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  min-height: 128px;
+  margin: 0 !important;
+  padding: 0 18px;
+  border: 1px solid #1b2640;
+  border-radius: 10px;
+  background: #0a1022;
+  font-size: 14px !important;
+  color: #8a97b4 !important;
+  cursor: pointer;
+}
+.refund-method input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.refund-method i {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid #64748b;
+  border-radius: 50%;
+}
+.refund-method.on {
+  border-color: #3b82f6;
+  background: #0f1d3d;
+  color: #fff !important;
+}
+.refund-method.on i {
+  border: 5px solid #fff;
+  background: #2563eb;
+}
+.refund-method.on svg {
+  color: #3b82f6;
+}
+.refund-method:has(input:focus-visible) {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+.refund-input {
+  display: block;
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid #1b2640;
+  border-radius: 8px;
+  background: #0a1022;
+  color: #e6ecf8;
+  font: inherit;
+  font-size: 14px;
+}
+.refund-input::placeholder {
+  color: #5d6a86;
+}
+.refund-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+.refund-input.err {
+  border-color: #dc2626;
+}
+.refund-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 42px;
+  margin-top: 18px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: none;
+  color: #e6ecf8;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.refund-upload-btn:hover {
+  background: rgba(37, 99, 235, 0.12);
+}
+.refund-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+.refund-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 28px;
+  border: none;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+  cursor: pointer;
+}
+.refund-send:hover {
+  background: #2f72e0;
+}
+
+/* ---------- Berkas ---------- */
+.refund-file {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 62px;
+  padding: 10px 18px;
+  border: 1px solid #1b2640;
+  border-radius: 8px;
+  background: #0a1022;
+}
+.refund-file.compact {
+  min-height: 0;
+  padding: 8px 12px;
+  background: #1c2335;
+  border-color: #2a3345;
+}
+.refund-file.picked {
+  margin-top: 18px;
+  min-height: 0;
+}
+.refund-file-ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #1c2b4d;
+  color: #7ea6ff;
+}
+.refund-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  color: #e6ecf8;
+}
+.refund-view-btn {
+  padding: 6px 20px;
+  border: 1px solid #e6ecf8;
+  border-radius: 999px;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.refund-file.compact .refund-view-btn,
+.refund-file.picked .refund-view-btn {
+  padding: 3px 12px;
+  border-radius: 6px;
+  border-color: #3a4558;
+  font-size: 12px;
+}
+.refund-view-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+.refund-view-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.refund-view-btn.danger {
+  border-color: #7f1d2d;
+  color: #f87171;
+}
+
+/* ---------- Data terkirim (peserta) ---------- */
+.refund-data {
+  padding-bottom: 0;
+  overflow: hidden;
+}
+.refund-data h2 {
+  font-size: 20px;
+}
+.refund-data .refund-sub {
+  margin-bottom: 26px;
+  font-size: 12px;
+}
+.refund-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.refund-pair label {
+  margin-top: 0;
+}
+.refund-data label {
+  margin-top: 20px;
+  font-weight: 600;
+}
+.refund-pair label {
+  margin-top: 0;
+}
+.refund-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 0 18px;
+  border: 1px solid #1b2640;
+  border-radius: 8px;
+  background: #0a1022;
+  font-size: 14px;
+  color: #e6ecf8;
+}
+.refund-box.strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+.refund-box.center {
+  justify-content: center;
+  min-height: 62px;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+.refund-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: #1c2a49;
+  color: #c7d6f5;
+  font-size: 14px;
+}
+.refund-banner p {
+  margin: 0;
+  line-height: 1.55;
+}
+.refund-banner b {
+  color: #fff;
+}
+.refund-banner-ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2b3b60;
+}
+.refund-banner.warn {
+  border: 1px solid #5b4710;
+  background: #231d0e;
+  color: #f5d77a;
+  font-size: 13px;
+}
+.refund-banner.warn .refund-banner-ic {
+  background: none;
+  width: auto;
+  height: auto;
+  color: #facc15;
+}
+.refund-organizer {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin: 22px -28px 0;
+  padding: 18px 0 22px;
+  border-top: 1px solid #1b2640;
+}
+.refund-organizer small {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #8a97b4;
+}
+.refund-organizer em {
+  font-style: normal;
+  font-size: 13px;
+  color: #8a97b4;
+}
+.refund-organizer .refund-avatar {
+  font-size: 14px;
+}
+
+/* ---------- Dialog konfirmasi kirim data (peserta) ---------- */
+.rp-dialog.refund-confirm {
+  max-width: 410px;
+  padding: 20px 22px 18px;
+  text-align: center;
+}
+.refund-confirm-ic {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  background: #2f2a1c;
+  color: #fbbf24;
+}
+.refund-confirm h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  color: #fff;
+}
+.refund-confirm-sub {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #8a97b4;
+}
+.refund-summary {
+  display: grid;
+  gap: 0;
+  margin-bottom: 12px;
+  padding: 2px 14px;
+  border: 1px solid #1b2640;
+  border-radius: 10px;
+  background: #090e1d;
+  text-align: left;
+}
+.refund-summary > div {
+  padding: 10px 0;
+  border-bottom: 1px solid #1b2640;
+}
+.refund-summary > div:last-child {
+  border-bottom: none;
+}
+.refund-summary small {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #8a97b4;
+}
+.refund-summary b {
+  font-size: 14px;
+  color: #fff;
+}
+.refund-summary b.icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.refund-summary b.big {
+  font-size: 22px;
+  letter-spacing: 0.02em;
+}
+.refund-qris-preview {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #0f1830;
+}
+.refund-qris-preview img {
+  display: block;
+  max-width: 110px;
+  max-height: 110px;
+  border-radius: 6px;
+  background: #fff;
+  object-fit: contain;
+}
+.refund-qris-preview span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+.refund-confirm-warn {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  border: 1px solid #5b4710;
+  border-radius: 8px;
+  background: #231d0e;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #f5d77a;
+}
+.refund-confirm-warn svg {
+  flex: none;
+  margin-top: 2px;
+}
+.refund-confirm-actions,
+.refund-proof-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.refund-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.refund-btn.dim {
+  background: #1d2640;
+  color: #c3cde2;
+}
+.refund-btn.primary {
+  background: #4b86f7;
+}
+.refund-btn.primary:hover:not(:disabled) {
+  background: #3b76e6;
+}
+.refund-btn:disabled {
+  cursor: not-allowed;
+}
+.refund-btn.primary:disabled {
+  background: #1d3566;
+  color: #7f96c7;
+}
+
+/* ---------- Penyelenggara ---------- */
+.refund-org {
+  border: 1px solid #1b2640;
+  border-radius: 12px;
+  background: #0b1224;
+}
+.refund-org-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #1b2640;
+}
+.refund-org-count {
+  flex: 1;
+  min-width: 0;
+}
+.refund-org-count span {
+  display: block;
+  font-size: 14px;
+  color: #9aa6c0;
+}
+.refund-org-count small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #6b7a99;
+}
+.refund-search,
+.refund-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 42px;
+  border: 1px solid #263149;
+  border-radius: 8px;
+  background: #0a1022;
+  color: #9aa6c0;
+}
+.refund-search {
+  width: 300px;
+  padding: 0 12px;
+  gap: 10px;
+}
+.refund-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  color: #e6ecf8;
+  font: inherit;
+  font-size: 13.5px;
+}
+.refund-search input:focus {
+  outline: none;
+}
+.refund-select {
+  width: 190px;
+  padding: 0 12px;
+}
+.refund-select svg {
+  position: absolute;
+  left: 14px;
+  pointer-events: none;
+}
+.refund-select select {
+  width: 100%;
+  height: 100%;
+  padding-left: 34px;
+  border: none;
+  background: none;
+  color: #e6ecf8;
+  font: inherit;
+  font-size: 13.5px;
+  appearance: none;
+  cursor: pointer;
+}
+.refund-select select:focus {
+  outline: none;
+}
+.refund-select option {
+  background: #0f1626;
+}
+.refund-rows {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 16px 16px 20px;
+  list-style: none;
+}
+.refund-row {
+  display: grid;
+  grid-template-columns:
+    44px minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1fr)
+    110px;
+  align-items: center;
+  gap: 28px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  background: #151f38;
+}
+.refund-row-name b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  color: #fff;
+}
+.refund-row-name small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #8a97b4;
+}
+.refund-row-col small {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #8a97b4;
+}
+.refund-row-col span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+.refund-row-end {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+.refund-row-end small {
+  font-size: 12px;
+  color: #8a97b4;
+}
+.refund-row-btn {
+  min-width: 78px;
+  padding: 7px 16px;
+  border: 1px solid #e6ecf8;
+  border-radius: 6px;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.refund-row-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.refund-org .admin-message {
+  margin: 0;
+  padding: 0 20px 20px;
+}
+
+/* ---------- Dialog proses transfer (penyelenggara) ---------- */
+.rp-dialog.refund-proof {
+  max-width: 480px;
+  padding: 22px 24px 20px;
+  text-align: left;
+}
+.refund-proof-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.refund-proof-head div {
+  flex: 1;
+  min-width: 0;
+}
+.refund-proof-head b {
+  display: block;
+  font-size: 17px;
+  color: #fff;
+}
+.refund-proof-head small {
+  font-size: 12px;
+  color: #8a97b4;
+}
+.refund-proof-title {
+  margin: 16px 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #e6ecf8;
+}
+.refund-proof-box {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 10px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #151d33;
+}
+.refund-proof-box > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+.refund-proof-box dt {
+  color: #8a97b4;
+}
+.refund-proof-box dd {
+  margin: 0;
+  font-weight: 600;
+  color: #fff;
+  text-align: right;
+}
+.refund-proof-box dd.account {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: #93bbff;
+}
+.refund-proof-box dd.amount {
+  color: #34d399;
+}
+.refund-copy {
+  display: inline-grid;
+  place-items: center;
+  padding: 2px;
+  border: none;
+  background: none;
+  color: #9aa6c0;
+  cursor: pointer;
+}
+.refund-copy:hover {
+  color: #fff;
+}
+.refund-proof-date {
+  margin: 8px 2px 0;
+  font-size: 12px;
+  font-style: italic;
+  color: #8a97b4;
+}
+.refund-drop {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 26px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #151d33;
+  font: inherit;
+  cursor: pointer;
+}
+.refund-drop:hover {
+  background: #1a2440;
+}
+.refund-drop-ic {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  background: #263149;
+  color: #93bbff;
+}
+.refund-drop b {
+  font-size: 13px;
+  color: #93bbff;
+}
+.refund-drop small {
+  font-size: 12px;
+  color: #8a97b4;
+}
+.refund-agree {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0 !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  color: #c3cde2 !important;
+  cursor: pointer;
+}
+.refund-agree input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  accent-color: #2563eb;
+}
+.refund-proof-actions {
+  grid-template-columns: auto auto;
+  justify-content: end;
+  margin-top: 20px;
+}
+.refund-proof-actions .refund-btn {
+  min-width: 96px;
+  height: 42px;
+}
+.refund-proof-actions .refund-btn.dim {
+  background: #2a3345;
+}
+
+/* ---------- Skeleton ---------- */
+.refund-skel {
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #131b2d 25%, #1b2540 50%, #131b2d 75%);
+  background-size: 200% 100%;
+  animation: refund-shimmer 1.4s infinite;
+}
+.refund-skel.block {
+  height: 110px;
+}
+.refund-skel.block.tall {
+  height: 320px;
+}
+.refund-skel.row {
+  height: 74px;
+}
+@keyframes refund-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .refund-methods,
+  .refund-pair {
+    grid-template-columns: 1fr;
+  }
+  .refund-method {
+    min-height: 72px;
+  }
+  .refund-org-top {
+    flex-wrap: wrap;
+  }
+  .refund-search,
+  .refund-select {
+    width: 100%;
+  }
+  .refund-row {
+    grid-template-columns: 44px 1fr;
+  }
+  .refund-row-end {
+    grid-column: 1 / -1;
+    justify-items: start;
+  }
+}
