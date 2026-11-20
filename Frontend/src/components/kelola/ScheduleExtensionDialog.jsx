@@ -4,7 +4,6 @@ import { cancellationFieldErrors } from "../../services/tournamentCancellationAp
 import {
   DAY_MS,
   formatWibDate,
-  formatWibDateTime,
   getScheduleExtension,
   submitScheduleExtension,
   toWibInput,
@@ -12,65 +11,6 @@ import {
 } from "../../services/scheduleExtensionApi";
 import "../../styles/match-report.css";
 import "../../styles/schedule-extension.css";
-
-const pad = (n) => String(n).padStart(2, "0");
-const clamp = (text, max) => pad(Math.min(max, Math.max(0, Number(text) || 0)));
-
-// Kotak jam "HH : MM": diketik atau dinaikkan/diturunkan dengan panah ↑↓ (tanpa daftar yang harus di-scroll)
-function TimeBox({ label, hour, minute, disabled, invalid, onChange }) {
-  const [h, setH] = useState(hour);
-  const [m, setM] = useState(minute);
-  useEffect(() => {
-    setH(hour);
-    setM(minute);
-  }, [hour, minute]);
-
-  const digits = (e) => e.target.value.replace(/\D/g, "").slice(0, 2);
-  const step = (e, current, max, isHour) => {
-    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
-    e.preventDefault();
-    const size = max + 1;
-    const next =
-      ((((Number(current) || 0) + (e.key === "ArrowUp" ? 1 : -1)) % size) +
-        size) %
-      size;
-    if (isHour) onChange(pad(next), clamp(m, 59));
-    else onChange(clamp(h, 23), pad(next));
-  };
-
-  return (
-    <div
-      className={`ext-time ${invalid ? "err" : ""} ${disabled ? "off" : ""}`}
-    >
-      <ScheduleIcon name="clock" size={15} />
-      <input
-        type="text"
-        inputMode="numeric"
-        maxLength={2}
-        aria-label={`${label}: jam`}
-        value={h}
-        disabled={disabled}
-        onFocus={(e) => e.target.select()}
-        onChange={(e) => setH(digits(e))}
-        onBlur={() => onChange(clamp(h, 23), clamp(m, 59))}
-        onKeyDown={(e) => step(e, h, 23, true)}
-      />
-      <span>:</span>
-      <input
-        type="text"
-        inputMode="numeric"
-        maxLength={2}
-        aria-label={`${label}: menit`}
-        value={m}
-        disabled={disabled}
-        onFocus={(e) => e.target.select()}
-        onChange={(e) => setM(digits(e))}
-        onBlur={() => onChange(clamp(h, 23), clamp(m, 59))}
-        onKeyDown={(e) => step(e, m, 59, false)}
-      />
-    </div>
-  );
-}
 
 function FormSkeleton() {
   return (
@@ -98,6 +38,7 @@ function impactText({ status, registrationOpen, closeChanged, playChanged }) {
 }
 
 // Dialog "Perpanjang jadwal" (menu ⋮ pada kartu Turnamen Kelolaan).
+// Hanya tanggal yang diubah; jam mengikuti jadwal yang berlaku.
 // GET dipanggil sekali saat dialog dibuka. Setelah PUT sukses, respons dipakai langsung (tanpa GET ulang).
 function ScheduleExtensionDialog({ id, name, onClose, onExtended }) {
   const [state, setState] = useState({ data: null, error: "" });
@@ -169,10 +110,10 @@ function ScheduleExtensionDialog({ id, name, onClose, onExtended }) {
         next[key] = `${label} harus setelah waktu sekarang.`;
       else if (value < min)
         next[key] =
-          `${label} tidak boleh lebih awal dari jadwal saat ini (${formatWibDateTime(data.active[key])}).`;
+          `${label} tidak boleh lebih awal dari jadwal saat ini (${formatWibDate(data.active[key])}).`;
       else if (value > max)
         next[key] =
-          `${label} maksimal ${data.limits.maxDays} hari dari jadwal awal (paling lambat ${formatWibDateTime(data.max[key])}).`;
+          `${label} maksimal ${data.limits.maxDays} hari dari jadwal awal (paling lambat ${formatWibDate(data.max[key])}).`;
     };
     if (closeChanged)
       check(
@@ -243,16 +184,11 @@ function ScheduleExtensionDialog({ id, name, onClose, onExtended }) {
     }
   };
 
-  // value = "YYYY-MM-DDTHH:mm" (WIB)
+  // value = "YYYY-MM-DDTHH:mm" (WIB). Hanya tanggal yang diubah: jam mengikuti jadwal yang berlaku.
   const clearError = (key) =>
     setErrors((prev) => ({ ...prev, [key]: "", form: "" }));
   const changeDate = (key, setValue, value, date) => {
     setValue(date ? `${date}T${value.slice(11, 16) || "00:00"}` : "");
-    clearError(key);
-  };
-  const changeTime = (key, setValue, value, hh, mm) => {
-    const date = value.slice(0, 10);
-    if (date) setValue(`${date}T${hh}:${mm}`);
     clearError(key);
   };
 
@@ -275,14 +211,6 @@ function ScheduleExtensionDialog({ id, name, onClose, onExtended }) {
           />
           <ScheduleIcon name="calendar" size={16} />
         </div>
-        <TimeBox
-          label={label}
-          hour={value.slice(11, 13) || "00"}
-          minute={value.slice(14, 16) || "00"}
-          disabled={locked || sending}
-          invalid={Boolean(errors[key])}
-          onChange={(hh, mm) => changeTime(key, setValue, value, hh, mm)}
-        />
       </div>
       {errors[key] ? (
         <p className="ext-err">{errors[key]}</p>
@@ -347,8 +275,8 @@ function ScheduleExtensionDialog({ id, name, onClose, onExtended }) {
             )}
 
             <p className="ext-initial">
-              Jadwal awal: {formatWibDateTime(data.initial.close)} (tutup) ·{" "}
-              {formatWibDateTime(data.initial.play)} (main)
+              Jadwal awal: {formatWibDate(data.initial.close)} (tutup) ·{" "}
+              {formatWibDate(data.initial.play)} (main)
             </p>
 
             {!data.canExtend ? (
@@ -414,13 +342,13 @@ function ScheduleExtensionDialog({ id, name, onClose, onExtended }) {
               {closeChanged && (
                 <div>
                   <dt>Tutup pendaftaran</dt>
-                  <dd>{formatWibDateTime(wibInputToDate(closeVal))}</dd>
+                  <dd>{formatWibDate(wibInputToDate(closeVal))}</dd>
                 </div>
               )}
               {playChanged && (
                 <div>
                   <dt>Jadwal main</dt>
-                  <dd>{formatWibDateTime(wibInputToDate(playVal))}</dd>
+                  <dd>{formatWibDate(wibInputToDate(playVal))}</dd>
                 </div>
               )}
             </dl>
