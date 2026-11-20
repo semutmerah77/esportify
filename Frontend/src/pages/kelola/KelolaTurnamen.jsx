@@ -15,6 +15,8 @@ import {
   getRegistrations,
 } from "../../services/tournamentManageApi";
 import "../../styles/kelola.css";
+import CancellationIcon from "../../components/kelola/CancellationIcon";
+import "../../styles/tournament-cancellation.css";
 
 const STATUS_LABEL = {
   pendaftaran: "Pendaftaran",
@@ -22,6 +24,7 @@ const STATUS_LABEL = {
   tertunda: "Tertunda",
   berlangsung: "Berlangsung",
   selesai: "Selesai",
+  dibatalkan: "Dibatalkan",
 };
 
 function KelolaTurnamen() {
@@ -50,6 +53,7 @@ function KelolaTurnamen() {
   const [toast, setToast] = useState("");
 
   const paid = head?.feeType === "berbayar";
+  const cancelled = head?.status === "dibatalkan";
 
   const loadHead = useCallback(() => getManageHeader(id).then(setHead), [id]);
 
@@ -103,7 +107,11 @@ function KelolaTurnamen() {
       .then((h) => {
         if (off) return;
         setHead(h);
-        setTab(h.feeType === "berbayar" ? "verifikasi" : "peserta");
+        setTab(
+          h.status !== "dibatalkan" && h.feeType === "berbayar"
+            ? "verifikasi"
+            : "peserta",
+        );
       })
       .catch(
         (err) => !off && setHeadError(err.message || "Gagal memuat turnamen."),
@@ -130,7 +138,7 @@ function KelolaTurnamen() {
 
   // Pendaftar hanya dimuat setelah header, karena hanya turnamen berbayar yang punya tab verifikasi
   useEffect(() => {
-    if (head && paid) loadRegs();
+    if (head && paid && !cancelled) loadRegs();
   }, [head?.id, paid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const back = (
@@ -154,11 +162,13 @@ function KelolaTurnamen() {
   if (!head) return <div className="kl-page">{back}</div>;
 
   // Indikator tampilan dari BE (bukan nilai status): Tertunda menggantikan Berlangsung
-  const statusKey = head.delayed
-    ? "tertunda"
-    : head.status === "pendaftaran" && head.closed
-      ? "ditutup"
-      : head.status;
+  const statusKey = cancelled
+    ? "dibatalkan"
+    : head.delayed
+      ? "tertunda"
+      : head.status === "pendaftaran" && head.closed
+        ? "ditutup"
+        : head.status;
 
   const percent = head.slot
     ? Math.min(100, Math.round(((head.filled ?? 0) / head.slot) * 100))
@@ -255,20 +265,35 @@ function KelolaTurnamen() {
         </div>
       </section>
 
+      {cancelled && (
+        <div className="cancel-banner danger">
+          <CancellationIcon name="stamp" size={20} />
+          <div>
+            <b>Turnamen dibatalkan</b>
+            <small>
+              Pembatalan sudah disetujui admin. Kelola bracket, skor, laporan,
+              dan pengumuman tidak tersedia lagi.
+            </small>
+          </div>
+        </div>
+      )}
+
       <nav className="kl-tabs" role="tablist">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.key}
-            className={`kl-tab ${tab === t.key ? "on" : ""}`}
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
-            {t.badge > 0 && <span className="kl-badge">{t.badge}</span>}
-          </button>
-        ))}
+        {(cancelled ? tabs.filter((t) => t.key === "peserta") : tabs).map(
+          (t) => (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.key}
+              className={`kl-tab ${tab === t.key ? "on" : ""}`}
+              onClick={() => setTab(t.key)}
+            >
+              {t.label}
+              {t.badge > 0 && <span className="kl-badge">{t.badge}</span>}
+            </button>
+          ),
+        )}
       </nav>
 
       <section className="kl-panel">

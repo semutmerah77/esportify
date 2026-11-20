@@ -53,6 +53,16 @@ function TournamentDetail() {
   }, [id, here, navigate]);
 
   const registerAction = () => {
+    // Turnamen dibatalkan: tombol Daftar diganti keterangan
+    if (state.data?.status === "dibatalkan") {
+      return (
+        <div className="tr-organizer-box">
+          <Icon name="lock" size={18} /> Turnamen ini telah dibatalkan,
+          pendaftaran tidak tersedia.
+        </div>
+      );
+    }
+
     // Status belum termuat: tombol nonaktif sementara
     if (!reg) {
       return (

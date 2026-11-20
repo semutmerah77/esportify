@@ -30,6 +30,8 @@ import PendaftaranDetail from "./pages/registration/PendaftaranDetail";
 import TurnamenSaya from "./pages/registration/TurnamenSaya";
 import KelolaTurnamen from "./pages/kelola/KelolaTurnamen";
 import PesertaTurnamen from "./pages/tournament/PesertaTurnamen";
+import TournamentCancellation from "./pages/kelola/TournamentCancellation";
+import AdminCancellationDetail from "./pages/admin/AdminCancellationDetail";
 
 function App() {
   return (
@@ -69,6 +71,10 @@ function App() {
             />
             <Route path="/turnamen/saya" element={<TurnamenSaya />} />
             <Route path="/turnamen/:id/daftar" element={<DaftarTurnamen />} />
+            <Route
+              path="/turnamen/:id/pembatalan"
+              element={<TournamentCancellation />}
+            />
             <Route path="/pendaftaran/:id" element={<PendaftaranDetail />} />
             <Route path="/squad/cari" element={<SearchSquad />} />
             <Route path="/squad/saya" element={<MySquads />} />
@@ -93,6 +99,10 @@ function App() {
             <Route path="profile" element={<AdminProfile />} />
             <Route path="games" element={<AdminGames />} />
             <Route path="pengajuan" element={<AdminSubmissions />} />
+            <Route
+              path="pengajuan/pembatalan/:id"
+              element={<AdminCancellationDetail />}
+            />
             <Route path="pengajuan/:id" element={<AdminSubmissionDetail />} />
           </Route>
         </Route>

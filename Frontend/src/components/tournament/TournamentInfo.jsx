@@ -1,11 +1,13 @@
 import { useState } from "react";
 import Icon from "../icon";
 import { longDate } from "../../utils/date";
+import "../../styles/tournament-cancellation.css";
 
 const STATUS_LABEL = {
   pendaftaran: "Pendaftaran",
   berlangsung: "Berlangsung",
   selesai: "Selesai",
+  dibatalkan: "Dibatalkan",
 };
 const PAYMENT_ITEMS = {
   qris: [{ icon: "qr", label: "QRIS" }],

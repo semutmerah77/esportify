@@ -60,6 +60,7 @@ function DaftarTurnamen() {
         setT({
           ...tour,
           name: detail.name || tour.name,
+          detailStatus: detail.status,
           game: detail.game || tour.game,
         });
         setChoices(ch);
@@ -104,7 +105,9 @@ function DaftarTurnamen() {
   }
   if (!t || !choices) return <div className="sq-page">{back}</div>;
 
-  const showFee = t.state === "daftar" && choices.items.length > 0;
+  const cancelled = t.detailStatus === "dibatalkan";
+  const showFee =
+    t.state === "daftar" && !cancelled && choices.items.length > 0;
 
   const head = (
     <section className="tr-card tr-head">
@@ -122,7 +125,7 @@ function DaftarTurnamen() {
   const titleRow = (
     <div className="tr-titlebar">
       <h1 className="admin-title">Daftar Turnamen</h1>
-      {t.state === "daftar" && choices.items.length > 0 && (
+      {t.state === "daftar" && !cancelled && choices.items.length > 0 && (
         <span className="tr-step">{step}/2</span>
       )}
     </div>
@@ -200,14 +203,18 @@ function DaftarTurnamen() {
     );
   }
 
-  // Pendaftaran ditutup / slot penuh
-  if (t.state !== "daftar") {
+  // Pendaftaran ditutup / slot penuh / turnamen dibatalkan
+  if (t.state !== "daftar" || cancelled) {
     return (
       <div className="sq-page tr-page">
         {back}
         {titleRow}
         {head}
-        <p className="tr-warn">{t.note}</p>
+        <p className="tr-warn">
+          {cancelled
+            ? "Turnamen ini telah dibatalkan, pendaftaran tidak tersedia."
+            : t.note}
+        </p>
       </div>
     );
   }

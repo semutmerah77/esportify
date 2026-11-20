@@ -1,0 +1,1113 @@
+/* PB-25 Pembatalan turnamen: kartu Turnamen Kelolaan (menu ⋮ + strip), halaman penyelenggara,
+   tab/detail admin. Prefix cancel- (halaman & komponen) dan t-more / t-strip (kartu Turnamen Kelolaan). */
+
+/* ---------- Kartu Turnamen Kelolaan ---------- */
+.t-status.pembatalan {
+  border: 1px solid #5b3fb0;
+  border-radius: 999px;
+  padding: 3px 12px;
+  background: rgba(124, 92, 230, 0.16);
+  color: #a78bfa;
+  font-size: 13px;
+  align-items: center;
+}
+.t-status.pembatalan i {
+  width: 7px;
+  height: 7px;
+  margin-top: 0;
+  background: #a78bfa;
+}
+.t-status.dibatalkan {
+  border: 1px solid #7f1d1d;
+  border-radius: 999px;
+  padding: 3px 12px;
+  background: rgba(220, 38, 38, 0.14);
+  color: #f87171;
+  font-size: 13px;
+  align-items: center;
+}
+.t-status.dibatalkan i {
+  width: 7px;
+  height: 7px;
+  margin-top: 0;
+  background: #f87171;
+}
+
+.t-strip {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.t-strip > svg {
+  flex: none;
+  margin-top: 2px;
+}
+.t-strip b {
+  display: block;
+  font-size: 14px;
+}
+.t-strip p {
+  margin: 4px 0 0;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+.t-strip.purple {
+  border-color: #3b2a7a;
+  background: #1c1840;
+  color: #a78bfa;
+}
+.t-strip.plain {
+  border-color: #2a3345;
+  background: #161c29;
+  color: #f87171;
+}
+.t-strip.plain b {
+  color: #fff;
+}
+.t-strip.danger {
+  border-color: #5c1a24;
+  background: #1f1018;
+  color: #f43f5e;
+}
+
+/* Menu ⋮ */
+.t-more {
+  position: relative;
+}
+.t-more-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #3a4558;
+  border-radius: 4px;
+  background: #2a3345;
+  color: #fff;
+  cursor: pointer;
+}
+.t-more-btn:hover {
+  background: #354157;
+}
+.t-more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 230px;
+  padding: 6px;
+  border: 1px solid #263149;
+  border-radius: 10px;
+  background: #0f1626;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+}
+.t-more-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #e6ecf8;
+  text-decoration: none;
+  cursor: pointer;
+}
+.t-more-item:hover {
+  background: #182238;
+}
+.t-more-item b {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+.t-more-item small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #8a97b4;
+}
+.t-more-item small.warn {
+  color: #facc15;
+}
+.t-more-item.disabled {
+  cursor: not-allowed;
+}
+.t-more-item.disabled:hover {
+  background: none;
+}
+.t-more-item.disabled b {
+  color: #94a3b8;
+}
+.t-more-ic.danger {
+  color: #f43f5e;
+}
+.t-more-ic.muted {
+  color: #64748b;
+}
+.t-more-ic {
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- Halaman penyelenggara & detail admin ---------- */
+.cancel-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  color: #e6ecf8;
+}
+.cancel-page * {
+  box-sizing: border-box;
+}
+.cancel-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px -8px;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cancel-back:hover {
+  color: #93bbff;
+}
+.cancel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.cancel-head h1,
+.cancel-admin-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+}
+.cancel-head p {
+  margin: 6px 0 0;
+  font-size: 18px;
+  color: #8a97b4;
+}
+.cancel-admin-title {
+  margin-bottom: 18px;
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.cancel-card {
+  margin-bottom: 16px;
+  padding: 22px 24px;
+  border: 1px solid #1f2a44;
+  border-radius: 14px;
+  background: #111827;
+}
+.cancel-h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+.cancel-key {
+  margin: 16px 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #8a97b4;
+}
+.cancel-chip {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid #263149;
+  border-radius: 8px;
+  background: #0f1626;
+  font-size: 14px;
+  color: #e6ecf8;
+}
+.cancel-text {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #1f2a44;
+  border-radius: 8px;
+  background: #0f1626;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #d5deef;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.cancel-refund-view {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #1f2a44;
+}
+.cancel-refund-view h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #fff;
+}
+.cancel-refund-view h3 svg {
+  color: #34d399;
+}
+.cancel-refund-view small {
+  display: block;
+  font-size: 12px;
+  color: #8a97b4;
+}
+.cancel-refund-view b {
+  display: block;
+  margin-top: 6px;
+  font-size: 16px;
+  color: #fff;
+}
+
+/* banner status */
+.cancel-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border: 1px solid;
+  border-radius: 12px;
+}
+.cancel-banner b {
+  display: block;
+  font-size: 16px;
+}
+.cancel-banner small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+.cancel-banner.purple {
+  border-color: #3b2a7a;
+  background: #1c1840;
+  color: #a78bfa;
+}
+.cancel-banner.plain {
+  border-color: #1f2a44;
+  background: #141b2b;
+  color: #f87171;
+}
+.cancel-banner.plain b {
+  color: #fff;
+}
+.cancel-banner.danger {
+  border-color: #5c1a24;
+  background: #1f1018;
+  color: #f43f5e;
+}
+.cancel-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cancel-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.cancel-pill.purple {
+  border-color: #5b3fb0;
+  background: rgba(124, 92, 230, 0.16);
+  color: #a78bfa;
+}
+.cancel-pill.red {
+  border-color: #4b2030;
+  background: #1b1320;
+  color: #f43f5e;
+}
+.cancel-pill.danger {
+  border-color: #7f1d1d;
+  background: rgba(220, 38, 38, 0.14);
+  color: #f87171;
+}
+
+/* catatan admin */
+.cancel-note-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cancel-note-head small {
+  font-size: 11px;
+  color: #8a97b4;
+}
+.cancel-note .cancel-h2 svg {
+  color: #f59e0b;
+}
+.cancel-note p {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #0b101c;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #d5deef;
+}
+.cancel-hint {
+  margin: 8px 0;
+  font-size: 13px;
+  color: #facc15;
+}
+.cancel-history {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cancel-history li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #1f2a44;
+  border-radius: 10px;
+  background: #0f1626;
+}
+.cancel-history b {
+  display: block;
+  font-size: 14px;
+}
+.cancel-history small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a97b4;
+}
+
+/* ---------- Form ---------- */
+.cancel-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #2a2316;
+  font-size: 14px;
+  color: #f3e7c8;
+}
+.cancel-warning svg {
+  flex: none;
+  color: #f59e0b;
+}
+.cancel-warning b {
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: #f59e0b;
+}
+.cancel-label {
+  margin: 22px 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+.cancel-label:first-of-type {
+  margin-top: 0;
+}
+.cancel-label em {
+  font-style: normal;
+  color: #f43f5e;
+}
+.cancel-radios {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.cancel-radio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #0b101c;
+  font-size: 14px;
+  color: #e6ecf8;
+  cursor: pointer;
+}
+.cancel-radio:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.cancel-radio input,
+.cancel-reject-opt input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.cancel-radio i,
+.cancel-reject-opt i {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid #64748b;
+  border-radius: 50%;
+}
+.cancel-radio.on {
+  border-color: #3b82f6;
+}
+.cancel-radio.on i,
+.cancel-reject-opt.on i {
+  border: 5px solid #fff;
+  background: #2563eb;
+}
+.cancel-radio:has(input:focus-visible),
+.cancel-reject-opt:has(input:focus-visible) {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+.cancel-textwrap {
+  position: relative;
+}
+.cancel-textarea {
+  display: block;
+  width: 100%;
+  min-height: 130px;
+  padding: 14px 16px 30px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #0b101c;
+  color: #e6ecf8;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+.cancel-textarea::placeholder {
+  color: #64748b;
+}
+.cancel-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+.cancel-textarea.err,
+.cancel-date.err {
+  border-color: #dc2626;
+}
+.cancel-count {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  font-size: 11px;
+  color: #8a97b4;
+}
+.cancel-err {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: #f87171;
+}
+.cancel-upload {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #0b101c;
+}
+.cancel-upload small {
+  text-align: center;
+  font-size: 12px;
+  color: #8a97b4;
+}
+.cancel-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  border: 1px solid #2563eb;
+  border-radius: 10px;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cancel-upload-btn:hover {
+  background: rgba(37, 99, 235, 0.12);
+}
+.cancel-files {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cancel-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #1f2a44;
+  border-radius: 10px;
+  background: #131b2d;
+}
+.cancel-file-ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #1c2b4d;
+  color: #7ea6ff;
+}
+.cancel-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.cancel-mini {
+  padding: 4px 12px;
+  border: 1px solid #3a4558;
+  border-radius: 6px;
+  background: #1c2335;
+  color: #e6ecf8;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cancel-mini:hover:not(:disabled) {
+  background: #263149;
+}
+.cancel-mini:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.cancel-mini.danger {
+  border-color: #7f1d2d;
+  color: #f87171;
+  background: none;
+}
+.cancel-refund {
+  margin-top: 26px;
+}
+.cancel-refund h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: #fff;
+}
+.cancel-refund h3 svg {
+  color: #34d399;
+}
+.cancel-refund h3 em {
+  font-style: normal;
+  color: #f43f5e;
+}
+.cancel-refund p {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #9aa6c0;
+}
+.cancel-refund label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #8a97b4;
+}
+.cancel-date {
+  width: 260px;
+  max-width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #0b101c;
+  color: #e6ecf8;
+  font: inherit;
+  font-size: 14px;
+  color-scheme: dark;
+}
+.cancel-agree {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+  font-size: 12.5px;
+  color: #c3cde2;
+  cursor: pointer;
+}
+.cancel-agree input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+}
+.cancel-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 22px;
+}
+.cancel-actions.end {
+  margin-top: 8px;
+}
+.cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 24px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+.cancel-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.cancel-btn.ghost {
+  background: #1a2132;
+  font-weight: 500;
+}
+.cancel-btn.dim {
+  background: #1d2640;
+  font-weight: 600;
+}
+.cancel-btn.primary {
+  background: #4b86f7;
+}
+.cancel-btn.primary:hover:not(:disabled) {
+  background: #3b76e6;
+}
+.cancel-btn.danger {
+  background: #dc2626;
+}
+.cancel-btn.danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+.cancel-btn.approve {
+  background: #16c70f;
+  color: #04170a;
+}
+.cancel-btn.approve:hover:not(:disabled) {
+  background: #12a80c;
+}
+.cancel-btn.wide {
+  width: 100%;
+}
+
+/* ---------- Popup konfirmasi ajukan ---------- */
+.cancel-confirm {
+  max-width: 440px;
+  text-align: center;
+}
+.cancel-confirm-ic,
+.cancel-overdue-ic {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+  border: 1px solid #5a4417;
+  border-radius: 50%;
+  background: #2f2610;
+  color: #f59e0b;
+}
+.cancel-confirm h2 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  color: #fff;
+}
+.cancel-confirm-text {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #9aa6c0;
+}
+.cancel-confirm-notes {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #0b101c;
+  text-align: left;
+  list-style: none;
+}
+.cancel-confirm-notes li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #c3cde2;
+}
+.cancel-confirm-notes svg {
+  flex: none;
+  margin-top: 2px;
+  color: #8a97b4;
+}
+.cancel-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ---------- Admin: tolak & follow-up ---------- */
+.cancel-reject {
+  max-width: 560px;
+}
+.cancel-reject-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #1f2a44;
+}
+.cancel-reject-head h2 {
+  margin: 0;
+  font-size: 19px;
+  color: #fff;
+}
+.cancel-reject-head p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #8a97b4;
+}
+.cancel-reject-head .rp-x {
+  margin-left: auto;
+}
+.cancel-reject-ic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #5c1a24;
+  border-radius: 10px;
+  background: #2a1219;
+  color: #f43f5e;
+}
+.cancel-reject-label {
+  margin: 16px 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #8a97b4;
+}
+.cancel-reject-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.cancel-reject-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #1f2a44;
+  border-radius: 10px;
+  background: #0b101c;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e6ecf8;
+  cursor: pointer;
+}
+.cancel-reject-opt.on {
+  border-color: #fff;
+}
+.cancel-reject-note {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 14px 0;
+  padding: 10px 14px;
+  border: 1px solid #4a3a14;
+  border-radius: 8px;
+  background: #241e10;
+  font-size: 12px;
+  color: #facc15;
+}
+.cancel-reject-note svg {
+  flex: none;
+}
+.cancel-reject-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid #1f2a44;
+}
+.cancel-overdue {
+  max-width: 500px;
+  text-align: center;
+}
+.cancel-overdue-tag {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #f59e0b;
+}
+.cancel-overdue h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  color: #fff;
+}
+.cancel-overdue-text {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #8a97b4;
+}
+.cancel-overdue-list {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid #1f2a44;
+  border-radius: 10px;
+  background: #0b101c;
+  list-style: none;
+  text-align: left;
+}
+.cancel-overdue-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13.5px;
+}
+.cancel-overdue-list i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+.cancel-overdue-list b {
+  flex: none;
+  color: #f59e0b;
+}
+
+/* detail admin */
+.cancel-tour-head h2 {
+  margin: 0 0 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #1f2a44;
+  font-size: 22px;
+  color: #fff;
+}
+.cancel-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.cancel-tiles > div {
+  padding: 12px 16px;
+  border: 1px solid #1f2a44;
+  border-radius: 8px;
+  background: #0b101c;
+}
+.cancel-tiles small {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #8a97b4;
+}
+.cancel-tiles b {
+  display: block;
+  margin-top: 6px;
+  font-size: 15px;
+  color: #fff;
+}
+
+/* skeleton */
+.cancel-skel {
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #131b2d 25%, #1b2540 50%, #131b2d 75%);
+  background-size: 200% 100%;
+  animation: cancel-shimmer 1.4s infinite;
+}
+.cancel-skel.w40 {
+  width: 40%;
+  height: 34px;
+}
+.cancel-skel.w25 {
+  width: 25%;
+  height: 18px;
+}
+.cancel-skel.block {
+  height: 320px;
+  margin-top: 18px;
+  border-radius: 14px;
+}
+.cancel-skel.row {
+  height: 20px;
+  margin: 8px 0;
+}
+
+/* Pill status "Dibatalkan" di halaman Kelola Turnamen / Ruang Turnamen */
+.kl-pill.dibatalkan {
+  border-color: #7f1d1d;
+  background: rgba(220, 38, 38, 0.14);
+  color: #f87171;
+}
+.kl-pill.dibatalkan i {
+  background: #f87171;
+}
+
+/* Popup pratinjau bukti */
+.cancel-preview {
+  display: flex;
+  flex-direction: column;
+  width: min(960px, 94vw);
+  max-width: none;
+  max-height: 92vh;
+  padding: 16px;
+}
+.cancel-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.cancel-preview-head b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  color: #fff;
+}
+.cancel-preview-head .rp-x {
+  position: static;
+  flex: none;
+  margin-left: auto;
+}
+.cancel-preview-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  border-radius: 10px;
+  background: #0b101c;
+}
+.cancel-preview-body img {
+  display: block;
+  max-width: 100%;
+  max-height: 76vh;
+  object-fit: contain;
+}
+.cancel-preview-body iframe {
+  width: 100%;
+  height: 76vh;
+  border: 0;
+  background: #fff;
+}
+
+/* Dialog tolak pembatalan: lebih ringkas, tombol sama lebar */
+.rp-dialog.cancel-reject {
+  max-width: 460px;
+  padding: 20px 22px;
+}
+.cancel-reject-head h2 {
+  font-size: 17px;
+}
+.cancel-reject-head p {
+  font-size: 12px;
+}
+.cancel-reject-ic {
+  width: 38px;
+  height: 38px;
+}
+.cancel-reject-list {
+  gap: 8px;
+}
+.cancel-reject-opt {
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.cancel-reject-note {
+  margin: 12px 0;
+  padding: 8px 12px;
+  font-size: 11.5px;
+}
+.cancel-reject-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.cancel-reject-actions .cancel-btn {
+  width: 100%;
+}
+
+/* Popup pratinjau bukti: lebih ringkas */
+.rp-dialog.cancel-preview {
+  width: min(640px, 90vw);
+  max-width: none;
+  max-height: 80vh;
+  padding: 14px 16px;
+}
+.cancel-preview-head b {
+  font-size: 14px;
+}
+.cancel-preview-body img {
+  max-height: 58vh;
+}
+.cancel-preview-body iframe {
+  height: 58vh;
+}
+
+@keyframes cancel-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .cancel-radios,
+  .cancel-tiles {
+    grid-template-columns: 1fr;
+  }
+  .cancel-head {
+    flex-direction: column;
+  }
+}
