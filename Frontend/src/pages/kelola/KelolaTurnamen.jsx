@@ -7,6 +7,7 @@ import ParticipantDetailModal from "../../components/kelola/ParticipantDetailMod
 import ParticipantsPanel from "../../components/kelola/ParticipantsPanel";
 import ReviewDrawer from "../../components/kelola/ReviewDrawer";
 import AnnouncementPanel from "../../components/kelola/AnnouncementPanel";
+import OrganizerRefundPanel from "../../components/refund/OrganizerRefundPanel";
 import { longDate } from "../../utils/date";
 import {
   getManageHeader,
@@ -189,6 +190,9 @@ function KelolaTurnamen() {
         ]
       : []),
     { key: "peserta", label: "Peserta" },
+    ...(cancelled && paid
+      ? [{ key: "refund", label: "Pengembalian Dana" }]
+      : []),
     { key: "bracket", label: "Bracket" },
     { key: "pengumuman", label: "Pengumuman" },
   ];
@@ -279,21 +283,24 @@ function KelolaTurnamen() {
       )}
 
       <nav className="kl-tabs" role="tablist">
-        {(cancelled ? tabs.filter((t) => t.key === "peserta") : tabs).map(
-          (t) => (
-            <button
-              key={t.key}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.key}
-              className={`kl-tab ${tab === t.key ? "on" : ""}`}
-              onClick={() => setTab(t.key)}
-            >
-              {t.label}
-              {t.badge > 0 && <span className="kl-badge">{t.badge}</span>}
-            </button>
-          ),
-        )}
+        {(cancelled
+          ? tabs.filter(
+              (t) => t.key === "peserta" || (paid && t.key === "refund"),
+            )
+          : tabs
+        ).map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.key}
+            className={`kl-tab ${tab === t.key ? "on" : ""}`}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label}
+            {t.badge > 0 && <span className="kl-badge">{t.badge}</span>}
+          </button>
+        ))}
       </nav>
 
       <section className="kl-panel">
@@ -333,6 +340,8 @@ function KelolaTurnamen() {
             onDetail={openDetail}
           />
         )}
+
+        {tab === "refund" && <OrganizerRefundPanel id={id} />}
 
         {tab === "bracket" && <BracketPanel id={id} onChanged={loadHead} />}
 

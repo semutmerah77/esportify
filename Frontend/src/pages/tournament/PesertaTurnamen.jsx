@@ -12,6 +12,7 @@ import PlayerAnnouncementPanel from "../../components/kelola/PlayerAnnouncementP
 import { getRegistration } from "../../services/tournamentRegApi";
 import "../../styles/kelola.css";
 import CancellationIcon from "../../components/kelola/CancellationIcon";
+import ParticipantRefundPanel from "../../components/refund/ParticipantRefundPanel";
 import "../../styles/tournament-cancellation.css";
 
 // Judul halaman untuk peserta (desain memakai tampilan Kelola Turnamen yang sama)
@@ -140,6 +141,9 @@ function PesertaTurnamen() {
   const tabs = [
     { key: "peserta", label: "Peserta" },
     ...(cancelled ? [] : [{ key: "bracket", label: "Bracket" }]),
+    ...(cancelled && head?.feeType === "berbayar"
+      ? [{ key: "pengembalian", label: "Pengembalian Dana" }]
+      : []),
     { key: "pengumuman", label: "Pengumuman" },
   ];
 
@@ -224,6 +228,8 @@ function PesertaTurnamen() {
             onDetail={openDetail}
           />
         )}
+
+        {tab === "pengembalian" && <ParticipantRefundPanel id={id} />}
 
         {tab === "bracket" && <PlayerBracketPanel id={id} />}
 
