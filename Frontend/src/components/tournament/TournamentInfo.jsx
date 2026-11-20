@@ -1,10 +1,13 @@
 import { useState } from "react";
 import Icon from "../icon";
-import { longDate } from "../../utils/date";
+import { formatWibDate } from "../../services/scheduleExtensionApi";
+import ScheduleIcon from "../kelola/ScheduleIcon";
+import "../../styles/schedule-extension.css";
 import "../../styles/tournament-cancellation.css";
 
 const STATUS_LABEL = {
   pendaftaran: "Pendaftaran",
+  ditutup: "Pendaftaran ditutup",
   berlangsung: "Berlangsung",
   selesai: "Selesai",
   dibatalkan: "Dibatalkan",
@@ -44,6 +47,9 @@ function InfoCard({ title, icon, children, sub }) {
 function TournamentInfo({ d, action, registered = null }) {
   const [expanded, setExpanded] = useState(false);
 
+  // "Pendaftaran Ditutup" hanya label tampilan (bukan status di database)
+  const phase = d.status === "pendaftaran" && d.closed ? "ditutup" : d.status;
+
   const offline = d.type === "offline";
   const place = offline
     ? [d.city, d.province].filter(Boolean).join(", ")
@@ -68,11 +74,17 @@ function TournamentInfo({ d, action, registered = null }) {
         <section className="td-summary">
           <div className="td-summary-head">
             <span className="td-game">{d.game}</span>
-            <span className={`t-status ${d.status}`}>
-              <i></i> {STATUS_LABEL[d.status] ?? d.status}
+            <span className={`t-status ${phase}`}>
+              <i></i> {STATUS_LABEL[phase] ?? phase}
             </span>
           </div>
           <h2 className="td-title">{d.name}</h2>
+          {d.extended && d.status !== "dibatalkan" && (
+            <span className="ext-badge">
+              <ScheduleIcon name="calendar-clock" size={13} /> Jadwal
+              diperpanjang
+            </span>
+          )}
 
           <div className="td-grid td-money">
             <div>
@@ -110,13 +122,13 @@ function TournamentInfo({ d, action, registered = null }) {
               <small>
                 <Icon name="calendar" size={13} /> Jadwal pendaftaran ditutup
               </small>
-              <b>{longDate(d.closeDate)}</b>
+              <b>{formatWibDate(d.closeDate)}</b>
             </div>
             <div>
               <small>
                 <Icon name="zap" size={13} /> Jadwal tanding
               </small>
-              <b>{longDate(d.matchDate)}</b>
+              <b>{formatWibDate(d.matchDate)}</b>
             </div>
           </div>
 

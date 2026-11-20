@@ -1,13 +1,27 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import ScheduleExtendedPopup from "../kelola/ScheduleExtendedPopup";
 import CancellationIcon from "../kelola/CancellationIcon";
+import ScheduleExtensionDialog from "../kelola/ScheduleExtensionDialog";
+import ScheduleIcon from "../kelola/ScheduleIcon";
 import "../../styles/tournament-cancellation.css";
+import "../../styles/schedule-extension.css";
+import { clearTournamentCache } from "../../services/tournamentSearchApi";
 
 // Menu ⋮ pada kartu Turnamen Kelolaan.
-// Satu pintu ke halaman pembatalan: "Ajukan pembatalan" atau "Lihat pengajuan pembatalan".
-// (Item "Perpanjangan" ditambahkan di PB-24.)
-function ManagedTournamentMenu({ id, status, cancellation, pendingVerify }) {
+// "Perpanjangan" (PB-24) membuka dialog perpanjang jadwal; pembatalan (PB-25) membuka halaman pembatalan.
+function ManagedTournamentMenu({
+  id,
+  name,
+  status,
+  cancellation,
+  pendingVerify,
+  onChanged,
+}) {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const [extending, setExtending] = useState(false);
+  const [doneText, setDoneText] = useState("");
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -23,13 +37,15 @@ function ManagedTournamentMenu({ id, status, cancellation, pendingVerify }) {
     };
   }, [open]);
 
-  // Turnamen selesai tidak bisa dibatalkan: tidak ada isi menu.
+  // Turnamen selesai tidak bisa dibatalkan maupun diperpanjang: tidak ada isi menu.
   if (status === "selesai") return null;
 
   const viewOnly =
     status === "dibatalkan" || cancellation?.status === "menunggu";
   const blocked = !viewOnly && pendingVerify !== null && pendingVerify > 0;
   const to = `/turnamen/${id}/pembatalan`;
+  // Perpanjangan tidak tersedia untuk turnamen dibatalkan / ada pembatalan menunggu verifikasi
+  const canExtend = !viewOnly;
 
   return (
     <div className="t-more" ref={rootRef}>
@@ -46,6 +62,26 @@ function ManagedTournamentMenu({ id, status, cancellation, pendingVerify }) {
 
       {open && (
         <div className="t-more-menu" role="menu">
+          {canExtend && (
+            <button
+              type="button"
+              role="menuitem"
+              className="t-more-item"
+              onClick={() => {
+                setOpen(false);
+                setExtending(true);
+              }}
+            >
+              <span className="t-more-ic info">
+                <ScheduleIcon name="calendar-clock" size={18} />
+              </span>
+              <span>
+                <b>Perpanjangan</b>
+                <small>Ubah tanggal daftar</small>
+              </span>
+            </button>
+          )}
+
           {viewOnly ? (
             <Link to={to} role="menuitem" className="t-more-item">
               <span className="t-more-ic danger">
@@ -82,6 +118,34 @@ function ManagedTournamentMenu({ id, status, cancellation, pendingVerify }) {
             </Link>
           )}
         </div>
+      )}
+
+      {extending && (
+        <ScheduleExtensionDialog
+          id={id}
+          name={name}
+          onClose={() => setExtending(false)}
+          onExtended={(res) => {
+            setExtending(false);
+            setDoneText(res.message);
+            clearTournamentCache(); // Cari Turnamen memuat ulang jadwal terbaru
+            onChanged?.(); // segarkan daftar SATU kali agar jadwal & badge ikut berubah
+          }}
+        />
+      )}
+
+      {doneText && (
+        <ScheduleExtendedPopup
+          text={doneText}
+          onClose={() => setDoneText("")}
+          onAnnounce={() => {
+            setDoneText("");
+            // buka Kelola Turnamen langsung di tab Pengumuman
+            navigate(`/turnamen/${id}/kelola`, {
+              state: { tab: "pengumuman" },
+            });
+          }}
+        />
       )}
     </div>
   );

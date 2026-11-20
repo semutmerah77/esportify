@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../../components/icon";
 import TournamentTabs from "../../components/tournament/TournamentTabs";
@@ -37,16 +37,17 @@ function ManageTournaments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const reload = useCallback(
+    () =>
+      getManagedTournaments()
+        .then(setItems)
+        .catch((err) => setError(err.message)),
+    [],
+  );
+
   useEffect(() => {
-    let off = false;
-    getManagedTournaments()
-      .then((list) => !off && setItems(list))
-      .catch((err) => !off && setError(err.message))
-      .finally(() => !off && setLoading(false));
-    return () => {
-      off = true;
-    };
-  }, []);
+    reload().finally(() => setLoading(false));
+  }, [reload]);
 
   // Pencarian dan filter dikerjakan di klien, sementara.
   // Filter memakai status asli turnamen (Tertunda & Pendaftaran ditutup tetap termasuk "Pendaftaran").
@@ -105,7 +106,11 @@ function ManageTournaments() {
 
         <div className="t-list">
           {visible.map((t) => (
-            <ManagedTournamentCard key={t.id} tournament={t} />
+            <ManagedTournamentCard
+              key={t.id}
+              tournament={t}
+              onChanged={reload}
+            />
           ))}
         </div>
 

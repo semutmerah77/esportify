@@ -193,6 +193,8 @@ const mapTournament = (data) => {
 
     date: submission.jadwal_main ?? null,
     registrationClose: submission.jadwal_pendaftaran_tutup ?? null,
+    extended:
+      (data.jadwal_diperpanjang ?? submission.jadwal_diperpanjang) === true,
 
     cityId: city ? String(city.id_kota ?? "") : "",
 
