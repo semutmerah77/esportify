@@ -9,20 +9,14 @@ use App\Models\Turnamen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Services\BatasWaktuPengajuan;
 
 class PengajuanTurnamenController extends Controller
 {
-    public function __construct(private BatasWaktuPengajuan $batasWaktu)
-{
-}
     /**
      * Menampilkan daftar pengajuan turnamen.
      */
     public function index(Request $request)
 {
-        $this->batasWaktu->perbaruiSemua();
-
     $query = PengajuanTurnamen::with([
         'player.user',
         'game',
@@ -70,8 +64,6 @@ class PengajuanTurnamenController extends Controller
                 'message' => 'Profil admin tidak ditemukan.',
             ], 403);
         }
-
-        $this->batasWaktu->perbaruiSemua();
 
         $pengajuan = DB::transaction(function () use ($id, $admin) {
             $pengajuan = PengajuanTurnamen::where(
@@ -133,14 +125,12 @@ class PengajuanTurnamenController extends Controller
         )->firstOrFail();
 
         // Pastikan pengajuan sedang ditinjau oleh admin yang login.
-        $sedangDitinjauAdminIni = $pengajuan->status === 'Sedang ditinjau'
-            && $pengajuan->id_admin === $admin->id_admin;
-
-        $sudahDisetujui = $pengajuan->status === 'Disetujui';
-
-        if (!$sedangDitinjauAdminIni && !$sudahDisetujui) {
+        if (
+            $pengajuan->status !== 'Sedang ditinjau' ||
+            $pengajuan->id_admin !== $admin->id_admin
+        ) {
             return response()->json([
-                'message' => 'KTP hanya dapat dilihat saat pengajuan sedang ditinjau atau sudah disetujui.'
+                'message' => 'Kamu tidak memiliki akses untuk melihat KTP pengajuan ini.'
             ], 403);
         }
 

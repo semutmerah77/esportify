@@ -759,8 +759,10 @@ Route::middleware('auth:sanctum')->group(function () {
                 'startEdit'
             ]);
 
-            Route::post('/pengajuan-turnamen/{id}/cancel-edit', [PengajuanTurnamenController::class, 'cancelEdit']);
-
+            Route::post('/pengajuan-turnamen/{id}/cancel-edit', [
+                PengajuanTurnamenController::class,
+                'cancelEdit'
+            ]);
             Route::put('/pengajuan-turnamen/{id}', [
                 PengajuanTurnamenController::class,
                 'update'
