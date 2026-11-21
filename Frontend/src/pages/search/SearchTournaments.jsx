@@ -13,7 +13,12 @@ import {
   getSearchProvinces,
   searchTournaments,
 } from "../../services/tournamentSearchApi";
-import { cleanSchedule, scheduleLabel } from "../../utils/searchSchedule";
+import {
+  cleanSchedule,
+  scheduleLabel,
+  cleanRegistration,
+  registrationLabel,
+} from "../../utils/searchSchedule";
 import "../../styles/search.css";
 
 // ASSUMPTION: halaman detail turnamen belum ada (menunggu desain). Isi saat route-nya jadi,
@@ -29,6 +34,9 @@ const FILTER_KEYS = [
   "sampai",
   "provinsi",
   "kota",
+  "daftar",
+  "daftarDari",
+  "daftarSampai",
 ];
 const EMPTY_FILTERS = {
   kategori: "",
@@ -39,6 +47,9 @@ const EMPTY_FILTERS = {
   sampai: "",
   provinsi: "",
   kota: "",
+  daftar: "",
+  daftarDari: "",
+  daftarSampai: "",
 };
 
 const labelOf = (list, value) =>
@@ -65,12 +76,18 @@ function SearchTournaments() {
       dari: p.get("dari") ?? "",
       sampai: p.get("sampai") ?? "",
     });
+    const registration = cleanRegistration({
+      daftar: p.get("daftar") ?? "",
+      daftarDari: p.get("daftarDari") ?? "",
+      daftarSampai: p.get("daftarSampai") ?? "",
+    });
     return {
       q: p.get("q") ?? "",
       kategori: p.get("kategori") ?? "",
       tipe,
       biaya: p.get("biaya") ?? "",
       ...schedule,
+      ...registration,
       // CHANGED: provinsi dan kota hanya berlaku untuk tipe Offline
       provinsi: offline ? (p.get("provinsi") ?? "") : "",
       kota: offline ? (p.get("kota") ?? "") : "",
@@ -203,6 +220,10 @@ function SearchTournaments() {
         next.dari = "";
         next.sampai = "";
       }
+      if (key === "daftar" && value !== "custom") {
+        next.daftarDari = "";
+        next.daftarSampai = "";
+      }
       return next;
     });
 
@@ -210,6 +231,7 @@ function SearchTournaments() {
     update({
       ...draft,
       ...cleanSchedule(draft),
+      ...cleanRegistration(draft),
       ...(draft.tipe !== "offline" ? { provinsi: "", kota: "" } : {}),
     });
     setOpen(false);
@@ -253,6 +275,13 @@ function SearchTournaments() {
       key: "jadwal",
       label: jadwalText,
       clear: ["jadwal", "dari", "sampai"],
+    });
+  const daftarText = registrationLabel(criteria);
+  if (daftarText)
+    chips.push({
+      key: "daftar",
+      label: daftarText,
+      clear: ["daftar", "daftarDari", "daftarSampai"],
     });
   if (criteria.kota)
     chips.push({

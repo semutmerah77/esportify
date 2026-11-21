@@ -241,6 +241,10 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
+/* Provinsi selalu mulai dari kolom pertama (baris baru) */
+.ct-panel-grid .ct-col-1 {
+  grid-column: 1;
+}
 .ct-field {
   display: grid;
   gap: 8px;
@@ -600,6 +604,37 @@
   border-color: transparent;
   background: none;
   color: var(--ct-tx3);
+}
+
+.ct-meta-date {
+  display: flex;
+  align-items: center; /* sejajar garis tengah */
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Titik + badge satu grup supaya kalau turun baris, titiknya ikut */
+.ct-ext-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ct-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #64748b;
+  flex-shrink: 0;
+}
+
+.ct-meta-date .ct-ext-inline {
+  position: static;
+  margin: 0; /* hapus margin-left: auto, sekarang rapat di samping tanggal */
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 /* ---------- Responsive ---------- */

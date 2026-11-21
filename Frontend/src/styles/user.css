@@ -1991,6 +1991,22 @@
   justify-content: space-between;
   gap: 12px;
 }
+
+/* Badge status dan badge "diperpanjang" satu kelompok di kanan atas */
+.td-head-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* margin-top 8px di .ext-badge itu untuk posisi lama di bawah judul */
+.td-head-right .ext-badge {
+  margin-top: 0;
+}
+
 .td-game {
   padding: 3px 12px;
   border: 1px solid #2c3a52;

@@ -5,9 +5,18 @@ import {
   TYPE_OPTIONS,
 } from "../../services/tournamentSearchApi";
 
-function SelectField({ id, label, value, onChange, disabled, children }) {
+function SelectField({
+  id,
+  label,
+  value,
+  onChange,
+  disabled,
+  className = "",
+  children,
+}) {
   return (
-    <div className="ct-field">
+    <div className={`ct-field ${className}`}>
+      {" "}
       <label className="ct-label" htmlFor={id}>
         {label}
       </label>
@@ -110,10 +119,24 @@ function FilterPanel({
           ))}
         </SelectField>
 
+        <SelectField
+          id="ct-daftar"
+          label="Batas Pendaftaran"
+          value={values.daftar}
+          onChange={(v) => onChange("daftar", v)}
+        >
+          {SCHEDULE_OPTIONS.map((o) => (
+            <option key={o.value || "all"} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </SelectField>
+
         {offline && (
           <>
             <SelectField
               id="ct-provinsi"
+              className="ct-col-1"
               label="Provinsi"
               value={values.provinsi}
               onChange={(v) => onChange("provinsi", v)}
@@ -167,6 +190,35 @@ function FilterPanel({
                 className="ct-input"
                 value={values.sampai}
                 onChange={(e) => onChange("sampai", e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
+        {values.daftar === "custom" && (
+          <div className="ct-dates">
+            <div className="ct-field">
+              <label className="ct-label" htmlFor="ct-daftar-dari">
+                Pendaftaran tutup dari
+              </label>
+              <input
+                id="ct-daftar-dari"
+                type="date"
+                className="ct-input"
+                value={values.daftarDari}
+                onChange={(e) => onChange("daftarDari", e.target.value)}
+              />
+            </div>
+            <div className="ct-field">
+              <label className="ct-label" htmlFor="ct-daftar-sampai">
+                Pendaftaran tutup sampai
+              </label>
+              <input
+                id="ct-daftar-sampai"
+                type="date"
+                className="ct-input"
+                value={values.daftarSampai}
+                onChange={(e) => onChange("daftarSampai", e.target.value)}
               />
             </div>
           </div>

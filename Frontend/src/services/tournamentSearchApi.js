@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "../config/env";
 import { apiRequest } from "./httpClient";
 // CHANGED: filter jadwal dipindah ke utils
-import { matchesSchedule } from "../utils/searchSchedule";
+import { matchesSchedule, matchesRegistration } from "../utils/searchSchedule";
 
 // Service halaman Cari Turnamen.
 // Data sumber: GET /turnamen.
@@ -307,8 +307,12 @@ const matches = (tournament, criteria = {}) => {
     }
   }
 
-  // CHANGED: jadwal (hari ini / 7 hari / rentang tanggal) di zona WIB
   if (!matchesSchedule(tournament.date, criteria)) {
+    return false;
+  }
+
+  // Batas pendaftaran (jadwal_pendaftaran_tutup)
+  if (!matchesRegistration(tournament.registrationClose, criteria)) {
     return false;
   }
 
