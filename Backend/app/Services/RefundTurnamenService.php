@@ -173,6 +173,7 @@ class RefundTurnamenService
             'squad' => [
                 'id_squad' => $pendaftaran?->squad?->id_squad,
                 'nama_squad' => $pendaftaran?->squad?->nama_squad,
+                'logo_url' => $this->urlPublik($pendaftaran?->squad?->logo_squad),
             ],
             'pendaftar' => [
                 'id_player' => $pendaftaran?->id_player,
@@ -195,16 +196,21 @@ class RefundTurnamenService
         ];
     }
 
+    /** Sama seperti logo_url / avatar_url di endpoint squad & player. */
+    private function urlPublik(?string $path): ?string
+    {
+        return $path ? asset('storage/' . $path) : null;
+    }
+
     public function infoTurnamen(Turnamen $turnamen): array
     {
-        $turnamen->loadMissing('pengajuan');
+        $turnamen->loadMissing(['pengajuan', 'penyelenggara.player']);
 
         return [
             'id_turnamen' => $turnamen->id_turnamen,
             'nama_turnamen' => $turnamen->pengajuan?->nama_turnamen,
             'nama_penyelenggara' => $turnamen->pengajuan?->nama_penyelenggara,
-            'status' => $turnamen->status,
-            'jenis_biaya' => $this->pembatalan->berbayar($turnamen) ? 'berbayar' : 'gratis',
+            'avatar_penyelenggara_url' => $this->urlPublik($turnamen->penyelenggara?->player?->avatar),
         ];
     }
 }

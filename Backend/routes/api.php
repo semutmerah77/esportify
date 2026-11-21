@@ -853,6 +853,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])
             AdminPembatalanTurnamenController::class,
             'lihatBukti'
         ])->whereNumber(['id', 'idBukti']);
+        
+        Route::get('/pembatalan-turnamen/{id}/ktp', [
+            AdminPembatalanTurnamenController::class,
+            'lihatKtp'
+        ])->whereNumber('id');
 
         Route::post('/pembatalan-turnamen/{id}/setujui', [
             AdminPembatalanTurnamenController::class,

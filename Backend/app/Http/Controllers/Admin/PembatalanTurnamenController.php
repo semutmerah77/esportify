@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\BuktiPembatalanTurnamen;
 use App\Models\PengajuanPembatalanTurnamen;
+use App\Models\PengajuanTurnamen;
 use App\Models\Turnamen;
 use App\Services\PembatalanTurnamenService;
 use Illuminate\Http\Request;
@@ -66,8 +67,8 @@ class PembatalanTurnamenController extends Controller
         if (!$pengajuan) {
             return $this->tidakDitemukan();
         }
-
-        $alasan = $this->pembatalan->alasanTidakBisaDiverifikasi($pengajuan);
+                $alasan = $this->pembatalan->alasanTidakBisaDiverifikasi($pengajuan);
+        $pengajuanTurnamen = $this->pengajuanTurnamen($pengajuan);
 
         return response()->json([
             'success' => true,
@@ -75,9 +76,56 @@ class PembatalanTurnamenController extends Controller
             'data' => $this->pembatalan->format($pengajuan, self::PREFIX_BUKTI, true) + [
                 'bisa_diverifikasi' => $alasan === null,
                 'alasan_tidak_bisa_diverifikasi' => $alasan,
+
+                // Revisi: data pengajuan turnamen (field sama dengan detail pengajuan Admin)
+                // + KTP penyelenggara, tetap bisa dilihat setelah disetujui/ditolak.
+                'ktp_url' => $pengajuanTurnamen?->getRawOriginal('ktp')
+                    ? self::PREFIX_BUKTI . "/{$pengajuan->id_pengajuan_pembatalan}/ktp"
+                    : null,
+                'pengajuan_turnamen' => $pengajuanTurnamen?->makeHidden(['ktp']),
             ],
         ]);
     }
+
+    /**
+     * GET /admin/pembatalan-turnamen/{id}/ktp
+     * KTP penyelenggara dari pengajuan turnamen. Tidak dibatasi status,
+     * supaya Admin tetap bisa melihatnya setelah pembatalan disetujui
+     * (jaga-jaga penyelenggara tidak mengembalikan dana).
+     */
+    public function lihatKtp($id)
+    {
+        $pengajuan = PengajuanPembatalanTurnamen::find($id);
+        $path = $pengajuan ? $this->pengajuanTurnamen($pengajuan)?->getRawOriginal('ktp') : null;
+
+        if (!$path || !Storage::disk('local')->exists($path)) {
+            return response()->json(['success' => false, 'message' => 'File KTP tidak ditemukan.'], 404);
+        }
+
+        return Storage::disk('local')->response($path, null, [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    private function pengajuanTurnamen(PengajuanPembatalanTurnamen $pengajuan): ?PengajuanTurnamen
+    {
+        $idPengajuan = Turnamen::whereKey($pengajuan->id_turnamen)->value('id_pengajuan');
+
+        return PengajuanTurnamen::with([
+            'player.user',
+            'game',
+            'kota.provinsi',
+            'sumberPendanaan',
+            'pendanaan',
+            'pembayaran',
+            'sponsor',
+            'rincian',
+            'hadiahLainnya',
+        ])->find($idPengajuan);
+    }
+
+    
 
     /**
      * POST /admin/pembatalan-turnamen/{id}/setujui
