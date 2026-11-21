@@ -64,16 +64,17 @@ function ResultCard({ item, onOpen }) {
             {statusLabel}
           </span>
         )}
-        {item.extended && (
-          <span className="ext-badge on-poster">
-            <ScheduleIcon name="calendar-clock" size={13} /> Jadwal diperpanjang
-          </span>
-        )}
       </div>
 
-      <div className="ct-meta">
+      <div className="ct-meta ct-meta-date">
         <Icon name="calendar" size={16} />
         <span>{formatDate(item.date)}</span>
+        {item.extended && (
+          <span className="ct-ext-group">
+            <i className="ct-dot" aria-hidden="true" />
+            <span className="ext-badge ct-ext-inline">Diperpanjang</span>
+          </span>
+        )}
       </div>
 
       <h3 className="ct-title">{item.name}</h3>

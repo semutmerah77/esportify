@@ -75,17 +75,19 @@ function TournamentInfo({ d, action, registered = null }) {
         <section className="td-summary">
           <div className="td-summary-head">
             <span className="td-game">{d.game}</span>
-            <span className={`t-status ${phase}`}>
-              <i></i> {STATUS_LABEL[phase] ?? phase}
-            </span>
+            <div className="td-head-right">
+              {d.extended && d.status !== "dibatalkan" && (
+                <span className="ext-badge">
+                  <ScheduleIcon name="calendar-clock" size={13} /> Jadwal
+                  diperpanjang
+                </span>
+              )}
+              <span className={`t-status ${phase}`}>
+                <i></i> {STATUS_LABEL[phase] ?? phase}
+              </span>
+            </div>
           </div>
           <h2 className="td-title">{d.name}</h2>
-          {d.extended && d.status !== "dibatalkan" && (
-            <span className="ext-badge">
-              <ScheduleIcon name="calendar-clock" size={13} /> Jadwal
-              diperpanjang
-            </span>
-          )}
 
           <div className="td-grid td-money">
             <div>

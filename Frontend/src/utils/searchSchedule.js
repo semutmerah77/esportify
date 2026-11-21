@@ -90,3 +90,27 @@ export function scheduleLabel(schedule) {
   if (s.sampai) return `Sampai ${shortDate(s.sampai)}`;
   return "";
 }
+
+// ===== Filter jadwal pendaftaran (memakai logika tanggal yang sama) =====
+
+const toSchedule = (c = {}) => ({
+  jadwal: c.daftar ?? "",
+  dari: c.daftarDari ?? "",
+  sampai: c.daftarSampai ?? "",
+});
+
+export function cleanRegistration(c = {}) {
+  const s = cleanSchedule(toSchedule(c));
+  return { daftar: s.jadwal, daftarDari: s.dari, daftarSampai: s.sampai };
+}
+
+export const isRegistrationActive = (c) => isScheduleActive(toSchedule(c));
+
+// tanggal: nilai ISO dari backend (pengajuan.jadwal_pendaftaran_tutup)
+export const matchesRegistration = (tanggal, c) =>
+  matchesSchedule(tanggal, toSchedule(c));
+
+export function registrationLabel(c) {
+  const label = scheduleLabel(toSchedule(c));
+  return label ? `Daftar: ${label}` : "";
+}
