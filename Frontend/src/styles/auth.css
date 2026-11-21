@@ -86,6 +86,7 @@
   border: 1px solid var(--border);
   border-radius: 16px;
   background: #151a26;
+  position: relative;
 }
 
 .auth-title {
@@ -224,71 +225,45 @@
   cursor: not-allowed;
 }
 
-/* Tombol Batal halaman Login */
+/* ========== TOMBOL X (TUTUP) LOGIN & REGISTER ========== */
+
+/* Login: wrapper cuma berisi tombol, jadi dibuat setinggi 0
+   supaya nggak makan ruang di atas judul */
 .login-page {
-  display: flex;
-  justify-content: flex-end; /* pindah ke kanan */
-  margin-bottom: 24px;
+  height: 0;
 }
 
-.login-back {
+.login-back,
+.register-page .register-back {
+  position: absolute;
+  top: 14px;
+  right: 14px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border: 1px solid #2c3a52;
-  border-radius: 6px;
-  background: #121826;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: var(--text);
-  font: inherit;
-  font-size: 12px;
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 
-.login-back:hover {
-  background: #1f2535;
-  color: var(--white);
+/* Ikon X lebih tebal */
+.login-back svg,
+.register-page .register-back svg {
+  stroke-width: 2.5;
 }
-
-.login-page .login-back:focus-visible {
-  outline: 2px solid var(--blue);
-  outline-offset: 2px;
-}
-
-/* Tombol Batal Register */
-.register-page .register-back {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  width: fit-content;
-  margin: 0 0 24px auto; /* auto di kiri = dorong ke kanan */
-  padding: 6px 10px;
-
-  border: 1px solid #2c3a52;
-  border-radius: 6px;
-  background: #121826;
-
-  color: var(--text);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.5;
-
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease;
-}
-
-.register-page .register-back:hover {
-  color: #ffffff;
-  background: #1f2535;
-}
-
+.login-back:hover,
+.login-back:focus-visible,
+.register-page .register-back:hover,
 .register-page .register-back:focus-visible {
-  outline: 2px solid var(--blue);
-  outline-offset: 2px;
+  color: #f43f5e;
+  background: transparent;
+  outline: none;
 }
 /* ========== TOMBOL BUAT AKUN FULL WIDTH ========== */
 
@@ -385,10 +360,6 @@
 }
 
 @media (max-width: 400px) {
-  .register-page .register-back {
-    margin-bottom: 20px;
-  }
-
   .register-page .auth-form-actions .auth-submit {
     min-height: 46px;
   }

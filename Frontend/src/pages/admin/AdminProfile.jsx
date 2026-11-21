@@ -1,19 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import Icon from "../../components/icon";
 import Avatar from "../../components/user/Avatar";
 import PasswordModal from "../../components/user/PasswordModal";
 import { useAuth } from "../../context/AuthContext";
 import { SKIP_AUTH } from "../../config/env";
 import {
-  getAdminProfile,
-  uploadAdminAvatar,
   updateAdminUsername,
   changeAdminPassword,
 } from "../../services/profileApi";
 import "../../styles/user.css"; // style profil dipakai ulang
-
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 
 const readError = (err) => {
   const fe = err?.fields?.username;
@@ -26,23 +21,12 @@ function AdminProfile() {
     useOutletContext();
   const { refreshUser } = useAuth();
   const navigate = useNavigate();
-  const fileRef = useRef(null);
 
   // Mode halaman: false = hanya lihat (default), true = form bisa diedit
   const [isEditing, setIsEditing] = useState(false);
 
-  // ---------- Avatar ----------
-  const [avatarFile, setAvatarFile] = useState(null); // file terpilih, belum di-upload
-  const [avatarPreview, setAvatarPreview] = useState(""); // blob URL untuk preview
+  // ---------- Avatar (hanya preview besar, admin tidak bisa ganti foto) ----------
   const [lightbox, setLightbox] = useState(false);
-  const [avatarMsg, setAvatarMsg] = useState({ text: "", type: "" });
-
-  // Bersihkan blob URL supaya tidak bocor memori
-  useEffect(() => {
-    return () => {
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-    };
-  }, [avatarPreview]);
 
   // Tutup lightbox dengan tombol Escape
   useEffect(() => {
@@ -51,47 +35,6 @@ function AdminProfile() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [lightbox]);
-
-  const clearAvatarDraft = () => {
-    setAvatarFile(null);
-    setAvatarPreview("");
-  };
-
-  // HANYA validasi + preview, upload baru dilakukan saat klik "Simpan perubahan"
-  const handleAvatar = (e) => {
-    const file = e.target.files[0];
-    e.target.value = "";
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setAvatarMsg({ text: "File harus berupa gambar.", type: "error" });
-      return;
-    }
-    if (file.size > MAX_AVATAR_SIZE) {
-      setAvatarMsg({ text: "Ukuran gambar maksimal 2 MB.", type: "error" });
-      return;
-    }
-
-    setAvatarMsg({ text: "", type: "" });
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
-
-  // Upload sungguhan, dipanggil dari handleSave
-  const uploadAvatarNow = async () => {
-    const localUrl = await uploadAdminAvatar(avatarFile);
-    let next = localUrl
-      ? { ...profile, avatar: localUrl }
-      : await getAdminProfile();
-
-    // Browser sering menampilkan gambar lama kalau URL-nya sama. Tambahkan
-    // ?v=timestamp supaya dimuat ulang.
-    if (next.avatar && !/^(data:|blob:)/.test(next.avatar)) {
-      const sep = next.avatar.includes("?") ? "&" : "?";
-      next = { ...next, avatar: `${next.avatar}${sep}v=${Date.now()}` };
-    }
-    return next;
-  };
 
   // ---------- Form informasi pribadi (admin hanya punya username) ----------
   const savedUsername = profile?.username ?? "";
@@ -106,8 +49,7 @@ function AdminProfile() {
   const locked = !isEditing || saving;
 
   const usernameChanged = username.trim() !== savedUsername;
-  // Avatar baru juga dihitung sebagai perubahan
-  const dirty = usernameChanged || !!avatarFile;
+  const dirty = usernameChanged;
 
   useEffect(() => {
     if (!toast) return;
@@ -122,12 +64,10 @@ function AdminProfile() {
     setIsEditing(true);
   };
 
-  // Klik "Batal": buang semua perubahan (termasuk foto terpilih)
+  // Klik "Batal": buang semua perubahan
   const handleReset = () => {
     setUsername(savedUsername);
     setError("");
-    clearAvatarDraft();
-    setAvatarMsg({ text: "", type: "" });
     setIsEditing(false);
   };
 
@@ -136,69 +76,31 @@ function AdminProfile() {
     if (!isEditing || !dirty || saving) return;
 
     const v = username.trim();
-    if (usernameChanged && v.length < 3) {
+    if (v.length < 3) {
       setError("Username minimal 3 karakter.");
       return;
     }
 
     setSaving(true);
     setError("");
-    let nextProfile = profile;
-    let usernameFailed = false;
-    let avatarFailed = false;
-    let anySaved = false;
 
-    // Username (kalau diubah)
-    if (usernameChanged) {
-      try {
-        await updateAdminUsername(v);
-        nextProfile = { ...nextProfile, username: v };
-        anySaved = true;
-      } catch (err) {
-        usernameFailed = true;
-        setError(readError(err));
-      }
-    }
-
-    // Avatar (kalau ada yang dipilih)
-    if (avatarFile) {
-      try {
-        const withAvatar = await uploadAvatarNow();
-        nextProfile = { ...nextProfile, avatar: withAvatar.avatar };
-        anySaved = true;
-        clearAvatarDraft();
-      } catch (err) {
-        avatarFailed = true;
-        const fe = err.fields?.avatar;
-        setAvatarMsg({
-          text:
-            (Array.isArray(fe) ? fe[0] : fe) ||
-            err.message ||
-            "Gagal mengunggah foto.",
-          type: "error",
-        });
-      }
-    }
-
-    if (anySaved) {
-      setProfile(nextProfile); // navbar ikut berubah
+    try {
+      await updateAdminUsername(v);
+      setProfile({ ...profile, username: v }); // navbar ikut berubah
       if (!SKIP_AUTH) await refreshUser().catch(() => {});
-    }
-
-    setSaving(false);
-
-    // Semua berhasil: kembali ke mode lihat. Kalau ada yang gagal, tetap di
-    // mode edit supaya pesan error-nya terlihat.
-    if (!usernameFailed && !avatarFailed) {
-      setAvatarMsg({ text: "", type: "" });
       setToast("Profil berhasil diperbarui");
       setIsEditing(false);
+    } catch (err) {
+      // Tetap di mode edit supaya pesan error-nya terlihat
+      setError(readError(err));
+    } finally {
+      setSaving(false);
     }
   };
 
   if (!profile) return <p className="admin-message">Memuat...</p>;
 
-  const shownAvatar = avatarPreview || profile.avatar;
+  const shownAvatar = profile.avatar;
 
   return (
     <div className="pr-page">
@@ -235,37 +137,10 @@ function AdminProfile() {
             >
               <Avatar src={shownAvatar} name={profile.username} size={128} />
             </button>
-
-            {/* Ganti foto hanya bisa saat mode edit */}
-            {isEditing && (
-              <button
-                type="button"
-                className="pr-camera"
-                onClick={() => fileRef.current.click()}
-                disabled={saving}
-                aria-label="Ganti foto profil"
-              >
-                <Icon name="camera" size={18} />
-              </button>
-            )}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={handleAvatar}
-            />
           </div>
 
           <h2 className="pr-name">{profile.username}</h2>
           <p className="pr-bio">Admin Platform</p>
-
-          {saving && avatarFile && <p className="pr-msg">Mengunggah...</p>}
-          {avatarMsg.text && (
-            <p className={`pr-msg ${avatarMsg.type}`}>{avatarMsg.text}</p>
-          )}
-          {avatarFile && <p className="pr-hint">Foto baru belum disimpan.</p>}
-          {isEditing && <p className="pr-hint">Gambar maksimal 2 MB.</p>}
         </section>
 
         {/* ===== Kolom kanan ===== */}

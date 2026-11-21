@@ -90,9 +90,9 @@ function Login() {
           type="button"
           className="login-back"
           onClick={() => navigate("/")}
+          aria-label="Tutup"
         >
-          <Icon name="x" size={14} />
-          <span>Batal</span>
+          <Icon name="x" size={20} />{" "}
         </button>
       </div>
       <h2 className="auth-title">Selamat datang kembali</h2>
