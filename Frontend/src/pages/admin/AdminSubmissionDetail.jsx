@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Icon from "../../components/icon";
 import DecisionModal from "../../components/admin/DecisionModal";
 import ConfirmDialog from "../../components/admin/ConfirmDialog";
@@ -213,6 +213,7 @@ function AdminSubmissionDetail() {
   const { id } = useParams();
   const ktp = useKtpPreview(id, "admin");
   const navigate = useNavigate();
+  const location = useLocation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -231,8 +232,8 @@ function AdminSubmissionDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Dipakai setelah keputusan (setujui/tolak/revisi): TIDAK memanggil release
-  const back = () => navigate("/admin/pengajuan");
+  // Kembali ke halaman asal kalau dibuka dari detail pembatalan; selain itu ke daftar pengajuan
+  const back = () => navigate(location.state?.from ?? "/admin/pengajuan");
 
   // Dipakai tombol Kembali: lepaskan pengajuan kalau masih "Sedang ditinjau"
   const handleBack = async () => {

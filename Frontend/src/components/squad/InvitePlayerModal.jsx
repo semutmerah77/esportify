@@ -11,7 +11,6 @@ import RosterLockNotice from "./RosterLockNotice";
 const DEBOUNCE_MS = 400;
 
 function InvitePlayerModal({ squad, locked = false, onClose }) {
-  const [tab, setTab] = useState("cari"); // "cari" | "teman"
   const [input, setInput] = useState("");
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState("");
@@ -142,111 +141,71 @@ function InvitePlayerModal({ squad, locked = false, onClose }) {
         </div>
 
         <div className="sqp-body">
-          <div className="sqp-tabs">
-            <button
-              type="button"
-              className={`sqp-tab ${tab === "cari" ? "active" : ""}`}
-              onClick={() => setTab("cari")}
-            >
-              <Icon name="search" size={15} /> Cari Player
-            </button>
-            <button
-              type="button"
-              className={`sqp-tab ${tab === "teman" ? "active" : ""}`}
-              onClick={() => setTab("teman")}
-            >
-              <Icon name="users" size={15} /> Teman Saya
-            </button>
+          <div className="sq-search sqp-search">
+            <Icon name="search" size={16} />
+            <input
+              type="text"
+              placeholder="Cari player dengan username"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              autoFocus
+            />
           </div>
 
-          {tab === "teman" && (
+          {!searched && !error && (
             <div className="sqp-empty">
               <span className="sqp-empty-ic">
-                <Icon name="users" size={26} />
+                <Icon name="search" size={26} />
               </span>
-              <b>Belum ada teman</b>
+              <b>Temukan player</b>
               <p>
-                Daftar teman belum tersedia. Gunakan tab Cari Player untuk
-                mengundang anggota baru.
+                Ketik username di kolom pencarian di atas untuk mulai mengundang
+                anggota baru.
               </p>
             </div>
           )}
 
-          {tab === "cari" && (
+          {error && <p className="sq-err">{error}</p>}
+          {actionError && <p className="sq-err">{actionError}</p>}
+
+          {searched && !error && items.length === 0 && (
+            <p className="sqp-note">{message || "Hasil tidak ditemukan."}</p>
+          )}
+
+          {items.length > 0 && (
             <>
-              <div className="sq-search sqp-search">
-                <Icon name="search" size={16} />
-                <input
-                  type="text"
-                  placeholder="Cari player dengan username"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  autoFocus
-                />
-              </div>
-
-              {!searched && !error && (
-                <div className="sqp-empty">
-                  <span className="sqp-empty-ic">
-                    <Icon name="search" size={26} />
-                  </span>
-                  <b>Temukan player</b>
-                  <p>
-                    Ketik username di kolom pencarian di atas untuk mulai
-                    mengundang anggota baru.
-                  </p>
-                </div>
-              )}
-
-              {error && <p className="sq-err">{error}</p>}
-              {actionError && <p className="sq-err">{actionError}</p>}
-
-              {searched && !error && items.length === 0 && (
-                <p className="sqp-note">
-                  {message || "Hasil tidak ditemukan."}
-                </p>
-              )}
-
-              {items.length > 0 && (
-                <>
-                  <h3 className="sqp-result-title">Hasil Pencarian</h3>
-                  <ul className="sqp-list">
-                    {items.map((p) => {
-                      const isMember = memberIds.has(p.id);
-                      const isSent = sent.has(p.id);
-                      return (
-                        <li key={p.id} className="sqp-row">
-                          <span className="sqp-avatar">
-                            {initials(p.username)}
-                          </span>
-                          <b>{p.username}</b>
-                          {isMember ? (
-                            <span className="sqp-state">
-                              <Icon name="user-check" size={15} /> Sudah Anggota
-                            </span>
-                          ) : isSent ? (
-                            <span className="sqp-state">
-                              <Icon name="check" size={15} /> Terkirim
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="sq-btn primary sqp-invite"
-                              disabled={sending === p.id || squad.full}
-                              title={
-                                squad.full ? "Squad sudah penuh" : undefined
-                              }
-                              onClick={() => invite(p)}
-                            >
-                              {sending === p.id ? "Mengirim..." : "Undang"}
-                            </button>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </>
-              )}
+              <h3 className="sqp-result-title">Hasil Pencarian</h3>
+              <ul className="sqp-list">
+                {items.map((p) => {
+                  const isMember = memberIds.has(p.id);
+                  const isSent = sent.has(p.id);
+                  return (
+                    <li key={p.id} className="sqp-row">
+                      <span className="sqp-avatar">{initials(p.username)}</span>
+                      <b>{p.username}</b>
+                      {isMember ? (
+                        <span className="sqp-state">
+                          <Icon name="user-check" size={15} /> Sudah Anggota
+                        </span>
+                      ) : isSent ? (
+                        <span className="sqp-state">
+                          <Icon name="check" size={15} /> Terkirim
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="sq-btn primary sqp-invite"
+                          disabled={sending === p.id || squad.full}
+                          title={squad.full ? "Squad sudah penuh" : undefined}
+                          onClick={() => invite(p)}
+                        >
+                          {sending === p.id ? "Mengirim..." : "Undang"}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             </>
           )}
         </div>

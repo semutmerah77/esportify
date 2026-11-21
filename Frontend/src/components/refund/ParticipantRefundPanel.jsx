@@ -82,6 +82,7 @@ function ParticipantRefundPanel({ id }) {
       <RefundSquadHeader
         squadName={refund?.squadName ?? "Squad kamu"}
         squadId={refund?.squadId ?? null}
+        squadLogo={refund?.squadLogo ?? null}
         registrant={refund?.registrant ?? "-"}
         status={refund?.status ?? "menunggu_data"}
         statusLabel={refund?.statusLabel}
@@ -100,6 +101,7 @@ function ParticipantRefundPanel({ id }) {
         <RefundDataCard
           refund={refund}
           organizer={data.tournament.organizer}
+          organizerAvatar={data.tournament.organizerAvatar}
           plannedDate={data.plannedDate}
         />
       )}

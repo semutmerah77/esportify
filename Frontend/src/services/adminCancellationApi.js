@@ -29,6 +29,7 @@ export const REJECTION_OTHER_MAX = 500;
 // <PengajuanAdmin> = <Pengajuan> + turnamen, diajukan_oleh, dst.
 export function mapAdminCancellation(p) {
   const t = p.turnamen ?? {};
+  const submission = p.pengajuan_turnamen ?? {};
   return {
     ...mapCancellationRequest(p),
     tournament: {
@@ -37,8 +38,15 @@ export function mapAdminCancellation(p) {
       organizer: t.nama_penyelenggara ?? p.diajukan_oleh?.username ?? "-",
       status: String(t.status ?? "").toLowerCase(),
       feeType: String(t.jenis_biaya ?? "").toLowerCase(),
+      type: String(
+        t.tipe_turnamen ?? submission.tipe_turnamen ?? "",
+      ).toLowerCase(), // online | offline
       acceptedCount: num(t.jumlah_peserta_diterima),
     },
+    // id pengajuan pembuatan turnamen (untuk tombol "Lihat Detail Pengajuan")
+    submissionId: num(submission.id_pengajuan),
+    // KTP penyelenggara: privat, dibuka dengan token hanya saat tombol "Lihat KTP" ditekan
+    ktpUrl: p.ktp_url ?? null,
     submittedBy: p.diajukan_oleh?.username ?? "",
     verifiedBy: p.diverifikasi_oleh ?? "",
     deadline: p.batas_verifikasi ?? null,

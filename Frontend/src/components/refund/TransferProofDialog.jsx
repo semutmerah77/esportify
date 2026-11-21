@@ -107,7 +107,12 @@ function TransferProofDialog({ tournamentId, item, onClose, onUploaded }) {
         aria-label={`Refund ${item.squadName}`}
       >
         <div className="refund-proof-head">
-          <RefundAvatar name={item.squadName} seed={item.squadId} size={44} />
+          <RefundAvatar
+            name={item.squadName}
+            seed={item.squadId}
+            src={item.squadLogo}
+            size={44}
+          />
           <div>
             <b>{item.squadName}</b>
             <small>ID: {item.squadId}</small>

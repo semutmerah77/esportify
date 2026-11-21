@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import RefundIcon from "./RefundIcon";
 import "../../styles/refund.css";
 
@@ -42,18 +43,40 @@ export function RefundStatusPill({ status, label }) {
   );
 }
 
-export function RefundAvatar({ name, seed, size = 44 }) {
+// Avatar bulat: gambar dari BE (src) menutupi inisial.
+// Kalau src kosong atau gagal dimuat, inisial tetap tampil.
+export function RefundAvatar({ name, seed, size = 44, src, color }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+
   return (
     <span
       className="refund-avatar"
       style={{
+        position: "relative",
+        overflow: "hidden",
         width: size,
         height: size,
-        background: refundAvatarColor(seed),
+        background: color ?? refundAvatarColor(seed),
         fontSize: size * 0.34,
       }}
     >
       {refundInitials(name)}
+      {src && !failed && (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          onError={() => setFailed(true)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      )}
     </span>
   );
 }
@@ -62,6 +85,7 @@ export function RefundAvatar({ name, seed, size = 44 }) {
 function RefundSquadHeader({
   squadName,
   squadId,
+  squadLogo,
   registrant,
   status,
   statusLabel,
@@ -70,7 +94,7 @@ function RefundSquadHeader({
   return (
     <section className="refund-card refund-squad">
       <div className="refund-squad-top">
-        <RefundAvatar name={squadName} seed={squadId} />
+        <RefundAvatar name={squadName} seed={squadId} src={squadLogo} />
         <div className="refund-squad-main">
           <b>{squadName}</b>
           <small>

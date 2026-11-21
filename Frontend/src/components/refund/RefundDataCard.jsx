@@ -5,7 +5,7 @@ import {
   REFUND_METHOD_TRANSFER,
   formatShortDate,
 } from "../../services/refundApi";
-import { refundInitials } from "./RefundSquadHeader";
+import { RefundAvatar } from "./RefundSquadHeader";
 import "../../styles/refund.css";
 
 const METHOD_TEXT = {
@@ -15,7 +15,7 @@ const METHOD_TEXT = {
 
 // Kartu "Data pengembalian dana" (peserta, hanya baca): data yang sudah dikirim + status transfer.
 // Anggota non-pendaftar tidak menerima atas nama / rekening / QRIS dari BE: bagian itu otomatis hilang.
-function RefundDataCard({ refund, organizer, plannedDate }) {
+function RefundDataCard({ refund, organizer, organizerAvatar, plannedDate }) {
   const hasData = Boolean(refund.method && refund.holderName);
   const done = refund.status === "selesai";
 
@@ -116,12 +116,12 @@ function RefundDataCard({ refund, organizer, plannedDate }) {
       {organizer && (
         <footer className="refund-organizer">
           <small>PENYELENGGARA</small>
-          <span
-            className="refund-avatar"
-            style={{ background: "#1f2a44", width: 44, height: 44 }}
-          >
-            {refundInitials(organizer)}
-          </span>
+          <RefundAvatar
+            name={organizer}
+            src={organizerAvatar}
+            size={44}
+            color="#1f2a44"
+          />
           <em>{/\s/.test(organizer) ? organizer : `@${organizer}`}</em>
         </footer>
       )}

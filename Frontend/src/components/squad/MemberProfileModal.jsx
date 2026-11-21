@@ -14,9 +14,8 @@ const joinedText = (value) => {
       });
 };
 
-// Profil singkat anggota. Aksi menyesuaikan peran yang melihat:
-// semua anggota : Kirim Permintaan Teman (belum ada API pertemanan -> nonaktif)
-// leader        : + Tetapkan Sebagai Leader, Keluarkan dari Squad
+// Profil singkat anggota. Aksi hanya untuk leader:
+// Tetapkan Sebagai Leader, Keluarkan dari Squad
 // Keluarkan nonaktif bila anggota ada di roster turnamen (roster lock per pemain).
 function MemberProfileModal({ member, canManage, onClose, onPromote, onKick }) {
   useEffect(() => {
@@ -29,6 +28,7 @@ function MemberProfileModal({ member, canManage, onClose, onPromote, onKick }) {
     .map((t) => t.name)
     .join(", ");
   const kickLocked = member.rosterLocked === true;
+  const showActions = canManage && member.role !== "leader";
 
   return (
     <div
@@ -74,55 +74,41 @@ function MemberProfileModal({ member, canManage, onClose, onPromote, onKick }) {
           </div>
         </div>
 
-        <div className="sqm-actions">
-          <button
-            type="button"
-            className="sqm-action"
-            disabled
-            title="Fitur pertemanan belum tersedia"
-          >
-            <span className="sqm-ic blue">
-              <Icon name="user-plus" size={14} />
-            </span>
-            Kirim Permintaan Teman
-          </button>
-
-          {canManage && member.role !== "leader" && (
-            <>
-              <button
-                type="button"
-                className="sqm-action"
-                onClick={() => onPromote(member)}
-              >
-                <span className="sqm-ic gold">
-                  <Icon name="crown" size={14} />
+        {showActions && (
+          <div className="sqm-actions">
+            <button
+              type="button"
+              className="sqm-action"
+              onClick={() => onPromote(member)}
+            >
+              <span className="sqm-ic gold">
+                <Icon name="crown" size={14} />
+              </span>
+              Tetapkan Sebagai Leader
+            </button>
+            <button
+              type="button"
+              className="sqm-action danger"
+              disabled={kickLocked}
+              onClick={() => onKick(member)}
+            >
+              <span className="sqm-ic red">
+                <Icon name={kickLocked ? "lock" : "user-minus"} size={14} />
+              </span>
+              Keluarkan dari Squad
+            </button>
+            {kickLocked && (
+              <p className="sqm-lock-note">
+                <Icon name="lock" size={13} />
+                <span>
+                  {member.username} masih terdaftar di roster turnamen
+                  {tournaments ? ` ${tournaments}` : ""} dan baru bisa
+                  dikeluarkan setelah turnamen selesai.
                 </span>
-                Tetapkan Sebagai Leader
-              </button>
-              <button
-                type="button"
-                className="sqm-action danger"
-                disabled={kickLocked}
-                onClick={() => onKick(member)}
-              >
-                <span className="sqm-ic red">
-                  <Icon name={kickLocked ? "lock" : "user-minus"} size={14} />
-                </span>
-                Keluarkan dari Squad
-              </button>
-              {kickLocked && (
-                <p className="sqm-lock-note">
-                  <Icon name="lock" size={13} />
-                  <span>
-                    {member.username} masih terdaftar di roster turnamen
-                    {tournaments ? ` ${tournaments}` : ""} dan baru bisa
-                    dikeluarkan setelah turnamen selesai.
-                  </span>
-                </p>
-              )}
-            </>
-          )}
-        </div>
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

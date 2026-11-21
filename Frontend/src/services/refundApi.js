@@ -32,6 +32,8 @@ export function mapRefund(r) {
     registrationId: num(r.id_pendaftaran),
     squadId: num(r.squad?.id_squad),
     squadName: r.squad?.nama_squad ?? "-",
+    // URL logo squad (nama field belum ada di kontrak refund: dicoba beberapa kemungkinan)
+    squadLogo: r.squad?.logo_url ?? r.squad?.logo ?? r.logo_squad_url ?? null,
     registrantId: num(r.pendaftar?.id_player),
     registrant: r.pendaftar?.username ?? "-",
     amount: num(r.nominal),
@@ -54,6 +56,12 @@ const mapTournament = (t = {}) => ({
   id: num(t.id_turnamen),
   name: t.nama_turnamen ?? "",
   organizer: t.nama_penyelenggara ?? "",
+  // URL avatar penyelenggara (nama field belum ada di kontrak refund: dicoba beberapa kemungkinan)
+  organizerAvatar:
+    t.avatar_penyelenggara_url ??
+    t.avatar_penyelenggara ??
+    t.penyelenggara?.avatar_url ??
+    null,
   status: String(t.status ?? "").toLowerCase(),
   feeType: String(t.jenis_biaya ?? "").toLowerCase(),
 });
