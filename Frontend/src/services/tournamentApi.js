@@ -452,6 +452,8 @@ export async function getTournamentDetail(id) {
     organizer:
       p.nama_penyelenggara ?? t.penyelenggara?.nama_penyelenggara ?? "-",
     agencyName: p.nama_instansi ?? "",
+    organizerUsername: p.username_penyelenggara ?? "",
+    organizerAvatar: p.avatar_penyelenggara ?? null,
     posterUrl: p.poster_url ?? toMediaUrl(p.poster),
     type: String(p.tipe_turnamen ?? "").toLowerCase(),
     city: p.kota?.nama_kota ?? "",
