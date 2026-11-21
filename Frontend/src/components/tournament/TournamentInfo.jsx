@@ -4,6 +4,7 @@ import { formatWibDate } from "../../services/scheduleExtensionApi";
 import ScheduleIcon from "../kelola/ScheduleIcon";
 import "../../styles/schedule-extension.css";
 import "../../styles/tournament-cancellation.css";
+import Avatar from "../user/Avatar";
 
 const STATUS_LABEL = {
   pendaftaran: "Pendaftaran",
@@ -208,6 +209,18 @@ function TournamentInfo({ d, action, registered = null }) {
             </div>
           ))}
         </section>
+      )}
+
+      {d.organizerUsername && (
+        <div className="td-host">
+          <small>PENYELENGGARA</small>
+          <Avatar
+            src={d.organizerAvatar}
+            name={d.organizerUsername}
+            size={44}
+          />
+          <p>@{d.organizerUsername}</p>
+        </div>
       )}
     </>
   );
