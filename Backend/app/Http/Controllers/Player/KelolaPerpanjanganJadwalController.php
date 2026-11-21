@@ -95,7 +95,7 @@ class KelolaPerpanjanganJadwalController extends Controller
                 return reset($errors);
             }
 
-            return [$terkunci, $this->perpanjangan->terapkan($terkunci, $tutupBaru, $mainBaru)];
+            return [$terkunci, $this->perpanjangan->terapkanPerpanjangan($terkunci, $tutupBaru, $mainBaru)];
         });
 
         if (is_string($hasil)) {

@@ -126,7 +126,7 @@ class PerpanjanganJadwalService
      *
      * @return array{pendaftaran_dibuka_kembali: bool, bracket_kembali_draft: bool, status_sebelumnya: string, status_sekarang: string}
      */
-    public function terapkan(Turnamen $turnamen, Carbon $tutupBaru, Carbon $mainBaru): array
+    public function terapkanPerpanjangan(Turnamen $turnamen, Carbon $tutupBaru, Carbon $mainBaru): array
     {
         $tutupAktifAsli = Carbon::parse($turnamen->jadwalPendaftaranTutupAktif());
         $tutupAktif = $this->menit($tutupAktifAsli);
