@@ -240,6 +240,11 @@ export async function getSubmissionDetail(id) {
     id: Number(d.id_pengajuan),
     status: d.status ?? "",
     createdAt: d.created_at ?? "",
+    resubmittedAt: d.diajukan_ulang_pada ?? "",
+    canEdit: d.bisa_edit === true,
+    canRevise: d.bisa_revisi === true,
+    isRevision: d.is_revisi === true,
+    deadline: d.batas_waktu_edit ?? null,
     reason,
     note,
     posterUrl: d.poster_url ?? toMediaUrl(d.poster),
@@ -336,6 +341,16 @@ export async function startEdit(id) {
     isRevision: Boolean(d.is_revisi),
     reason: d.alasan_admin ?? "",
   };
+}
+// POST /api/pengajuan-turnamen/{id}/cancel-edit (tanpa body)
+// keepalive dipakai saat tab ditutup/refresh supaya request tetap terkirim.
+export async function cancelEdit(id, { keepalive = false } = {}) {
+  const response = await apiRequest(`/pengajuan-turnamen/${id}/cancel-edit`, {
+    method: "POST",
+    keepalive,
+  });
+  const d = response?.data ?? response;
+  return { status: d?.status ?? "" };
 }
 
 // Simpan: POST + _method=PUT (multipart). Hanya field yang berubah yang dikirim.
