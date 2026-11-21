@@ -241,10 +241,15 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
-/* Provinsi selalu mulai dari kolom pertama (baris baru) */
-.ct-panel-grid .ct-col-1 {
-  grid-column: 1;
+
+/* Tiap kolom panel filter ditumpuk ke bawah sendiri-sendiri */
+.ct-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* samakan dengan jarak antar-baris .ct-panel-grid kalau beda */
+  min-width: 0;
 }
+
 .ct-field {
   display: grid;
   gap: 8px;
