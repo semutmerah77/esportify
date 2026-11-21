@@ -249,7 +249,7 @@ class TurnamenController extends Controller
             'pengajuan.pembayaran',
             'pengajuan.hadiahLainnya',
             'penyelenggara',
-            'pengajuan.player:id_player,id_user',
+            'pengajuan.player:id_player,id_user,avatar',
             'pengajuan.player.user:id_user,username',
         ])->find($id);
 
@@ -295,6 +295,9 @@ class TurnamenController extends Controller
                     // tidak dikirim (hanya untuk admin dan pengaju).
                     'nama_instansi' => $pengajuan->nama_instansi,
                     'username_penyelenggara' => $pengajuan->player?->user?->username,
+                    'avatar_penyelenggara'   => $pengajuan->player?->avatar
+                    ? asset('storage/' . $pengajuan->player->avatar)
+                    : null,
                     'poster' => $pengajuan->poster,
                     'tipe_turnamen' => $pengajuan->tipe_turnamen,
                     // Jumlah pemain per squad (diatur penyelenggara)
