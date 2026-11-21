@@ -136,7 +136,12 @@ function OrganizerRefundPanel({ id }) {
       <ul className="refund-rows">
         {visible.map((r) => (
           <li key={r.id} className="refund-row">
-            <RefundAvatar name={r.squadName} seed={r.squadId} size={44} />
+            <RefundAvatar
+              name={r.squadName}
+              seed={r.squadId}
+              src={r.squadLogo}
+              size={44}
+            />
             <div className="refund-row-name">
               <b title={r.squadName}>{r.squadName}</b>
               <small>

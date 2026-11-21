@@ -14,10 +14,26 @@ import "../../styles/match-report.css";
 import "../../styles/tournament-cancellation.css";
 
 const FEE_LABEL = { berbayar: "Berbayar", gratis: "Gratis" };
+const TYPE_LABEL = { online: "Online", offline: "Offline" };
 const RESULT_BANNER = {
   disetujui: { tone: "danger", title: "Pembatalan disetujui", icon: "check" },
   ditolak: { tone: "plain", title: "Pembatalan ditolak", icon: "x-circle" },
 };
+
+// Jarak halaman dipaksa lewat inline style supaya tidak terpengaruh CSS global admin
+const PAGE_STYLE = {
+  display: "block",
+  minHeight: 0,
+  height: "auto",
+  margin: "0 auto",
+  paddingTop: 0,
+};
+const BACK_STYLE = {
+  margin: "0 0 12px -8px",
+  height: "auto",
+  minHeight: 0,
+};
+const TITLE_STYLE = { margin: "0 0 18px", padding: 0 };
 
 // Halaman detail pembatalan turnamen (admin): /admin/pengajuan/pembatalan/:id
 function AdminCancellationDetail() {
@@ -77,7 +93,12 @@ function AdminCancellationDetail() {
   };
 
   const back = (
-    <button type="button" className="cancel-back" onClick={toList}>
+    <button
+      type="button"
+      className="cancel-back admin"
+      style={BACK_STYLE}
+      onClick={toList}
+    >
       <CancellationIcon name="chevron-left" size={26} /> Kembali
     </button>
   );
@@ -85,7 +106,7 @@ function AdminCancellationDetail() {
   const { data, error } = state;
   if (error) {
     return (
-      <div className="cancel-page">
+      <div className="cancel-page admin" style={PAGE_STYLE}>
         {back}
         <p className="admin-message error">{error}</p>
       </div>
@@ -93,7 +114,7 @@ function AdminCancellationDetail() {
   }
   if (!data) {
     return (
-      <div className="cancel-page">
+      <div className="cancel-page admin" style={PAGE_STYLE}>
         {back}
         <div className="cancel-skel w40" />
         <div className="cancel-skel block" />
@@ -102,15 +123,47 @@ function AdminCancellationDetail() {
   }
 
   const result = RESULT_BANNER[data.status];
+  const isOnline = data.tournament.type === "online";
 
   return (
-    <div className="cancel-page">
+    <div className="cancel-page admin" style={PAGE_STYLE}>
       {back}
-      <h1 className="cancel-admin-title">Detail Pembatalan Turnamen</h1>
+      <h1 className="cancel-admin-title" style={TITLE_STYLE}>
+        Detail Pembatalan Turnamen
+      </h1>
 
       <section className="cancel-card">
-        <div className="cancel-tour-head">
-          <h2>{data.tournament.name}</h2>
+        <div
+          className="cancel-tour-head"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            marginBottom: 16,
+            paddingBottom: 16,
+            borderBottom: "1px solid #1f2a44",
+          }}
+        >
+          <h2 style={{ margin: 0, padding: 0, border: "none" }}>
+            {data.tournament.name}
+          </h2>
+          {/* Membuka halaman detail pengajuan pembuatan (arsip). Pengajuan itu sudah Disetujui,
+              jadi statusnya tidak berubah dan tombol keputusan di sana nonaktif.
+              KTP penyelenggara dilihat dari halaman itu. */}
+          <button
+            type="button"
+            className="cancel-btn ghost"
+            style={{ flexShrink: 0, borderColor: "#3a4558" }}
+            disabled={!data.submissionId}
+            onClick={() =>
+              navigate(`/admin/pengajuan/${data.submissionId}`, {
+                state: { from: `/admin/pengajuan/pembatalan/${id}` },
+              })
+            }
+          >
+            Lihat Detail Pengajuan
+          </button>
         </div>
         <div className="cancel-tiles">
           <div>
@@ -118,8 +171,23 @@ function AdminCancellationDetail() {
             <b>{data.tournament.organizer}</b>
           </div>
           <div>
-            <small>PESERTA DITERIMA</small>
-            <b>{data.tournament.acceptedCount ?? "-"} tim</b>
+            <small>TIPE TURNAMEN</small>
+            <b>
+              {data.tournament.type && (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: "inline-block",
+                    width: 8,
+                    height: 8,
+                    marginRight: 8,
+                    borderRadius: "50%",
+                    background: isOnline ? "#3b82f6" : "#f59e0b",
+                  }}
+                />
+              )}
+              {TYPE_LABEL[data.tournament.type] ?? "-"}
+            </b>
           </div>
           <div>
             <small>JENIS TURNAMEN</small>
