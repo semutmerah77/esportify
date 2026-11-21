@@ -10,7 +10,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest(path, { method = "GET", body } = {}) {
+export async function apiRequest(
+  path,
+  { method = "GET", body, keepalive = false } = {},
+) {
   const token = getToken();
   const isForm = body instanceof FormData;
   let response;
@@ -25,6 +28,7 @@ export async function apiRequest(path, { method = "GET", body } = {}) {
         ...(body && !isForm ? { "Content-Type": "application/json" } : {}),
       },
       body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
+      keepalive,
     });
   } catch {
     throw new ApiError("Tidak dapat terhubung ke server. Coba lagi nanti.");
