@@ -125,12 +125,14 @@ class PengajuanTurnamenController extends Controller
         )->firstOrFail();
 
         // Pastikan pengajuan sedang ditinjau oleh admin yang login.
-        if (
-            $pengajuan->status !== 'Sedang ditinjau' ||
-            $pengajuan->id_admin !== $admin->id_admin
-        ) {
+        $sedangDitinjauAdminIni = $pengajuan->status === 'Sedang ditinjau'
+            && $pengajuan->id_admin === $admin->id_admin;
+
+        $sudahDisetujui = $pengajuan->status === 'Disetujui';
+
+        if (!$sedangDitinjauAdminIni && !$sudahDisetujui) {
             return response()->json([
-                'message' => 'Kamu tidak memiliki akses untuk melihat KTP pengajuan ini.'
+                'message' => 'KTP hanya dapat dilihat saat pengajuan sedang ditinjau atau sudah disetujui.'
             ], 403);
         }
 
