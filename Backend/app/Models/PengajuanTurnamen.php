@@ -53,8 +53,6 @@ class PengajuanTurnamen extends Model
             'setuju_pertanggungjawaban' => 'boolean',
             'min_roster' => 'integer',
             'maks_roster' => 'integer',
-            'revisi_diminta_pada' => 'datetime',
-            'diajukan_ulang_pada' => 'datetime',
         ];
     }
 

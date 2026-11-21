@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Player;
 use App\Http\Controllers\Controller;
 use App\Models\PengajuanTurnamen;
 use App\Models\SumberPendanaan;
+use App\Services\BatasWaktuPengajuan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -14,6 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 class PengajuanTurnamenController extends Controller
 {
+    public function __construct(private BatasWaktuPengajuan $batasWaktu)
+    {
+    }
+
     /**
      * Menampilkan semua pengajuan milik Player yang sedang login.
      */
@@ -28,6 +32,9 @@ class PengajuanTurnamenController extends Controller
             ], 404);
         }
 
+        // Bereskan pengajuan yang batas edit/revisinya sudah lewat.
+        $this->batasWaktu->perbaruiSemua();
+
         $pengajuan = PengajuanTurnamen::with([
             'game',
             'kota.provinsi',
@@ -41,10 +48,15 @@ class PengajuanTurnamenController extends Controller
 
         $pengajuan->makeHidden(['ktp']);
 
+        $data = $pengajuan->map(fn ($item) => array_merge(
+            $item->toArray(),
+            $this->batasWaktu->info($item)
+        ));
+
         return response()->json([
             'success' => true,
             'message' => 'Daftar pengajuan turnamen berhasil diambil.',
-            'data' => $pengajuan,
+            'data' => $data,
         ]);
     }
 
@@ -61,6 +73,9 @@ class PengajuanTurnamenController extends Controller
                 'message' => 'Data Player tidak ditemukan.',
             ], 404);
         }
+
+        // Bereskan pengajuan yang batas edit/revisinya sudah lewat.
+        $this->batasWaktu->perbaruiSemua();
 
         $pengajuan = PengajuanTurnamen::with([
             'game',
@@ -89,7 +104,10 @@ class PengajuanTurnamenController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Detail pengajuan turnamen berhasil diambil.',
-            'data' => $pengajuan,
+            'data' => array_merge(
+                $pengajuan->toArray(),
+                $this->batasWaktu->info($pengajuan)
+            ),
         ]);
     }
 
@@ -264,7 +282,7 @@ class PengajuanTurnamenController extends Controller
             $validated['jadwal_main']
         );
 
-         $this->validateRoster(
+        $this->validateRoster(
             $validated['min_roster'],
             $validated['maks_roster']
         );
@@ -430,8 +448,10 @@ class PengajuanTurnamenController extends Controller
     /**
      * Menandai bahwa Player mulai mengedit pengajuan.
      *
-     * Edit biasa: 5 menit sejak created_at.
-     * Revisi: 5 menit sejak revisi_diminta_pada.
+     * Edit biasa: batas_edit_menit sejak pengajuan terakhir dikirim
+     * (diajukan_ulang_pada jika ada, jika belum created_at).
+     * Revisi: batas_revisi_menit sejak revisi_diminta_pada.
+     * Nilai menit diatur di config/pengajuan.php.
      */
     public function startEdit(Request $request, $id)
     {
@@ -444,83 +464,131 @@ class PengajuanTurnamenController extends Controller
             ], 404);
         }
 
-        $pengajuan = PengajuanTurnamen::where('id_player', $player->id_player)
-            ->where('id_pengajuan', $id)
-            ->first();
+        return DB::transaction(function () use ($player, $id) {
+            $pengajuan = PengajuanTurnamen::where('id_player', $player->id_player)
+                ->where('id_pengajuan', $id)
+                ->lockForUpdate()
+                ->first();
 
-        if (!$pengajuan) {
+            if (!$pengajuan) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pengajuan turnamen tidak ditemukan.',
+                ], 404);
+            }
+
+            if (
+                $pengajuan->status === 'Revisi'
+                && empty($pengajuan->revisi_diminta_pada)
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Waktu permintaan revisi belum tercatat. Silakan hubungi Admin.',
+                ], 422);
+            }
+
+            $statusAwal = $pengajuan->status;
+            $pengajuan = $this->batasWaktu->perbarui($pengajuan);
+            $info = $this->batasWaktu->info($pengajuan);
+
+            if (!$info['bisa_edit'] && !$info['bisa_revisi']) {
+                $pesan = match (true) {
+                    $statusAwal !== $pengajuan->status && $pengajuan->status === 'Ditolak'
+                        => $this->batasWaktu->alasanTolakOtomatis(),
+                    $pengajuan->status === 'Sedang ditinjau'
+                        => 'Pengajuan sedang ditinjau Admin dan tidak dapat diedit.',
+                    $pengajuan->status === 'Disetujui'
+                        => 'Pengajuan sudah disetujui dan tidak dapat diedit.',
+                    $pengajuan->status === 'Ditolak'
+                        => 'Pengajuan sudah ditolak dan tidak dapat diedit.',
+                    default
+                        => 'Waktu untuk mengedit pengajuan sudah habis.',
+                };
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $pesan,
+                    'data' => [
+                        'id_pengajuan' => $pengajuan->id_pengajuan,
+                        'status' => $pengajuan->status,
+                    ],
+                ], 422);
+            }
+
+            if ($pengajuan->status !== 'Sedang diedit') {
+                $pengajuan->status = 'Sedang diedit';
+                $pengajuan->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $info['is_revisi']
+                    ? 'Pengajuan revisi berhasil masuk ke mode edit.'
+                    : 'Pengajuan berhasil masuk ke mode edit.',
+                'data' => [
+                    'id_pengajuan' => $pengajuan->id_pengajuan,
+                    'status' => $pengajuan->status,
+                    'batas_waktu_edit' => $info['batas_waktu_edit'],
+                    'is_revisi' => $info['is_revisi'],
+                    'alasan_admin' => $pengajuan->alasan_admin,
+                ],
+            ]);
+        });
+    }
+
+    /**
+     * Membatalkan mode edit tanpa menyimpan perubahan.
+     *
+     * Edit biasa -> kembali ke Menunggu Verifikasi.
+     * Revisi     -> kembali ke Revisi (timer revisi tetap berjalan).
+     * Aman dipanggil berkali-kali.
+     */
+    public function cancelEdit(Request $request, $id)
+    {
+        $player = $request->user()->player;
+
+        if (!$player) {
             return response()->json([
                 'success' => false,
-                'message' => 'Pengajuan turnamen tidak ditemukan.',
+                'message' => 'Data Player tidak ditemukan.',
             ], 404);
         }
 
-        $isRevisi = $pengajuan->status === 'Revisi'
-            || (
-                $pengajuan->status === 'Sedang diedit'
-                && !empty($pengajuan->revisi_diminta_pada)
-            );
+        return DB::transaction(function () use ($player, $id) {
+            $pengajuan = PengajuanTurnamen::where('id_player', $player->id_player)
+                ->where('id_pengajuan', $id)
+                ->lockForUpdate()
+                ->first();
 
-        if (
-            $pengajuan->status === 'Revisi'
-            && empty($pengajuan->revisi_diminta_pada)
-        ) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Waktu permintaan revisi belum tercatat. Silakan hubungi Admin.',
-            ], 422);
-        }
+            if (!$pengajuan) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pengajuan turnamen tidak ditemukan.',
+                ], 404);
+            }
 
-        if (!in_array($pengajuan->status, [
-            'Menunggu Verifikasi',
-            'Revisi',
-            'Sedang diedit',
-        ], true)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Pengajuan ini tidak dapat diedit berdasarkan status saat ini.',
-            ], 422);
-        }
+            $pengajuan = $this->batasWaktu->perbarui($pengajuan);
 
-        $waktuAcuan = $isRevisi
-            ? Carbon::parse($pengajuan->revisi_diminta_pada)
-            : Carbon::parse($pengajuan->created_at);
+            if ($pengajuan->status === 'Sedang diedit') {
+                $pengajuan->status = !empty($pengajuan->revisi_diminta_pada)
+                    ? 'Revisi'
+                    : 'Menunggu Verifikasi';
 
-        $batasWaktuEdit = $waktuAcuan->copy()->addMinutes(5);
-
-        if (now()->greaterThan($batasWaktuEdit)) {
-            $pengajuan->status = $isRevisi
-                ? 'Ditolak'
-                : 'Menunggu Verifikasi';
-
-            $pengajuan->save();
+                $pengajuan->save();
+            }
 
             return response()->json([
-                'success' => false,
-                'message' => $isRevisi
-                    ? 'Batas waktu revisi sudah habis. Pengajuan otomatis ditolak.'
-                    : 'Waktu untuk mengedit pengajuan sudah habis.',
-            ], 422);
-        }
-
-        if ($pengajuan->status !== 'Sedang diedit') {
-            $pengajuan->status = 'Sedang diedit';
-            $pengajuan->save();
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => $isRevisi
-                ? 'Pengajuan revisi berhasil masuk ke mode edit.'
-                : 'Pengajuan berhasil masuk ke mode edit.',
-            'data' => [
-                'id_pengajuan' => $pengajuan->id_pengajuan,
-                'status' => $pengajuan->status,
-                'batas_waktu_edit' => $batasWaktuEdit->toDateTimeString(),
-                'is_revisi' => $isRevisi,
-                'alasan_admin' => $pengajuan->alasan_admin,
-            ],
-        ]);
+                'success' => true,
+                'message' => 'Mode edit dibatalkan.',
+                'data' => array_merge(
+                    [
+                        'id_pengajuan' => $pengajuan->id_pengajuan,
+                        'status' => $pengajuan->status,
+                    ],
+                    $this->batasWaktu->info($pengajuan)
+                ),
+            ]);
+        });
     }
 
     /**
@@ -555,30 +623,24 @@ class PengajuanTurnamenController extends Controller
             ], 422);
         }
 
-        $isRevisi = !empty($pengajuan->revisi_diminta_pada);
+        // Cek batas waktu. Jika lewat:
+        // revisi -> otomatis Ditolak, edit biasa -> kembali Menunggu Verifikasi.
+        $pengajuan = $this->batasWaktu->perbarui($pengajuan);
 
-        $waktuAcuan = $isRevisi
-            ? Carbon::parse($pengajuan->revisi_diminta_pada)
-            : Carbon::parse($pengajuan->created_at);
-
-        $batasWaktuEdit = $waktuAcuan->copy()->addMinutes(5);
-
-        // Jika waktu revisi habis, pengajuan otomatis ditolak.
-        // Jika edit biasa habis, status dikembalikan ke antrean verifikasi.
-        if (now()->greaterThan($batasWaktuEdit)) {
-            $pengajuan->status = $isRevisi
-                ? 'Ditolak'
-                : 'Menunggu Verifikasi';
-
-            $pengajuan->save();
-
+        if ($pengajuan->status !== 'Sedang diedit') {
             return response()->json([
                 'success' => false,
-                'message' => $isRevisi
-                    ? 'Batas waktu revisi sudah habis. Pengajuan otomatis ditolak.'
-                    : 'Waktu untuk mengedit pengajuan sudah habis.',
+                'message' => $pengajuan->status === 'Ditolak'
+                    ? $this->batasWaktu->alasanTolakOtomatis()
+                    : 'Waktu untuk mengedit pengajuan sudah habis. Perubahan tidak disimpan.',
+                'data' => [
+                    'id_pengajuan' => $pengajuan->id_pengajuan,
+                    'status' => $pengajuan->status,
+                ],
             ], 422);
         }
+
+        $isRevisi = !empty($pengajuan->revisi_diminta_pada);
 
         $validated = $request->validate([
             'poster' => [
@@ -865,8 +927,9 @@ class PengajuanTurnamenController extends Controller
                 // Setelah berhasil diedit, pengajuan kembali ke antrean verifikasi.
                 $dataPengajuan['status'] = 'Menunggu Verifikasi';
 
-                // Jika Player berhasil mengirim ulang revisi,
-                // catat waktu pengajuan ulang.
+                // Jika Player berhasil mengirim ulang revisi, catat waktu pengajuan ulang.
+                // Jendela edit berikutnya dihitung dari waktu ini.
+                // Edit biasa TIDAK mengubah kolom ini, supaya jendela edit tidak bisa diperpanjang terus.
                 if ($isRevisi) {
                     $dataPengajuan['diajukan_ulang_pada'] = now();
                 }
@@ -1052,7 +1115,7 @@ class PengajuanTurnamenController extends Controller
         }
     }
 
-        /**
+    /**
      * Memastikan minimal roster tidak melebihi maksimal roster.
      */
     private function validateRoster($minRoster, $maksRoster): void
