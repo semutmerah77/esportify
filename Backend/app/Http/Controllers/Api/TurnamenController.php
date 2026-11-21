@@ -249,6 +249,8 @@ class TurnamenController extends Controller
             'pengajuan.pembayaran',
             'pengajuan.hadiahLainnya',
             'penyelenggara',
+            'pengajuan.player:id_player,id_user',
+            'pengajuan.player.user:id_user,username',
         ])->find($id);
 
         if (!$turnamen) {
@@ -292,6 +294,7 @@ class TurnamenController extends Controller
                     // Nama instansi tampil publik. Nomor instansi sengaja
                     // tidak dikirim (hanya untuk admin dan pengaju).
                     'nama_instansi' => $pengajuan->nama_instansi,
+                    'username_penyelenggara' => $pengajuan->player?->user?->username,
                     'poster' => $pengajuan->poster,
                     'tipe_turnamen' => $pengajuan->tipe_turnamen,
                     // Jumlah pemain per squad (diatur penyelenggara)
