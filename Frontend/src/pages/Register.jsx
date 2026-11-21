@@ -134,9 +134,9 @@ function Register() {
           type="button"
           className="register-back"
           onClick={() => navigate("/")}
+          aria-label="Tutup"
         >
-          <Icon name="x" size={14} />
-          <span>Batal</span>
+          <Icon name="x" size={20} />{" "}
         </button>
 
         <h2 className="auth-title">Buat Akun</h2>

@@ -49,8 +49,7 @@ const readError = (err, errorKey) => {
   return (Array.isArray(fe) ? fe[0] : fe) || err?.message || "Gagal menyimpan.";
 };
 
-function Profile() {
-  const { profile, setProfile } = useOutletContext();
+function ProfileContent({ profile, setProfile }) {
   const { refreshUser } = useAuth();
   const navigate = useNavigate();
   const fileRef = useRef(null);
@@ -566,6 +565,17 @@ function Profile() {
       )}
     </div>
   );
+}
+
+// SESUDAH
+function Profile() {
+  const { profile, setProfile } = useOutletContext() ?? {};
+
+  if (!profile) {
+    return <p className="admin-message">Memuat profil...</p>;
+  }
+
+  return <ProfileContent profile={profile} setProfile={setProfile} />;
 }
 
 export default Profile;

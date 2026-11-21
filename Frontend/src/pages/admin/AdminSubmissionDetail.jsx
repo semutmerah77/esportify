@@ -269,6 +269,7 @@ function AdminSubmissionDetail() {
   };
 
   const statusKey = String(data?.status ?? "").toLowerCase();
+  const canViewKtp = reviewing || statusKey === "disetujui";
 
   // Yang sedang dilihat: KTP (blob dari backend, privat) atau file publik (QRIS)
   const viewing = ktp.preview ?? preview;
@@ -302,6 +303,8 @@ function AdminSubmissionDetail() {
             </div>
             <p className="d-label">Tanggal Diajukan</p>
             <div className="d-box">{longDate(data.createdAt)}</div>
+            <p className="d-label">Username Pengirim</p>
+            <div className="d-box">{data.submitterUsername}</div>
           </section>
 
           <section className="d-card d-center">
@@ -467,7 +470,8 @@ function AdminSubmissionDetail() {
             {/* KTP privat: diambil lewat endpoint /admin/pengajuan-turnamen/{id}/ktp dengan token */}
             <FileRow
               name={data.ktpName}
-              note="File KTP tidak tersedia"
+              note="KTP hanya bisa dilihat saat ditinjau atau setelah disetujui"
+              disabled={!canViewKtp}
               loading={ktp.loading}
               onOpen={ktp.open}
             />

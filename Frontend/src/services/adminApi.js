@@ -657,6 +657,7 @@ export async function getAdminSubmissionDetail(id) {
     id: Number(d.id_pengajuan),
     name: d.nama_turnamen ?? "-",
     organizer: d.nama_penyelenggara ?? d.player?.user?.username ?? "-",
+    submitterUsername: d.player?.user?.username || "-",
     agencyName: d.nama_instansi ?? "",
     agencyPhone: d.nomor_instansi ?? "",
     status: d.status ?? "",
