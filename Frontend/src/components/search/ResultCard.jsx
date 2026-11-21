@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Icon from "../icon";
-import ScheduleIcon from "../kelola/ScheduleIcon";
 import "../../styles/schedule-extension.css";
 import {
   formatDate,
