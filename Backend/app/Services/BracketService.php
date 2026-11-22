@@ -604,6 +604,10 @@ class BracketService
      */
     public function alasanTidakBisaUbahSkor(Turnamen $turnamen, Pertandingan $pertandingan): ?string
     {
+        if ($turnamen->status === Turnamen::STATUS_SELESAI) {
+            return Turnamen::PESAN_HASIL_TERKUNCI;
+        }
+
         if ($turnamen->sudahBerakhir()) {
             return $turnamen->pesanBerakhir();
         }
@@ -673,8 +677,115 @@ class BracketService
         ]);
 
         $this->majukan($pertandingan, $idPemenang, $idKalah);
+        // PB-21: final / perebutan Juara 3 → simpan juara sementara & masa koreksi.
+        $this->perbaruiHasilSementara($pertandingan);
 
         return $pertandingan;
+    }
+
+    // ==========================================
+    // HASIL SEMENTARA & MASA KOREKSI (PB-21)
+    // ==========================================
+
+    /**
+     * Dipanggil setiap hasil ditetapkan (update skor, koreksi, laporan disetujui).
+     * Final → Juara 1 & 2, perebutan Juara 3 → Juara 3. Kalau keduanya sudah
+     * punya hasil, masa koreksi 30 menit dimulai / di-reset.
+     */
+    private function perbaruiHasilSementara(Pertandingan $pertandingan): void
+    {
+        $bracket = BracketTurnamen::find($pertandingan->id_bracket);
+        if (!$bracket) {
+            return;
+        }
+
+        $idPertandingan = (int) $pertandingan->id_pertandingan;
+
+        if ((int) $bracket->pertandinganFinal()?->id_pertandingan === $idPertandingan) {
+            PendaftaranTurnamen::saveJuaraPertamaKedua($idPertandingan);
+        } elseif ((int) $bracket->pertandinganJuaraKetiga()?->id_pertandingan === $idPertandingan) {
+            PendaftaranTurnamen::saveJuaraKetiga($idPertandingan);
+        } else {
+            return;
+        }
+
+        if (BracketTurnamen::checkBracketStatus((int) $bracket->id_turnamen)) {
+            Turnamen::mulaiMasaKoreksi((int) $bracket->id_turnamen);
+        }
+    }
+
+    /** Info masa koreksi untuk FE (null kalau belum masuk masa koreksi). */
+    public function infoMasaKoreksi(Turnamen $turnamen): ?array
+    {
+        if ($turnamen->waktu_mulai_koreksi === null) {
+            return null;
+        }
+
+        $berjalan = $turnamen->status === 'berlangsung';
+
+        return [
+            'sedang_berjalan' => $berjalan,
+            'waktu_mulai_koreksi' => $turnamen->waktu_mulai_koreksi->toIso8601String(),
+            'berakhir_pada' => $turnamen->batasMasaKoreksi()->toIso8601String(),
+            'sisa_detik' => $berjalan ? (int) max(0, now()->diffInSeconds($turnamen->batasMasaKoreksi(), false)) : 0,
+            'pesan' => $berjalan
+                ? 'Hasil tersimpan, masa koreksi ' . Turnamen::MASA_KOREKSI_MENIT . ' menit.'
+                : null,
+        ];
+    }
+
+    /**
+     * Juara 1, 2, 3 — hanya kalau turnamen sudah selesai
+     * (selama masa koreksi hasil masih sementara, tidak ditampilkan).
+     */
+    public function hasilAkhir(Turnamen $turnamen): ?array
+    {
+        if ($turnamen->status !== Turnamen::STATUS_SELESAI) {
+            return null;
+        }
+
+        return PendaftaranTurnamen::with('squad')
+            ->where('id_turnamen', $turnamen->id_turnamen)
+            ->where('status_pendaftaran', 'diterima')
+            ->whereIn('peringkat_akhir', [1, 2, 3])
+            ->orderBy('peringkat_akhir')
+            ->get()
+            ->map(fn (PendaftaranTurnamen $p) => [
+                'peringkat' => (int) $p->peringkat_akhir,
+                'squad' => $this->formatSlot($p),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Scheduler tiap menit (command turnamen:tetapkan-hasil):
+     * masa koreksi 30 menit berakhir → turnamen selesai (juara permanen,
+     * bracket terkunci, roster dibuka).
+     */
+    public function prosesHasilAkhirSemuaTurnamen(): int
+    {
+        $jumlah = 0;
+
+        foreach (Turnamen::getTurnamenMasaKoreksiBerakhir() as $kandidat) {
+            $selesai = DB::transaction(function () use ($kandidat) {
+                $turnamen = Turnamen::lockForUpdate()->find($kandidat->id_turnamen);
+
+                // Cek ulang setelah dikunci (bisa saja baru dikoreksi).
+                if (!$turnamen || $turnamen->status !== 'berlangsung' || !$turnamen->masaKoreksiBerakhir()
+                    || !BracketTurnamen::checkBracketStatus((int) $turnamen->id_turnamen)) {
+                    return false;
+                }
+
+                app(PendaftaranTurnamenService::class)->selesaikanTurnamen($turnamen);
+
+                return true;
+            });
+
+            $jumlah += $selesai ? 1 : 0;
+        }
+
+        return $jumlah;
     }
 
     // ==========================================
@@ -694,6 +805,7 @@ class BracketService
         $idSaya = array_values(array_map('intval', array_filter((array) $idPendaftaranSaya)));
 
         $turnamen = $untukPenyelenggara ? $bracket->turnamen()->with('pengajuan')->first() : null;
+        $infoTurnamen = $turnamen ?? $bracket->turnamen()->first();
 
         $bracket->load([
             'babak.pertandingan.pendaftaranA.squad',
@@ -715,6 +827,9 @@ class BracketService
             'tanggal_publikasi' => $bracket->tanggal_publikasi,
             'jumlah_peserta' => $jumlahPeserta,
             'jumlah_slot' => $this->ukuranBracket(max(2, $jumlahPeserta)),
+            // PB-21
+            'masa_koreksi' => $this->infoMasaKoreksi($infoTurnamen),
+            'hasil_akhir' => $this->hasilAkhir($infoTurnamen),
 
             'babak' => $bracket->babak->map(fn (BabakTurnamen $b) => [
                 'id_babak' => $b->id_babak,

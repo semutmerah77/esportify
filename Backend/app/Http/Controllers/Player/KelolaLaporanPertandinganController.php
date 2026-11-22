@@ -155,6 +155,8 @@ class KelolaLaporanPertandinganController extends Controller
                 'laporan' => $this->laporan->formatLaporan($laporan),
                 'laporan_lawan_disetujui_otomatis' => $hasil['otomatis']['disetujui'],
                 'laporan_lawan_ditolak_otomatis' => $hasil['otomatis']['ditolak'],
+                // PB-21: terisi kalau final & perebutan Juara 3 sudah lengkap
+                'masa_koreksi' => app(\App\Services\BracketService::class)->infoMasaKoreksi($turnamen->fresh()),
             ],
         ]);
     }
