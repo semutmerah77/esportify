@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ScheduleExtendedPopup from "../kelola/ScheduleExtendedPopup";
 import CancellationIcon from "../kelola/CancellationIcon";
@@ -7,6 +7,20 @@ import ScheduleIcon from "../kelola/ScheduleIcon";
 import "../../styles/tournament-cancellation.css";
 import "../../styles/schedule-extension.css";
 import { clearTournamentCache } from "../../services/tournamentSearchApi";
+
+// Batas bawah area yang terlihat: tepi bawah wadah yang bisa di-scroll/memotong, atau layar.
+function visibleBottom(el) {
+  let bottom = window.innerHeight;
+  let node = el.parentElement;
+  while (node && node !== document.body) {
+    const { overflowY } = window.getComputedStyle(node);
+    if (/(auto|scroll|hidden|clip)/.test(overflowY)) {
+      bottom = Math.min(bottom, node.getBoundingClientRect().bottom);
+    }
+    node = node.parentElement;
+  }
+  return bottom;
+}
 
 // Menu ⋮ pada kartu Turnamen Kelolaan.
 // "Perpanjangan" (PB-24) membuka dialog perpanjang jadwal; pembatalan (PB-25) membuka halaman pembatalan.
@@ -19,10 +33,12 @@ function ManagedTournamentMenu({
   onChanged,
 }) {
   const [open, setOpen] = useState(false);
+  const [up, setUp] = useState(false); // true = menu dibuka ke atas (ruang di bawah kurang)
   const navigate = useNavigate();
   const [extending, setExtending] = useState(false);
   const [doneText, setDoneText] = useState("");
   const rootRef = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -35,6 +51,18 @@ function ManagedTournamentMenu({
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
+  }, [open]);
+
+  // Ukur sebelum tampil: kalau menu melewati batas bawah, buka ke atas
+  useLayoutEffect(() => {
+    if (!open) {
+      setUp(false);
+      return;
+    }
+    const menu = menuRef.current;
+    if (!menu) return;
+    const menuBottom = menu.getBoundingClientRect().bottom;
+    setUp(menuBottom > visibleBottom(menu));
   }, [open]);
 
   // Turnamen selesai tidak bisa dibatalkan maupun diperpanjang: tidak ada isi menu.
@@ -61,7 +89,11 @@ function ManagedTournamentMenu({
       </button>
 
       {open && (
-        <div className="t-more-menu" role="menu">
+        <div
+          className={`t-more-menu ${up ? "up" : ""}`}
+          role="menu"
+          ref={menuRef}
+        >
           {canExtend && (
             <button
               type="button"

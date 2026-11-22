@@ -15,9 +15,19 @@ import {
 } from "../../services/refundApi";
 
 const METHOD_INFO = {
-  [REFUND_METHOD_TRANSFER]: { label: "Nomor rekening", icon: "bank" },
+  [REFUND_METHOD_TRANSFER]: { label: "Transfer bank", icon: "bank" },
   [REFUND_METHOD_QRIS]: { label: "QRIS", icon: "qr" },
 };
+
+// Wajib "NAMA BANK - NOMOR". Mengembalikan teks yang sudah dirapikan, atau null kalau formatnya salah.
+const parseAccount = (value) => {
+  const m = String(value)
+    .trim()
+    .match(/^(.+?)\s*-\s*(.+)$/);
+  if (!m || !m[1].trim() || !m[2].trim()) return null;
+  return `${m[1].trim()} - ${m[2].trim()}`;
+};
+
 const extensionOf = (file) => String(file.name).split(".").pop().toLowerCase();
 
 // Formulir pengembalian dana (peserta pendaftar). Dikirim lewat dialog "Periksa kembali data";
@@ -102,12 +112,20 @@ function RefundForm({ tournamentId, methods, onSubmitted }) {
 
   const askConfirm = () => {
     const next = {};
-    if (isTransfer && !accountNumber.trim())
-      next.nomor_rekening = "Nama bank dan nomor rekening wajib diisi.";
+    if (isTransfer) {
+      if (!accountNumber.trim()) {
+        next.nomor_rekening = "Nama bank dan nomor rekening wajib diisi.";
+      } else if (!parseAccount(accountNumber)) {
+        next.nomor_rekening =
+          "Format salah. Tulis dengan tanda - di antara nama bank dan nomor, contoh: BCA - 1234567890.";
+      }
+    }
     if (!holderName.trim()) next.atas_nama = "Atas nama wajib diisi.";
     if (!isTransfer && !qrisFile)
       next.file_qris = "Gambar QRIS wajib diunggah.";
     setErrors(next);
+    if (isTransfer && !next.nomor_rekening)
+      setAccountNumber(parseAccount(accountNumber)); // rapikan jadi "BCA - 123"
     if (Object.keys(next).length) return;
     setDialogError("");
     setConfirming(true);
