@@ -24,3 +24,19 @@ Artisan::command('turnamen:mulai', function (BracketService $bracket) {
 })->purpose('Publikasi bracket otomatis dan memulai turnamen');
 
 Schedule::command('turnamen:mulai')->everyMinute()->withoutOverlapping();
+
+
+// ==========================================
+// PB-21: PENETAPAN HASIL AKHIR TURNAMEN
+// Masa koreksi 30 menit sejak hasil final & perebutan Juara 3 lengkap
+// (waktu_mulai_koreksi). Setelah lewat → turnamen selesai: juara permanen,
+// bracket terkunci, roster pemain dibuka.
+// Lokal: php artisan schedule:work
+// ==========================================
+
+Artisan::command('turnamen:tetapkan-hasil', function (BracketService $bracket) {
+    $jumlah = $bracket->prosesHasilAkhirSemuaTurnamen();
+    $this->info("Turnamen selesai: {$jumlah}");
+})->purpose('Menetapkan hasil akhir turnamen setelah masa koreksi 30 menit');
+
+Schedule::command('turnamen:tetapkan-hasil')->everyMinute()->withoutOverlapping();

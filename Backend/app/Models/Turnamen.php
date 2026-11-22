@@ -22,6 +22,7 @@ class Turnamen extends Model
         'jadwal_main',
         'jadwal_pendaftaran_tutup_baru',
         'jadwal_main_baru',
+        'waktu_mulai_koreksi',
     ];
 
     protected $casts = [
@@ -29,6 +30,7 @@ class Turnamen extends Model
         'jadwal_main' => 'datetime',
         'jadwal_pendaftaran_tutup_baru' => 'datetime',
         'jadwal_main_baru' => 'datetime',
+        'waktu_mulai_koreksi' => 'datetime',
     ];
 
     /**
@@ -92,6 +94,69 @@ class Turnamen extends Model
         return $this->status === self::STATUS_DIBATALKAN
             ? 'Turnamen sudah dibatalkan.'
             : 'Turnamen sudah selesai.';
+    }
+
+    // ==========================================
+    // MASA KOREKSI HASIL FINAL (PB-21)
+    // ==========================================
+
+    public const STATUS_SELESAI = 'selesai';
+    public const MASA_KOREKSI_MENIT = 30;
+    public const PESAN_HASIL_TERKUNCI = 'Turnamen sudah selesai, hasil tidak dapat diubah.';
+
+    /** SD: getStatusTurnamen(id_turnamen) — status terbaru langsung dari database. */
+    public static function getStatusTurnamen(int $idTurnamen): ?string
+    {
+        return static::whereKey($idTurnamen)->value('status');
+    }
+
+    /**
+     * SD: mulaiMasaKoreksi(id_turnamen). Dipanggil saat hasil final & perebutan
+     * Juara 3 lengkap, dan dipanggil lagi setiap ada koreksi (waktu di-reset).
+     */
+    public static function mulaiMasaKoreksi(int $idTurnamen): bool
+    {
+        return static::whereKey($idTurnamen)->update(['waktu_mulai_koreksi' => now()]) > 0;
+    }
+
+    /** SD: getTurnamenMasaKoreksiBerakhir() — dipakai Scheduler tiap menit. */
+    public static function getTurnamenMasaKoreksiBerakhir()
+    {
+        return static::where('status', 'berlangsung')
+            ->whereNotNull('waktu_mulai_koreksi')
+            ->where('waktu_mulai_koreksi', '<=', now()->subMinutes(self::MASA_KOREKSI_MENIT))
+            ->get();
+    }
+
+    public function batasMasaKoreksi(): ?Carbon
+    {
+        return $this->waktu_mulai_koreksi?->copy()->addMinutes(self::MASA_KOREKSI_MENIT);
+    }
+
+    public function masaKoreksiBerakhir(): bool
+    {
+        return $this->waktu_mulai_koreksi !== null && now()->gte($this->batasMasaKoreksi());
+    }
+
+    // ==========================================
+    // STATISTIK SQUAD (PB-21) — hanya turnamen selesai & pendaftaran diterima
+    // ==========================================
+
+    /** SD: getTotalTurnamenBySquad(id_squad) */
+    public static function getTotalTurnamenBySquad(int $idSquad): int
+    {
+        return static::where('status', self::STATUS_SELESAI)
+            ->whereHas('pendaftaran', fn ($q) => $q->where('id_squad', $idSquad)->where('status_pendaftaran', 'diterima'))
+            ->count();
+    }
+
+    /** SD: getTotalTurnamenBySquadAndGame(id_squad, id_game) */
+    public static function getTotalTurnamenBySquadAndGame(int $idSquad, int $idGame): int
+    {
+        return static::where('status', self::STATUS_SELESAI)
+            ->whereHas('pengajuan', fn ($q) => $q->where('id_game', $idGame))
+            ->whereHas('pendaftaran', fn ($q) => $q->where('id_squad', $idSquad)->where('status_pendaftaran', 'diterima'))
+            ->count();
     }
 
     public function pengajuanPembatalan(): HasMany

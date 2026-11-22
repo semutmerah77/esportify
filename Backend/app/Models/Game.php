@@ -34,5 +34,25 @@ class Game extends Model
             'id_kategori'
         );
     }
+
+    // ==========================================
+    // PB-21: game yang pernah diikuti Squad (turnamen selesai)
+    // ==========================================
+
+    /** SD: getDaftarGameBySquad(id_squad) */
+    public static function getDaftarGameBySquad(int $idSquad)
+    {
+        $idGame = PendaftaranTurnamen::hasilAkhirSquad($idSquad)->select('pg.id_game')->toBase();
+
+        return static::whereIn('id_game', $idGame)
+            ->orderBy('nama_game')
+            ->get(['id_game', 'nama_game', 'avatar']);
+    }
+
+    /** SD: getGameById(id_game) */
+    public static function getGameById(int $idGame): ?self
+    {
+        return static::find($idGame, ['id_game', 'nama_game', 'avatar']);
+    }
 }
 ?>

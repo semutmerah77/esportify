@@ -48,4 +48,47 @@ class BracketTurnamen extends Model
     {
         return $this->status_bracket === self::STATUS_DRAFT;
     }
+
+    // ==========================================
+    // PENETAPAN JUARA (PB-21)
+    // ==========================================
+
+    /** Pertandingan perebutan Juara 3 (hanya ada kalau peserta >= 4). */
+    public function pertandinganJuaraKetiga(): ?Pertandingan
+    {
+        $id = Pertandingan::where('id_bracket', $this->id_bracket)
+            ->whereNotNull('id_pertandingan_kalah_selanjutnya')
+            ->value('id_pertandingan_kalah_selanjutnya');
+
+        return $id ? Pertandingan::find($id) : null;
+    }
+
+    /** Pertandingan final: tidak punya pertandingan selanjutnya dan bukan perebutan Juara 3. */
+    public function pertandinganFinal(): ?Pertandingan
+    {
+        $idJuara3 = $this->pertandinganJuaraKetiga()?->id_pertandingan;
+
+        return Pertandingan::where('id_bracket', $this->id_bracket)
+            ->whereNull('id_pertandingan_selanjutnya')
+            ->when($idJuara3, fn ($q) => $q->where('id_pertandingan', '!=', $idJuara3))
+            ->first();
+    }
+
+    /**
+     * SD: checkBracketStatus(id_turnamen) — final dan perebutan Juara 3
+     * sudah punya hasil. Turnamen < 4 peserta cukup final.
+     */
+    public static function checkBracketStatus(int $idTurnamen): bool
+    {
+        $bracket = static::where('id_turnamen', $idTurnamen)->first();
+        $final = $bracket?->pertandinganFinal();
+
+        if (!$final || !$final->punyaSkor()) {
+            return false;
+        }
+
+        $juara3 = $bracket->pertandinganJuaraKetiga();
+
+        return $juara3 === null || $juara3->punyaSkor();
+    }
 }

@@ -109,6 +109,10 @@ class LaporanPertandinganService
      */
     public function alasanTidakBisaLapor(Turnamen $turnamen, Pertandingan $pertandingan, ?PendaftaranTurnamen $pendaftaranSaya): ?string
     {
+        if ($turnamen->status === Turnamen::STATUS_SELESAI) {
+            return Turnamen::PESAN_HASIL_TERKUNCI;
+        }
+
         if ($turnamen->sudahBerakhir()) {
             return $turnamen->pesanBerakhir();
         }
@@ -214,6 +218,11 @@ class LaporanPertandinganService
     {
         if ($laporan->status_laporan !== LaporanHasilPertandingan::STATUS_MENUNGGU) {
             return 'Laporan sudah diverifikasi sebelumnya.';
+        }
+
+        // PB-21: setelah masa koreksi berakhir, hasil terkunci.
+        if (Turnamen::getStatusTurnamen((int) $turnamen->id_turnamen) === Turnamen::STATUS_SELESAI) {
+            return Turnamen::PESAN_HASIL_TERKUNCI;
         }
 
         if ($turnamen->sudahBerakhir()) {

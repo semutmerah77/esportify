@@ -56,6 +56,8 @@ use App\Http\Controllers\Player\KelolaPembatalanTurnamenController;
 use App\Http\Controllers\Admin\PembatalanTurnamenController as AdminPembatalanTurnamenController;
 use App\Http\Controllers\Player\RefundTurnamenController;
 use App\Http\Controllers\Player\KelolaPerpanjanganJadwalController;
+use App\Http\Controllers\Player\LihatWinRateSquadController;
+use App\Http\Controllers\Player\LihatBadgeSquadController;
 use App\Http\Controllers\Player\KelolaRefundTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
@@ -249,6 +251,48 @@ Route::middleware('auth:sanctum')->group(function () {
                 SquadController::class,
                 'show'
             ]);
+
+            // PB-21: Win Rate Squad (semua Player, dari Detail Squad)
+            Route::get('/squad/{id}/win-rate', [
+                LihatWinRateSquadController::class,
+                'getWinRateSquad'
+            ])->whereNumber('id');
+
+            Route::get('/squad/{id}/win-rate/detail', [
+                LihatWinRateSquadController::class,
+                'getDetailWinRateSquad'
+            ])->whereNumber('id');
+
+            Route::get('/squad/{id}/win-rate/daftar-game', [
+                LihatWinRateSquadController::class,
+                'getDaftarGameBySquad'
+            ])->whereNumber('id');
+
+            Route::get('/squad/{id}/win-rate/game/{idGame}', [
+                LihatWinRateSquadController::class,
+                'getWinRateByGame'
+            ])->whereNumber(['id', 'idGame']);
+
+            // PB-21: Badge & pencapaian (riwayat turnamen) Squad
+            Route::get('/squad/{id}/badge', [
+                LihatBadgeSquadController::class,
+                'getBadgePrestasiJuara'
+            ])->whereNumber('id');
+
+            Route::get('/squad/{id}/pencapaian', [
+                LihatBadgeSquadController::class,
+                'getDaftarPencapaianSquad'
+            ])->whereNumber('id');
+
+            Route::get('/squad/{id}/pencapaian/daftar-game', [
+                LihatBadgeSquadController::class,
+                'getDaftarGameBySquad'
+            ])->whereNumber('id');
+
+            Route::get('/squad/{id}/pencapaian/game/{idGame}', [
+                LihatBadgeSquadController::class,
+                'getPencapaianSquadByGame'
+            ])->whereNumber(['id', 'idGame']);
 
         });
 
