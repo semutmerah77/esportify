@@ -7,6 +7,8 @@ use App\Models\Turnamen;
 use App\Models\PendaftaranTurnamen;
 use App\Models\Player;
 use App\Models\Penyelenggara;
+use App\Models\PengajuanPembatalanTurnamen;
+use App\Services\PembatalanTurnamenService;
 use App\Services\BracketService;
 use App\Services\PendaftaranTurnamenService;
 use Illuminate\Http\Request;
@@ -187,6 +189,7 @@ class TurnamenController extends Controller
             ->with([
                 'pengajuan:id_pengajuan,id_game,nama_turnamen,nama_penyelenggara,nama_instansi,poster,tipe_turnamen,slot,jadwal_pendaftaran_tutup,jadwal_main,deskripsi_lokasi',
                 'pengajuan.game:id_game,nama_game',
+                'pengajuanPembatalanTerakhir',
             ])
             // Bracket, jumlah menunggu/diterima, dan slot terisi dimuat sekaligus
             // (tidak query per turnamen).
@@ -201,6 +204,10 @@ class TurnamenController extends Controller
                     'status' => $this->hitungStatus($item->jadwalMainAktif(), $item->status),
                     'created_at' => $item->created_at,
                  ] + app(BracketService::class)->infoPersiapan($item) + [
+
+                   'pengajuan_pembatalan_terakhir' => $this->formatPembatalanTerakhir(
+                        $item->pengajuanPembatalanTerakhir
+                    ),
 
                     'pengajuan' => [
                         'id_pengajuan' => $pengajuan->id_pengajuan,
@@ -407,6 +414,31 @@ class TurnamenController extends Controller
                 'username' => $pendaftaran->pendaftar?->user?->username,
             ],
             'didaftarkan_oleh_saya' => (int) $pendaftaran->id_player === (int) $player->id_player,
+        ];
+    }
+
+    /**
+     * PB-25: ringkasan pengajuan pembatalan terakhir untuk kartu turnamen kelolaan.
+     * null kalau turnamen belum pernah diajukan pembatalan.
+     */
+    private function formatPembatalanTerakhir(?PengajuanPembatalanTurnamen $p): ?array
+    {
+        if (!$p) {
+            return null;
+        }
+
+        return [
+            'id_pengajuan_pembatalan' => $p->id_pengajuan_pembatalan,
+            'status_pengajuan' => $p->status_pengajuan,
+            'alasan_pembatalan' => $p->alasan_pembatalan,
+            'label_alasan_pembatalan' => app(PembatalanTurnamenService::class)
+                ->labelAlasan($p->alasan_pembatalan),
+            'tanggal_pengajuan' => $p->tanggal_pengajuan?->toIso8601String(),
+            'tanggal_verifikasi' => $p->tanggal_verifikasi?->toIso8601String(),
+            // Catatan admin hanya relevan kalau pengajuan ditolak.
+            'catatan_admin' => $p->status_pengajuan === PengajuanPembatalanTurnamen::STATUS_DITOLAK
+                ? $p->catatan_admin
+                : null,
         ];
     }
 }

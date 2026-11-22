@@ -99,6 +99,15 @@ class Turnamen extends Model
         return $this->hasMany(PengajuanPembatalanTurnamen::class, 'id_turnamen', 'id_turnamen');
     }
 
+    /**
+     * Pengajuan pembatalan paling baru (kartu turnamen kelolaan).
+     */
+    public function pengajuanPembatalanTerakhir(): HasOne
+    {
+        return $this->hasOne(PengajuanPembatalanTurnamen::class, 'id_turnamen', 'id_turnamen')
+            ->latestOfMany('id_pengajuan_pembatalan');
+    }
+
     public function pengajuan(): BelongsTo
     {
         return $this->belongsTo(
