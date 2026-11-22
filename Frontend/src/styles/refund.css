@@ -668,10 +668,10 @@
 .refund-row {
   display: grid;
   grid-template-columns:
-    44px minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1fr)
+    44px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)
     110px;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
   padding: 14px 20px;
   border-radius: 10px;
   background: #151f38;
@@ -704,6 +704,14 @@
   font-size: 13px;
   font-weight: 600;
   color: #fff;
+}
+.refund-row-col .refund-pill {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  overflow: visible;
+  padding: 4px 12px;
+  font-size: 12px;
 }
 .refund-row-end {
   display: grid;

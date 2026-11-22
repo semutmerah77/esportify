@@ -125,7 +125,7 @@ function TransferProofDialog({ tournamentId, item, onClose, onUploaded }) {
           <div>
             <dt>Metode</dt>
             <dd>
-              {item.method === REFUND_METHOD_QRIS ? "QRIS" : "Nomor rekening"}
+              {item.method === REFUND_METHOD_QRIS ? "QRIS" : "Transfer bank"}
             </dd>
           </div>
           {bank && (

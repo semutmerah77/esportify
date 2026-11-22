@@ -9,7 +9,7 @@ import { RefundAvatar } from "./RefundSquadHeader";
 import "../../styles/refund.css";
 
 const METHOD_TEXT = {
-  [REFUND_METHOD_TRANSFER]: "Nomor rekening",
+  [REFUND_METHOD_TRANSFER]: "Transfer bank",
   [REFUND_METHOD_QRIS]: "QRIS",
 };
 
