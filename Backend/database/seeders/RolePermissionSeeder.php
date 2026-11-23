@@ -100,6 +100,8 @@ class RolePermissionSeeder extends Seeder
             'kelola_refund_turnamen',
             // Perpanjangan Jadwal (PB-24)
             'perpanjang_jadwal_turnamen',
+            // Chat Player (PB-27 & PB-28)
+            'chat_player',
         ];
 
         $admin = Role::findByName('admin', 'web');

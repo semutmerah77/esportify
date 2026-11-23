@@ -59,6 +59,7 @@ use App\Http\Controllers\Player\KelolaPerpanjanganJadwalController;
 use App\Http\Controllers\Player\LihatWinRateSquadController;
 use App\Http\Controllers\Player\LihatBadgeSquadController;
 use App\Http\Controllers\Player\LihatBadgeProfilPlayerController;
+use App\Http\Controllers\Player\ChatController;
 use App\Http\Controllers\Player\KelolaRefundTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
@@ -351,6 +352,35 @@ Route::middleware('auth:sanctum')->group(function () {
             LihatBadgeProfilPlayerController::class,
             'getProfilePlayer'
         ])->whereNumber('id')->middleware('permission:cari_player');
+
+        
+        // ==========================================
+        // PB-27 & PB-28: CHAT PLAYER, STATUS TERBACA, BLOKIR
+        // (pesan baru diambil FE lewat polling pesan-terbaru)
+        // ==========================================
+
+        Route::middleware('permission:chat_player')->prefix('chat')->group(function () {
+
+            Route::get('/percakapan', [ChatController::class, 'getDaftarPercakapan']);
+
+            Route::get('/percakapan/{id}', [ChatController::class, 'bukaPercakapan'])->whereNumber('id');
+
+            Route::post('/player/{idPlayerTujuan}', [ChatController::class, 'bukaHalamanPesan'])->whereNumber('idPlayerTujuan');
+
+            Route::post('/percakapan/{id}/pesan', [ChatController::class, 'kirimPesan'])->whereNumber('id');
+
+            Route::get('/percakapan/{id}/pesan-terbaru', [ChatController::class, 'getPesanTerbaru'])->whereNumber('id');
+
+            Route::post('/percakapan/{id}/dibaca', [ChatController::class, 'tandaiPesanDibaca'])->whereNumber('id');
+
+            Route::post('/percakapan/{id}/bersihkan', [ChatController::class, 'bersihkanPesan'])->whereNumber('id');
+
+            Route::delete('/percakapan/{id}', [ChatController::class, 'hapusPercakapan'])->whereNumber('id');
+
+            Route::post('/blokir/{idPlayerDiblokir}', [ChatController::class, 'blokirPesan'])->whereNumber('idPlayerDiblokir');
+
+            Route::delete('/blokir/{idPlayerDiblokir}', [ChatController::class, 'bukaBlokirPesan'])->whereNumber('idPlayerDiblokir');
+        });
 
 
         // ==========================================
