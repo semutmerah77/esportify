@@ -12,6 +12,7 @@ const skipProfile = {
   avatar: null,
   bio: "Hallo Bruh!!",
   gender: "Laki-laki",
+  trophies: { gold: 3, silver: 1, bronze: 0 },
 };
 
 // ASSUMPTION: avatar bisa URL lengkap atau path. Path relatif digabung dengan
@@ -35,6 +36,13 @@ const toAvatarUrl = (value) => {
 
 // ASSUMPTION: nama field belum dikonfirmasi. Data player bisa ada di objek "player".
 // PERUBAHAN: ikut membaca avatar_url kalau backend memakai nama itu.
+
+// piala individu: { gold, silver, bronze } (PB-23)
+const mapTrophies = (p) => ({
+  gold: Number(p?.gold ?? 0),
+  silver: Number(p?.silver ?? 0),
+  bronze: Number(p?.bronze ?? 0),
+});
 const mapProfile = (d) => {
   const player = d.player ?? {};
   return {
@@ -46,6 +54,7 @@ const mapProfile = (d) => {
     ),
     bio: player.bio ?? d.bio ?? "",
     gender: player.jenis_kelamin ?? d.jenis_kelamin ?? "",
+    trophies: mapTrophies(d.piala),
   };
 };
 
@@ -57,6 +66,50 @@ export async function getProfile() {
   }
   const response = await apiRequest("/profile");
   return mapProfile(response?.data ?? response);
+}
+
+// GET /api/players/{id}/profil (PB-23). Hanya 1 request: squad & piala sudah termasuk.
+// Cache sederhana per id_player supaya buka ulang profil yang sama tidak request lagi.
+// Error 404 dilempar apa adanya (err.status === 404): tampilan "Player tidak ditemukan", tanpa retry.
+const playerCache = new Map();
+
+export async function getPlayerProfile(id) {
+  const key = String(id);
+  if (playerCache.has(key)) return playerCache.get(key);
+
+  if (SKIP_AUTH) {
+    await wait();
+    return {
+      id: Number(id),
+      username: "Rizky Pratama",
+      avatar: null,
+      bio: "Bang, ayo mabar!",
+      gender: "laki-laki",
+      squads: [],
+      trophies: { gold: 3, silver: 1, bronze: 2 },
+      isSelf: false,
+    };
+  }
+
+  const response = await apiRequest(`/players/${key}/profil`);
+  const d = response?.data ?? response;
+  const data = {
+    id: d.id_player,
+    username: d.username ?? "-",
+    avatar: toAvatarUrl(d.avatar_url),
+    bio: d.bio ?? "",
+    gender: String(d.jenis_kelamin ?? "").toLowerCase(),
+    squads: (d.squad ?? []).map((s) => ({
+      id: s.id_squad,
+      code: s.kode_squad ?? "",
+      name: s.nama_squad ?? "-",
+      logo: s.logo_url ?? "",
+    })),
+    trophies: mapTrophies(d.piala),
+    isSelf: d.profil_sendiri === true,
+  };
+  playerCache.set(key, data);
+  return data;
 }
 
 // PUT /api/profile

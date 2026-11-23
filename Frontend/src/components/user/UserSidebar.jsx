@@ -54,7 +54,9 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
   const [menuOpen, setMenuOpen] = useState(
     pathname.startsWith("/turnamen") || pathname.startsWith("/pendaftaran"),
   );
-  const [squadOpen, setSquadOpen] = useState(pathname.startsWith("/squad"));
+  const [squadOpen, setSquadOpen] = useState(
+    pathname.startsWith("/squad") || pathname.startsWith("/player"),
+  );
   const [showGate, setShowGate] = useState(false);
 
   const returnTo = `${pathname}${search}`;
@@ -119,10 +121,11 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
 
   const isItemActive = (item) => {
     // Detail squad (/squad/:id): menu yang aktif mengikuti asal halaman (Cari Squad atau Squad Saya)
+    // PB-23: profil Player (/player/:id) dibuka dari squad, jadi ikut menyalakan menu squad
     const isSquadDetail =
       /^\/squad\/(?!cari(\/|$)|saya(\/|$))[^/]+(\/(winrate|lencana))?$/.test(
         pathname,
-      );
+      ) || /^\/player\/[^/]+$/.test(pathname);
     if (isSquadDetail && item.detailFrom)
       return squadFrom() === item.detailFrom;
 

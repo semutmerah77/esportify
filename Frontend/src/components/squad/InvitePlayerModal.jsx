@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "../../styles/player-profile.css";
 import Icon from "../icon";
 import initials from "./initials";
 import {
@@ -11,6 +13,12 @@ import RosterLockNotice from "./RosterLockNotice";
 const DEBOUNCE_MS = 400;
 
 function InvitePlayerModal({ squad, locked = false, onClose }) {
+  const navigate = useNavigate();
+  // PB-23: klik player membuka profilnya (1 request saat halaman profil dibuka)
+  const openProfile = (p) => {
+    onClose();
+    navigate(`/player/${p.id}`);
+  };
   const [input, setInput] = useState("");
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState("");
@@ -181,8 +189,21 @@ function InvitePlayerModal({ squad, locked = false, onClose }) {
                   const isSent = sent.has(p.id);
                   return (
                     <li key={p.id} className="sqp-row">
-                      <span className="sqp-avatar">{initials(p.username)}</span>
-                      <b>{p.username}</b>
+                      <span
+                        className="sqp-avatar sqp-open"
+                        onClick={() => openProfile(p)}
+                      >
+                        {initials(p.username)}
+                      </span>
+                      <b
+                        className="sqp-open"
+                        role="link"
+                        tabIndex={0}
+                        onClick={() => openProfile(p)}
+                        onKeyDown={(e) => e.key === "Enter" && openProfile(p)}
+                      >
+                        {p.username}
+                      </b>
                       {isMember ? (
                         <span className="sqp-state">
                           <Icon name="user-check" size={15} /> Sudah Anggota

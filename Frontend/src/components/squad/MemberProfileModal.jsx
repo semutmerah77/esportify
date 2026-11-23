@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Icon from "../icon";
 import initials from "./initials";
 
@@ -14,10 +15,13 @@ const joinedText = (value) => {
       });
 };
 
-// Profil singkat anggota. Aksi hanya untuk leader:
+// Profil singkat anggota. Semua orang bisa membuka profil lengkap (PB-23).
+// Aksi hanya untuk leader:
 // Tetapkan Sebagai Leader, Keluarkan dari Squad
 // Keluarkan nonaktif bila anggota ada di roster turnamen (roster lock per pemain).
 function MemberProfileModal({ member, canManage, onClose, onPromote, onKick }) {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -29,6 +33,12 @@ function MemberProfileModal({ member, canManage, onClose, onPromote, onKick }) {
     .join(", ");
   const kickLocked = member.rosterLocked === true;
   const showActions = canManage && member.role !== "leader";
+
+  // PB-23: profil lengkap (piala, squad) diambil saat halaman profil dibuka
+  const openProfile = () => {
+    onClose();
+    navigate(`/player/${member.playerId}`);
+  };
 
   return (
     <div
@@ -74,41 +84,50 @@ function MemberProfileModal({ member, canManage, onClose, onPromote, onKick }) {
           </div>
         </div>
 
-        {showActions && (
-          <div className="sqm-actions">
-            <button
-              type="button"
-              className="sqm-action"
-              onClick={() => onPromote(member)}
-            >
-              <span className="sqm-ic gold">
-                <Icon name="crown" size={14} />
-              </span>
-              Tetapkan Sebagai Leader
-            </button>
-            <button
-              type="button"
-              className="sqm-action danger"
-              disabled={kickLocked}
-              onClick={() => onKick(member)}
-            >
-              <span className="sqm-ic red">
-                <Icon name={kickLocked ? "lock" : "user-minus"} size={14} />
-              </span>
-              Keluarkan dari Squad
-            </button>
-            {kickLocked && (
-              <p className="sqm-lock-note">
-                <Icon name="lock" size={13} />
-                <span>
-                  {member.username} masih terdaftar di roster turnamen
-                  {tournaments ? ` ${tournaments}` : ""} dan baru bisa
-                  dikeluarkan setelah turnamen selesai.
+        <div className="sqm-actions">
+          <button type="button" className="sqm-action" onClick={openProfile}>
+            <span className="sqm-ic gold">
+              <Icon name="user" size={14} />
+            </span>
+            Lihat Profil
+          </button>
+
+          {showActions && (
+            <>
+              <button
+                type="button"
+                className="sqm-action"
+                onClick={() => onPromote(member)}
+              >
+                <span className="sqm-ic gold">
+                  <Icon name="crown" size={14} />
                 </span>
-              </p>
-            )}
-          </div>
-        )}
+                Tetapkan Sebagai Leader
+              </button>
+              <button
+                type="button"
+                className="sqm-action danger"
+                disabled={kickLocked}
+                onClick={() => onKick(member)}
+              >
+                <span className="sqm-ic red">
+                  <Icon name={kickLocked ? "lock" : "user-minus"} size={14} />
+                </span>
+                Keluarkan dari Squad
+              </button>
+              {kickLocked && (
+                <p className="sqm-lock-note">
+                  <Icon name="lock" size={13} />
+                  <span>
+                    {member.username} masih terdaftar di roster turnamen
+                    {tournaments ? ` ${tournaments}` : ""} dan baru bisa
+                    dikeluarkan setelah turnamen selesai.
+                  </span>
+                </p>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

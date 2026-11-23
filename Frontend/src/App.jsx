@@ -27,6 +27,7 @@ import MySquads from "./pages/squad/MySquads";
 import SquadDetail from "./pages/squad/SquadDetail";
 import SquadWinRateDetail from "./pages/squad/SquadWinRateDetail";
 import SquadAchievementList from "./pages/squad/SquadAchievementList";
+import PlayerProfile from "./pages/player/PlayerProfile";
 import DaftarTurnamen from "./pages/registration/DaftarTurnamen";
 import PendaftaranDetail from "./pages/registration/PendaftaranDetail";
 import TurnamenSaya from "./pages/registration/TurnamenSaya";
@@ -86,6 +87,7 @@ function App() {
               path="/squad/:id/lencana"
               element={<SquadAchievementList />}
             />
+            <Route path="/player/:id" element={<PlayerProfile />} />
           </Route>
         </Route>
 

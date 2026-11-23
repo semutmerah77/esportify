@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import Icon from "../components/icon";
 import Avatar from "../components/user/Avatar";
 import PasswordModal from "../components/user/PasswordModal";
+import TrophyCards from "../components/player/TrophyCards";
 import { useAuth } from "../context/AuthContext";
 import { SKIP_AUTH } from "../config/env";
 import {
@@ -83,7 +84,7 @@ function ProfileContent({ profile, setProfile }) {
     setAvatarPreview("");
   };
 
-  // HANYA validasi + preview, upload baru dilakukan saat klik "Simpan perubahan"
+  // HANYA validasi + preview, upload baru dilakukan saat klik "Simpan"
   const handleAvatar = (e) => {
     const file = e.target.files[0];
     e.target.value = "";
@@ -151,7 +152,7 @@ function ProfileContent({ profile, setProfile }) {
     setErrors((e) => ({ ...e, [key]: "" }));
   };
 
-  // Klik "Edit": mulai dari data yang tersimpan
+  // Klik "Edit profil": mulai dari data yang tersimpan
   const handleEdit = () => {
     setForm(base);
     setErrors({});
@@ -242,6 +243,7 @@ function ProfileContent({ profile, setProfile }) {
   };
 
   const shownAvatar = avatarPreview || profile.avatar;
+  const bioMax = 150; // sesuai desain (11/150)
 
   return (
     <div className="pr-page">
@@ -265,214 +267,142 @@ function ProfileContent({ profile, setProfile }) {
       <h1 className="pr-title">Profil</h1>
       <p className="pr-sub">Kelola informasi akun kamu.</p>
 
-      <div className="pr-grid">
-        {/* ===== Kolom kiri: avatar ===== */}
-        <section className="pr-card pr-side">
-          <div className="pr-ring">
-            {/* Klik avatar = lihat preview besar (mode lihat maupun edit) */}
+      {/* ===== Kartu atas: avatar, nama, bio, tombol Edit profil ===== */}
+      <section className="pr-card pm-hero">
+        <div className="pm-avatar">
+          {/* Klik avatar = lihat preview besar (mode lihat maupun edit) */}
+          <button
+            type="button"
+            className="pr-avatar-btn"
+            onClick={() => setLightbox(true)}
+            aria-label="Lihat foto profil"
+          >
+            <Avatar src={shownAvatar} name={profile.username} size={76} />
+          </button>
+
+          {/* Ganti foto hanya bisa saat mode edit */}
+          {isEditing && (
             <button
               type="button"
-              className="pr-avatar-btn"
-              onClick={() => setLightbox(true)}
-              aria-label="Lihat foto profil"
+              className="pm-camera"
+              onClick={() => fileRef.current.click()}
+              disabled={saving}
+              aria-label="Ganti foto profil"
             >
-              <Avatar src={shownAvatar} name={profile.username} size={128} />
+              <Icon name="camera" size={13} />
             </button>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handleAvatar}
+          />
+        </div>
 
-            {/* Ganti foto hanya bisa saat mode edit */}
-            {isEditing && (
-              <button
-                type="button"
-                className="pr-camera"
-                onClick={() => fileRef.current.click()}
-                disabled={saving}
-                aria-label="Ganti foto profil"
-              >
-                <Icon name="camera" size={18} />
-              </button>
-            )}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={handleAvatar}
-            />
-          </div>
-
-          <h2 className="pr-name">{profile.username}</h2>
-          {profile.bio && <p className="pr-bio">{profile.bio}</p>}
-
+        <div className="pm-hero-main">
+          <h2>{profile.username}</h2>
+          {profile.bio && <p>{profile.bio}</p>}
           {saving && avatarFile && <p className="pr-msg">Mengunggah...</p>}
           {avatarMsg.text && (
             <p className={`pr-msg ${avatarMsg.type}`}>{avatarMsg.text}</p>
           )}
-          {avatarFile && <p className="pr-hint">Foto baru belum disimpan.</p>}
-          {isEditing && <p className="pr-hint">Gambar maksimal 2 MB.</p>}
-        </section>
+          {avatarFile && <p className="pm-hint">Foto baru belum disimpan.</p>}
+          {isEditing && !avatarFile && (
+            <p className="pm-hint">Gambar maksimal 2 MB.</p>
+          )}
+        </div>
 
-        {/* ===== Kolom kanan ===== */}
-        <div className="pr-col">
-          <form
-            className={`pr-card ${isEditing ? "" : "pr-view"}`}
-            onSubmit={handleSave}
-            noValidate
+        {/* Edit profil: hanya di mode lihat. Di mode edit, Batal ada di bawah form. */}
+        {!isEditing && (
+          <button
+            type="button"
+            className="pm-edit-btn"
+            onClick={handleEdit}
+            disabled={saving}
           >
-            <div className="pr-head">
-              {/* Baris judul: judul di kiri, tombol Edit/Batal di pojok kanan */}
-              <div className="pr-head-top">
-                <h3>Informasi pribadi</h3>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              <path d="m15 5 4 4" />
+            </svg>
+            Edit profil
+          </button>
+        )}
+      </section>
 
-                {/* Satu tombol yang berganti: Edit (pensil) <-> Batal (silang) */}
-                <button
-                  type="button"
-                  className="pr-btn pr-btn-s pr-btn-toggle"
-                  onClick={isEditing ? handleReset : handleEdit}
-                  disabled={saving}
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    {isEditing ? (
-                      <>
-                        <path d="M18 6 6 18" />
-                        <path d="m6 6 12 12" />
-                      </>
-                    ) : (
-                      <>
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                        <path d="m15 5 4 4" />
-                      </>
-                    )}
-                  </svg>
-                  {isEditing ? "Batal" : "Edit"}
-                </button>
-              </div>
+      {/* ===== Prestasi (PB-23: piala individu dari GET /profile -> piala) ===== */}
+      <section className="pr-card pm-card">
+        <h3>Prestasi</h3>
+        <p className="pm-card-sub">Piala kemenanganmu.</p>
+        <TrophyCards trophies={profile.trophies} />
+      </section>
 
-              <p>
-                {isEditing
-                  ? "Perubahan tersimpan setelah kamu menekan Simpan perubahan."
-                  : "Informasi profil yang tampil di akun kamu."}
-              </p>
-            </div>
+      {/* ===== Informasi pribadi ===== */}
+      <form
+        className={`pr-card pm-card ${isEditing ? "editing" : "pr-view"}`}
+        onSubmit={handleSave}
+        noValidate
+      >
+        <h3>Informasi pribadi</h3>
+        <p className="pm-card-sub">
+          {isEditing
+            ? "Perubahan tersimpan setelah kamu menekan Simpan."
+            : "Informasi profil yang tampil di akun kamu."}
+        </p>
 
-            <div className="pr-body">
-              <div className="pr-field">
-                <label className="pr-label" htmlFor="pr-username">
-                  Username
-                </label>
-                <input
-                  id="pr-username"
-                  className={`pr-input ${errors.username ? "err" : ""}`}
-                  value={form.username}
-                  onChange={(e) => setField("username", e.target.value)}
-                  disabled={locked}
-                />
-                {errors.username && <p className="pr-err">{errors.username}</p>}
-              </div>
+        <div className="pm-two">
+          <div>
+            <label
+              className={`pm-field ${errors.username ? "err" : ""}`}
+              htmlFor="pr-username"
+            >
+              <span className="pm-flabel">Username</span>
+              <input
+                id="pr-username"
+                className="pm-input"
+                value={form.username}
+                onChange={(e) => setField("username", e.target.value)}
+                disabled={locked}
+              />
+            </label>
+            {errors.username && <p className="pr-err">{errors.username}</p>}
+          </div>
 
-              <div className="pr-field">
-                <label className="pr-label" htmlFor="pr-bio">
-                  Bio
-                </label>
-                <textarea
-                  id="pr-bio"
-                  className={`pr-input pr-textarea ${errors.bio ? "err" : ""}`}
-                  value={form.bio}
-                  placeholder={isEditing ? "" : "Belum ada bio"}
-                  onChange={(e) => setField("bio", e.target.value)}
-                  disabled={locked}
-                />
-                {isEditing && (
-                  <p className="pr-count">{form.bio.length} karakter</p>
-                )}
-                {errors.bio && <p className="pr-err">{errors.bio}</p>}
-              </div>
-
-              <div className="pr-field">
-                <span className="pr-label">Jenis kelamin</span>
-                <div className="pr-chips">
-                  {GENDER_OPTIONS.map((opt) => (
-                    <label
-                      key={opt.value}
-                      className={`pr-chip ${
-                        form.gender === opt.value ? "on" : ""
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="gender"
-                        value={opt.value}
-                        checked={form.gender === opt.value}
-                        onChange={() => setField("gender", opt.value)}
-                        disabled={locked}
-                      />
-                      {opt.label}
-                    </label>
-                  ))}
-                </div>
-                {errors.gender && <p className="pr-err">{errors.gender}</p>}
-              </div>
-            </div>
-
-            {isEditing && (
-              <div className="pr-foot">
-                <span className={`pr-dirty ${dirty ? "on" : ""}`}>
-                  <i />
-                  {dirty
-                    ? "Ada perubahan yang belum disimpan"
-                    : "Belum ada perubahan"}
-                </span>
-                <button
-                  type="submit"
-                  className="pr-btn pr-btn-p"
-                  disabled={!dirty || saving}
-                >
-                  {saving ? "Menyimpan..." : "Simpan perubahan"}
-                </button>
-              </div>
-            )}
-          </form>
-
-          {/* Email read-only permanen (tidak ada endpoint ubah email) */}
-          <section className="pr-card">
-            <div className="pr-head">
-              <h3>Akun</h3>
-              <p>Email dan password yang kamu pakai untuk masuk.</p>
-            </div>
-
-            <div className="pr-row">
-              <div className="pr-sec-ic blue" aria-hidden="true">
+          <div>
+            <label
+              className={`pm-field ${errors.gender ? "err" : ""}`}
+              htmlFor="pr-gender"
+            >
+              <span className="pm-flabel">Jenis kelamin</span>
+              <select
+                id="pr-gender"
+                className="pm-input pm-select"
+                value={form.gender}
+                onChange={(e) => setField("gender", e.target.value)}
+                disabled={locked}
+              >
+                {GENDER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {isEditing && (
                 <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="3" y="5" width="18" height="14" rx="2" />
-                  <path d="M3 7l9 6 9-6" />
-                </svg>
-              </div>
-              <div className="pr-sec-tx">
-                <b>Email</b>
-                <span className="pr-email">{profile.email}</span>
-              </div>
-              <span className="pr-badge">
-                <svg
-                  width="13"
-                  height="13"
+                  className="pm-chev"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -481,53 +411,146 @@ function ProfileContent({ profile, setProfile }) {
                   strokeLinejoin="round"
                   aria-hidden="true"
                 >
-                  <rect x="4" y="11" width="16" height="10" rx="2" />
-                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                  <path d="m6 9 6 6 6-6" />
                 </svg>
-              </span>
-            </div>
-
-            <div className="pr-row">
-              <div className="pr-sec-ic" aria-hidden="true">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="4" y="11" width="16" height="10" rx="2" />
-                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                </svg>
-              </div>
-              <div className="pr-sec-tx">
-                <b>Password</b>
-                <span>••••••••</span>
-              </div>
-              <button
-                type="button"
-                className="pr-btn pr-btn-s"
-                onClick={() => setPwOpen(true)}
-              >
-                Ubah password
-              </button>
-            </div>
-          </section>
-
-          {/* changePassword dipanggil dengan kontrak yang sama:
-              { currentPassword, password, confirmPassword } */}
-          {pwOpen && (
-            <PasswordModal
-              onSubmit={changePassword}
-              onClose={() => setPwOpen(false)}
-              onSuccess={() => setToast("Password berhasil diubah")}
-            />
-          )}
+              )}
+            </label>
+            {errors.gender && <p className="pr-err">{errors.gender}</p>}
+          </div>
         </div>
-      </div>
+
+        <div>
+          <label
+            className={`pm-field pm-bio ${errors.bio ? "err" : ""}`}
+            htmlFor="pr-bio"
+          >
+            <span className="pm-flabel">Bio</span>
+            <textarea
+              id="pr-bio"
+              className="pm-input pm-textarea"
+              value={form.bio}
+              maxLength={bioMax}
+              placeholder={isEditing ? "" : "Belum ada bio"}
+              onChange={(e) => setField("bio", e.target.value)}
+              disabled={locked}
+            />
+            {isEditing && (
+              <span className="pm-count">
+                {form.bio.length}/{bioMax}
+              </span>
+            )}
+          </label>
+          {errors.bio && <p className="pr-err">{errors.bio}</p>}
+        </div>
+
+        {isEditing && (
+          <div className="pm-foot">
+            <button
+              type="button"
+              className="pm-btn ghost"
+              onClick={handleReset}
+              disabled={saving}
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="pm-btn primary"
+              disabled={!dirty || saving}
+            >
+              {saving ? "Menyimpan..." : "Simpan"}
+            </button>
+          </div>
+        )}
+      </form>
+
+      {/* ===== Akun: email (read-only) dan password ===== */}
+      <section className="pr-card pm-card">
+        <h3>Akun</h3>
+        <p className="pm-card-sub">
+          Email dan password yang kamu pakai untuk masuk.
+        </p>
+
+        <div className="pm-two">
+          <div className="pm-acc">
+            <span className="pm-acc-ic blue" aria-hidden="true">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="M3 7l9 6 9-6" />
+              </svg>
+            </span>
+            <div className="pm-acc-tx">
+              <small>Email</small>
+              <b>{profile.email}</b>
+            </div>
+            {/* Email tidak bisa diubah (tidak ada endpoint ubah email) */}
+            <span className="pm-lock" title="Tidak dapat diubah">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="4" y="11" width="16" height="10" rx="2" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              </svg>
+            </span>
+          </div>
+
+          <div className="pm-acc">
+            <span className="pm-acc-ic" aria-hidden="true">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="4" y="11" width="16" height="10" rx="2" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              </svg>
+            </span>
+            <div className="pm-acc-tx">
+              <small>Password</small>
+              <b className="dots">••••••••</b>
+            </div>
+            <button
+              type="button"
+              className="pm-pw-btn"
+              onClick={() => setPwOpen(true)}
+            >
+              Ubah password
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* changePassword dipanggil dengan kontrak yang sama:
+          { currentPassword, password, confirmPassword } */}
+      {pwOpen && (
+        <PasswordModal
+          onSubmit={changePassword}
+          onClose={() => setPwOpen(false)}
+          onSuccess={() => setToast("Password berhasil diubah")}
+        />
+      )}
 
       {/* ===== Lightbox preview avatar (4:3, dipangkas) ===== */}
       {lightbox && (
@@ -559,8 +582,25 @@ function ProfileContent({ profile, setProfile }) {
       )}
 
       {toast && (
-        <div className="pr-toast" role="status">
-          {toast}
+        <div className="pm-ov" onClick={() => setToast("")}>
+          <div className="pm-done" role="status">
+            <span className="pm-done-ic">
+              <svg
+                width="26"
+                height="26"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </span>
+            <b>{toast}</b>
+          </div>
         </div>
       )}
     </div>
