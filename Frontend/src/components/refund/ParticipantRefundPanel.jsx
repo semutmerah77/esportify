@@ -101,6 +101,7 @@ function ParticipantRefundPanel({ id }) {
         <RefundDataCard
           refund={refund}
           organizer={data.tournament.organizer}
+          organizerPlayerId={data.tournament.organizerPlayerId}
           organizerAvatar={data.tournament.organizerAvatar}
           plannedDate={data.plannedDate}
         />

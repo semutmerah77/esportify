@@ -64,6 +64,7 @@ const mapTournament = (t = {}) => ({
     null,
   status: String(t.status ?? "").toLowerCase(),
   feeType: String(t.jenis_biaya ?? "").toLowerCase(),
+  organizerPlayerId: num(t.id_player_penyelenggara), // PB-23: buka profil penyelenggara
 });
 
 // ----- Peserta -----
