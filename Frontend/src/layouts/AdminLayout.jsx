@@ -117,10 +117,6 @@ function AdminShell() {
           </Link>
         </div>
         <div className="admin-topbar-right">
-          <button className="admin-circle-btn" aria-label="Notifikasi">
-            <Icon name="bell" size={18} />
-            <span className="admin-dot"></span>
-          </button>
           <Link
             to="/admin/profile"
             title="Profil admin"
@@ -165,7 +161,9 @@ function AdminShell() {
             organizer: r.tournament.organizer,
             waitingDays: Math.max(
               0,
-              Math.floor((now - new Date(r.submittedAt ?? "").getTime()) / 86400000) || 0,
+              Math.floor(
+                (now - new Date(r.submittedAt ?? "").getTime()) / 86400000,
+              ) || 0,
             ),
           }))}
           onReview={goReviewCancellation}

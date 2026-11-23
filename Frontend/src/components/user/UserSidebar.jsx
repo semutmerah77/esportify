@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import Icon from "../icon"; // samakan huruf besar/kecil dengan nama file aslinya
+import Icon from "../icon";
+import { ChatBubbleIcon } from "../chat/ChatIcons";
 
 const tournamentItems = [
   {
@@ -48,7 +49,14 @@ const squadItems = [
   },
 ];
 
-function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
+function UserSidebar({
+  open,
+  onNavigate,
+  onLogout,
+  guest = false,
+  chatEnabled = true,
+  chatUnread = 0,
+}) {
   const { pathname, search, state } = useLocation();
 
   // Profil Player (/player/:id) dibuka dari Turnamen (state.area = "turnamen") atau dari Squad
@@ -279,6 +287,16 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
             );
           })}
         </div>
+      )}
+
+      {/* Obrolan (PB-27): menyala di /obrolan dan /obrolan/:id */}
+      {!guest && chatEnabled && (
+        <NavLink to="/obrolan" className={navClass} onClick={onNavigate}>
+          <ChatBubbleIcon size={16} /> Obrolan
+          {chatUnread > 0 && (
+            <span className="ch-dot" aria-label="Ada pesan belum dibaca" />
+          )}
+        </NavLink>
       )}
 
       {/* Aksi di dasar sidebar: sama posisinya untuk guest dan user */}

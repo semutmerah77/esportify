@@ -14,6 +14,7 @@ function Avatar({ src, name = "", size = 36 }) {
         <img
           src={src}
           alt={name}
+          loading="lazy"
           onError={() => {
             // SEMENTARA buat debug: hapus baris ini kalau avatar sudah muncul
             console.warn("[Avatar] gagal dimuat dari URL:", src);
