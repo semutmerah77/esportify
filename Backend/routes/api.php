@@ -58,6 +58,7 @@ use App\Http\Controllers\Player\RefundTurnamenController;
 use App\Http\Controllers\Player\KelolaPerpanjanganJadwalController;
 use App\Http\Controllers\Player\LihatWinRateSquadController;
 use App\Http\Controllers\Player\LihatBadgeSquadController;
+use App\Http\Controllers\Player\LihatBadgeProfilPlayerController;
 use App\Http\Controllers\Player\KelolaRefundTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
@@ -343,6 +344,13 @@ Route::middleware('auth:sanctum')->group(function () {
             PlayerSearchController::class,
             'index'
         ])->middleware('permission:cari_player');
+
+        
+        // PB-23: Profil Player lain + piala Gold/Silver/Bronze (dipakai ulang PB-27)
+        Route::get('/players/{id}/profil', [
+            LihatBadgeProfilPlayerController::class,
+            'getProfilePlayer'
+        ])->whereNumber('id')->middleware('permission:cari_player');
 
 
         // ==========================================

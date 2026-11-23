@@ -185,6 +185,36 @@ class PendaftaranTurnamen extends Model
         return self::daftarPencapaian($idSquad, $idGame);
     }
 
+    // ==========================================
+    // PIALA INDIVIDU PLAYER (PB-23)
+    // Dari roster pendaftaran (anggota_pendaftaran_turnamen), bukan keanggotaan
+    // Squad saat ini: pemain cadangan ikut dapat, anggota di luar roster tidak,
+    // dan piala tetap ada walau Player keluar / pindah Squad.
+    // ==========================================
+
+    /** SD: getPrestasiByPlayer(id_player) — Gold = Juara 1, Silver = Juara 2, Bronze = Juara 3. */
+    public static function getPrestasiByPlayer(int $idPlayer): array
+    {
+        $baris = AnggotaPendaftaranTurnamen::query()
+            ->join('pendaftaran_turnamen as pt', 'pt.id_pendaftaran', '=', 'anggota_pendaftaran_turnamen.id_pendaftaran')
+            ->join('turnamen as t', 't.id_turnamen', '=', 'pt.id_turnamen')
+            ->where('anggota_pendaftaran_turnamen.id_player', $idPlayer)
+            ->where('pt.status_pendaftaran', 'diterima')
+            ->where('t.status', Turnamen::STATUS_SELESAI)
+            ->whereIn('pt.peringkat_akhir', [1, 2, 3])
+            ->selectRaw('SUM(CASE WHEN pt.peringkat_akhir = 1 THEN 1 ELSE 0 END) as gold')
+            ->selectRaw('SUM(CASE WHEN pt.peringkat_akhir = 2 THEN 1 ELSE 0 END) as silver')
+            ->selectRaw('SUM(CASE WHEN pt.peringkat_akhir = 3 THEN 1 ELSE 0 END) as bronze')
+            ->toBase()
+            ->first();
+
+        return [
+            'gold' => (int) ($baris->gold ?? 0),
+            'silver' => (int) ($baris->silver ?? 0),
+            'bronze' => (int) ($baris->bronze ?? 0),
+        ];
+    }
+
     private static function hitungJuara(int $idSquad, ?int $idGame = null): array
     {
         $baris = static::hasilAkhirSquad($idSquad, $idGame)

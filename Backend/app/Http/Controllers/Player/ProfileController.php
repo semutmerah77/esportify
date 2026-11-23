@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Player;
 
 use App\Http\Controllers\Controller;
+use App\Models\PendaftaranTurnamen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -37,6 +38,8 @@ class ProfileController extends Controller
                 'avatar' => $player->avatar,
                 'bio' => $player->bio,
                 'jenis_kelamin' => $player->jenis_kelamin,
+                // PB-23 (R5.04): piala juga tampil di Profil Saya
+                'piala' => PendaftaranTurnamen::getPrestasiByPlayer($player->id_player),
             ],
         ], 200);
     }
