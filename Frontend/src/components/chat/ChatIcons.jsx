@@ -62,3 +62,11 @@ export const SendIcon = ({ size = 16 }) => (
     <path d="M22 3L2 11l8 3 3 8 9-19z" />
   </svg>
 );
+
+export const UnlockIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
+    <rect x="4" y="11" width="16" height="10" rx="2" />
+    <path d="M8 11V7a4 4 0 0 1 7.6-1.7" />
+    <circle cx="12" cy="16" r="1" fill="currentColor" />
+  </svg>
+);
