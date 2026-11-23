@@ -211,6 +211,8 @@ class RefundTurnamenService
             'nama_turnamen' => $turnamen->pengajuan?->nama_turnamen,
             'nama_penyelenggara' => $turnamen->pengajuan?->nama_penyelenggara,
             'avatar_penyelenggara_url' => $this->urlPublik($turnamen->penyelenggara?->player?->avatar),
+            // PB-23: untuk membuka profil penyelenggara (GET /players/{id}/profil)
+            'id_player_penyelenggara' => $turnamen->penyelenggara?->id_player,
         ];
     }
 }

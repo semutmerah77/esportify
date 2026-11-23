@@ -294,6 +294,8 @@ class TurnamenController extends Controller
             'data' => [
                 'id_turnamen' => $turnamen->id_turnamen,
                 'status' => $status,
+                // PB-23: untuk membuka profil penyelenggara (GET /players/{id}/profil)
+                'id_player_penyelenggara' => $turnamen->penyelenggara?->id_player,
                 // Indikator "Persiapan tertunda" (tidak disimpan di DB)
                 ...app(BracketService::class)->infoPersiapan($turnamen),
                 'created_at' => $turnamen->created_at,
