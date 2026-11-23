@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getPlayerBracket } from "../../services/tournamentBracketApi";
 import BracketCanvas from "./BracketCanvas";
 import PlayerReportDialog from "./PlayerReportDialog";
+import CorrectionBanner from "./CorrectionBanner";
+import { ChampionsCard } from "./ChampionsPodium";
+import ChampionsPopup from "./ChampionsPopup";
 import "../../styles/bracket.css";
 
 function Skeleton() {
@@ -17,14 +20,18 @@ function Skeleton() {
 }
 
 // Tab Bracket untuk peserta/player. id = id turnamen.
-// Draft: struktur tampil, squad lain disamarkan, tanpa tombol lapor (PB-14 revisi).
-// 403 (bukan peserta): pesan BE ditampilkan, tanpa retry otomatis.
-function PlayerBracketPanel({ id }) {
+// subtitle : "Nama Turnamen · Game" untuk popup juara
+// onChanged: dipanggil saat turnamen selesai agar header halaman (status) disegarkan
+function PlayerBracketPanel({ id, subtitle = "", onChanged }) {
   const [state, setState] = useState({ data: null, error: "" });
   const [reporting, setReporting] = useState(null);
+  const [championsOpen, setChampionsOpen] = useState(false);
+  const sawCorrection = useRef(false);
 
   useEffect(() => {
     let off = false;
+    sawCorrection.current = false;
+    setChampionsOpen(false);
     setState({ data: null, error: "" });
     getPlayerBracket(id)
       .then((data) => !off && setState({ data, error: "" }))
@@ -41,7 +48,6 @@ function PlayerBracketPanel({ id }) {
     };
   }, [id]);
 
-  // Muat ulang tanpa skeleton (setelah laporan terkirim)
   const refresh = useCallback(
     () =>
       getPlayerBracket(id)
@@ -50,29 +56,50 @@ function PlayerBracketPanel({ id }) {
     [id],
   );
   const closeReport = useCallback(() => setReporting(null), []);
+  const closeChampions = useCallback(() => setChampionsOpen(false), []);
+
+  const correction = state.data?.bracket?.correction ?? null;
+  const champions = state.data?.bracket?.champions ?? null;
+
+  // Popup juara hanya saat turnamen BARU selesai
+  useEffect(() => {
+    if (correction) sawCorrection.current = true;
+    if (champions && sawCorrection.current) {
+      sawCorrection.current = false;
+      setChampionsOpen(true);
+    }
+  }, [correction, champions]);
+
+  const onCorrectionEnded = async () => {
+    await refresh();
+    onChanged?.();
+  };
 
   if (state.error) return <p className="admin-message error">{state.error}</p>;
   if (!state.data) return <Skeleton />;
 
   const { data } = state;
   const b = data.bracket;
-  const masked = data.masked || !data.published;
 
-  // Belum ada bracket sama sekali
-  if (!b) {
-    return <p className="kl-empty">{data.note || "Bracket belum tersedia."}</p>;
+  if (!data.published || !b) {
+    return (
+      <p className="kl-empty">{data.note || "Bracket belum dipublikasikan."}</p>
+    );
   }
+
+  const finished = data.tournament.status === "selesai";
 
   return (
     <>
-      {masked && (
-        <div className="kl-bk-card kl-bk-note">
-          <b>Bracket belum dipublikasikan</b>
-          <p>
-            {data.note ||
-              "Identitas Squad lain masih disamarkan dan posisi dapat berubah."}
-          </p>
-        </div>
+      {correction && !finished && (
+        <CorrectionBanner
+          key={correction.endsAt}
+          seconds={correction.seconds}
+          onExpired={onCorrectionEnded}
+        />
+      )}
+      {finished && champions && (
+        <ChampionsCard champions={champions} decidedAt={b.finalizedAt} />
       )}
       {b.description && (
         <div className="kl-bk-card kl-bk-desc">
@@ -85,14 +112,21 @@ function PlayerBracketPanel({ id }) {
       <BracketCanvas
         rounds={b.rounds}
         mineReg={data.mySquad?.regId ?? null}
-        onReport={masked ? undefined : setReporting}
+        onReport={finished ? undefined : setReporting}
       />
-      {reporting && !masked && (
+      {reporting && !finished && (
         <PlayerReportDialog
           tournamentId={id}
           match={reporting}
           onClose={closeReport}
           onSubmitted={refresh}
+        />
+      )}
+      {championsOpen && champions && (
+        <ChampionsPopup
+          champions={champions}
+          subtitle={subtitle}
+          onClose={closeChampions}
         />
       )}
     </>

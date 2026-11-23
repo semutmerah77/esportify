@@ -25,6 +25,8 @@ import ManagedTournamentDetail from "./pages/tournament/ManagedTournamentDetail"
 import SearchSquad from "./pages/squad/SearchSquad";
 import MySquads from "./pages/squad/MySquads";
 import SquadDetail from "./pages/squad/SquadDetail";
+import SquadWinRateDetail from "./pages/squad/SquadWinRateDetail";
+import SquadAchievementList from "./pages/squad/SquadAchievementList";
 import DaftarTurnamen from "./pages/registration/DaftarTurnamen";
 import PendaftaranDetail from "./pages/registration/PendaftaranDetail";
 import TurnamenSaya from "./pages/registration/TurnamenSaya";
@@ -79,6 +81,11 @@ function App() {
             <Route path="/squad/cari" element={<SearchSquad />} />
             <Route path="/squad/saya" element={<MySquads />} />
             <Route path="/squad/:id" element={<SquadDetail />} />
+            <Route path="/squad/:id/winrate" element={<SquadWinRateDetail />} />
+            <Route
+              path="/squad/:id/lencana"
+              element={<SquadAchievementList />}
+            />
           </Route>
         </Route>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Icon from "../../components/icon";
@@ -39,6 +39,14 @@ function PesertaTurnamen() {
   const [part, setPart] = useState({ items: [], ready: false, error: "" });
   // Detail peserta: { item, data, loading, error }
   const [detailOf, setDetailOf] = useState(null);
+
+  const reloadHead = useCallback(
+    () =>
+      getManageHeader(id)
+        .then(setHead)
+        .catch(() => {}),
+    [id],
+  );
 
   useEffect(() => {
     let off = false;
@@ -231,7 +239,13 @@ function PesertaTurnamen() {
 
         {tab === "pengembalian" && <ParticipantRefundPanel id={id} />}
 
-        {tab === "bracket" && <PlayerBracketPanel id={id} />}
+        {tab === "bracket" && (
+          <PlayerBracketPanel
+            id={id}
+            subtitle={[head.name, head.game].filter(Boolean).join(" · ")}
+            onChanged={reloadHead}
+          />
+        )}
 
         {tab === "pengumuman" && <PlayerAnnouncementPanel id={id} />}
       </section>

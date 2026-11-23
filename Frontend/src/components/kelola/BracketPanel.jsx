@@ -12,6 +12,9 @@ import BracketIcon from "./BracketIcon";
 import ScoreDialog from "./ScoreDialog";
 import ReportInboxDrawer from "./ReportInboxDrawer";
 import ActionDonePopup from "./ActionDonePopup";
+import CorrectionBanner from "./CorrectionBanner";
+import { ChampionsCard } from "./ChampionsPodium";
+import ChampionsPopup from "./ChampionsPopup";
 import "../../styles/bracket.css";
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -485,7 +488,7 @@ function SuccessPopup({ title, text, onClose }) {
 
 // id      : id turnamen
 // onChanged: dipanggil setelah acak/publikasi/edit agar header halaman (status) disegarkan
-function BracketPanel({ id, onChanged }) {
+function BracketPanel({ id, onChanged, tournamentName = "", gameName = "" }) {
   const [state, setState] = useState({ data: null, error: "" });
   const [dialog, setDialog] = useState(null); // "acak" | "publikasi" | { round }
   const [busy, setBusy] = useState(false);
@@ -493,6 +496,8 @@ function BracketPanel({ id, onChanged }) {
   const [popup, setPopup] = useState(null); // { title, text } popup sukses di tengah layar
   const [done, setDone] = useState(null); // { title, text } popup sukses
   const [inboxOpen, setInboxOpen] = useState(false); // panel Laporan Hasil
+  const [championsOpen, setChampionsOpen] = useState(false);
+  const sawCorrection = useRef(false);
 
   const load = useCallback(
     () =>
@@ -545,6 +550,18 @@ function BracketPanel({ id, onChanged }) {
   useEffect(() => {
     if (left === 0) load().then(() => onChanged?.());
   }, [left]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const correction = state.data?.bracket?.correction ?? null;
+  const champions = state.data?.bracket?.champions ?? null;
+
+  // Popup juara hanya saat turnamen BARU selesai
+  useEffect(() => {
+    if (correction) sawCorrection.current = true;
+    if (champions && sawCorrection.current) {
+      sawCorrection.current = false;
+      setChampionsOpen(true);
+    }
+  }, [correction, champions]);
 
   const closeDialog = () => {
     setDialog(null);
@@ -613,6 +630,11 @@ function BracketPanel({ id, onChanged }) {
     return res;
   };
 
+  const onCorrectionEnded = async () => {
+    await load();
+    onChanged?.();
+  };
+
   if (state.error && !state.data)
     return <p className="admin-message error">{state.error}</p>;
   if (!state.data) return <Skeleton />;
@@ -659,65 +681,79 @@ function BracketPanel({ id, onChanged }) {
 
   return (
     <>
-      <div className="kl-bk-card">
-        <div className="kl-bk-card-top">
-          <div className="kl-bk-title">
-            {!published && <span className="kl-bk-draft">Draft</span>}
-            <h3>
-              {published
-                ? "Bracket sedang berjalan"
-                : blocked
-                  ? "Bracket belum bisa dipublikasikan"
-                  : "Bracket belum dipublikasikan"}
-            </h3>
+      {correction && !finished && (
+        <CorrectionBanner
+          key={correction.endsAt}
+          seconds={correction.seconds}
+          onExpired={onCorrectionEnded}
+        />
+      )}
+
+      {!finished && (
+        <div className="kl-bk-card">
+          <div className="kl-bk-card-top">
+            <div className="kl-bk-title">
+              {!published && <span className="kl-bk-draft">Draft</span>}
+              <h3>
+                {published
+                  ? "Bracket sedang berjalan"
+                  : blocked
+                    ? "Bracket belum bisa dipublikasikan"
+                    : "Bracket belum dipublikasikan"}
+              </h3>
+            </div>
+
+            {published && (
+              <div className="kl-bk-actions">
+                <button
+                  type="button"
+                  className="kl-bk-btn report"
+                  onClick={() => setInboxOpen(true)}
+                >
+                  <BracketIcon name="file" size={15} /> Laporan Hasil
+                  {t.pendingReports > 0 && (
+                    <span className="kl-bk-badge">{t.pendingReports}</span>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {!published && (
+              <div className="kl-bk-actions">
+                <button
+                  type="button"
+                  className="kl-bk-btn"
+                  disabled={!data.canShuffle}
+                  onClick={() => setDialog("acak")}
+                >
+                  <BracketIcon name="shuffle" size={15} /> Acak Posisi
+                </button>
+                <button
+                  type="button"
+                  className="kl-bk-btn primary"
+                  disabled={!t.canPublish}
+                  onClick={() => setDialog("publikasi")}
+                >
+                  <BracketIcon name="eye" size={15} /> Publikasikan Bracket
+                </button>
+              </div>
+            )}
           </div>
-
-          {published && (
-            <div className="kl-bk-actions">
-              <button
-                type="button"
-                className="kl-bk-btn report"
-                onClick={() => setInboxOpen(true)}
-              >
-                <BracketIcon name="file" size={15} /> Laporan Hasil
-                {t.pendingReports > 0 && (
-                  <span className="kl-bk-badge">{t.pendingReports}</span>
-                )}
-              </button>
-            </div>
-          )}
-
-          {!published && (
-            <div className="kl-bk-actions">
-              <button
-                type="button"
-                className="kl-bk-btn"
-                disabled={!data.canShuffle}
-                onClick={() => setDialog("acak")}
-              >
-                <BracketIcon name="shuffle" size={15} /> Acak Posisi
-              </button>
-              <button
-                type="button"
-                className="kl-bk-btn primary"
-                disabled={!t.canPublish}
-                onClick={() => setDialog("publikasi")}
-              >
-                <BracketIcon name="eye" size={15} /> Publikasikan Bracket
-              </button>
-            </div>
-          )}
+          <div className="kl-bk-card-sub">
+            <p>{subtitle}</p>
+            {hint && (
+              <span className={`kl-bk-hintline ${hint.cls}`}>
+                <BracketIcon name={hint.icon} size={15} /> {hint.text}
+                {hint.time && <b>{hint.time}</b>}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="kl-bk-card-sub">
-          <p>{subtitle}</p>
-          {hint && (
-            <span className={`kl-bk-hintline ${hint.cls}`}>
-              <BracketIcon name={hint.icon} size={15} /> {hint.text}
-              {hint.time && <b>{hint.time}</b>}
-            </span>
-          )}
-        </div>
-      </div>
+      )}
+
+      {finished && champions && (
+        <ChampionsCard champions={champions} decidedAt={b?.finalizedAt} />
+      )}
 
       {b && (
         <DescriptionCard
@@ -826,6 +862,14 @@ function BracketPanel({ id, onChanged }) {
           title={done.title}
           text={done.text}
           onClose={() => setDone(null)}
+        />
+      )}
+
+      {championsOpen && champions && (
+        <ChampionsPopup
+          champions={champions}
+          subtitle={[tournamentName, gameName].filter(Boolean).join(" · ")}
+          onClose={() => setChampionsOpen(false)}
         />
       )}
 
