@@ -9,7 +9,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Icon from "../icon";
 import Avatar from "../user/Avatar";
 import ConfirmDialog from "./ConfirmDialog";
-import { BanIcon, BroomIcon, DotsIcon, SendIcon, TrashIcon } from "./ChatIcons";
+import {
+  BanIcon,
+  BroomIcon,
+  DotsIcon,
+  SendIcon,
+  TrashIcon,
+  UnlockIcon,
+} from "./ChatIcons";
 import {
   blockPlayer,
   clearConversation,
@@ -415,29 +422,31 @@ function ChatWindow({ id, chat }) {
           </button>
           {menuOpen && (
             <div className="ch-menu" role="menu">
-              {!page.blocked && (
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setConfirm("block");
-                  }}
-                >
-                  <BanIcon size={15} /> Blokir Pesan
-                </button>
-              )}
               <button
                 type="button"
                 role="menuitem"
+                className="muted"
                 onClick={() => {
                   setMenuOpen(false);
                   setConfirm("clear");
                 }}
               >
-                <BroomIcon size={15} /> Bersihkan Pesan
+                <BroomIcon size={24} /> Bersihkan Pesan
               </button>
               <hr />
+              {!page.blocked && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="danger"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setConfirm("block");
+                  }}
+                >
+                  <BanIcon size={24} /> Blokir Pesan
+                </button>
+              )}
               <button
                 type="button"
                 role="menuitem"
@@ -447,7 +456,7 @@ function ChatWindow({ id, chat }) {
                   setConfirm("delete");
                 }}
               >
-                <TrashIcon size={15} /> Hapus Percakapan
+                <TrashIcon size={24} /> Hapus Percakapan
               </button>
             </div>
           )}
@@ -486,15 +495,28 @@ function ChatWindow({ id, chat }) {
 
       {page.blocked ? (
         <div className="ch-blocked">
-          <span>Anda memblokir Player ini</span>
-          <button
-            type="button"
-            className="ch-result-btn"
-            onClick={unblock}
-            disabled={busy}
-          >
-            Buka Blokir
-          </button>
+          <p className="ch-blocked-text">
+            <BanIcon size={16} /> Anda telah memblokir player ini. Ketuk untuk
+            membuka blokir.
+          </p>
+          <div className="ch-blocked-actions">
+            <button
+              type="button"
+              className="ch-blk-btn danger"
+              onClick={() => setConfirm("delete")}
+              disabled={busy}
+            >
+              <TrashIcon size={18} /> Hapus percakapan
+            </button>
+            <button
+              type="button"
+              className="ch-blk-btn"
+              onClick={unblock}
+              disabled={busy}
+            >
+              <UnlockIcon size={18} /> Buka blokir
+            </button>
+          </div>
         </div>
       ) : (
         <form className="ch-compose" onSubmit={submit}>
