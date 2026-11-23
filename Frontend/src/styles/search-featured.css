@@ -1,0 +1,247 @@
+/* Carousel "Turnamen unggulan" di halaman Cari Turnamen.
+   Memakai token --ct-* dari .ct-page (search.css), jadi harus dirender
+   di dalam .ct-page. Semua class berawalan .ct-feat. */
+
+.ct-feat {
+  position: relative;
+  margin-bottom: 28px;
+  padding: 26px 0 18px;
+  overflow: hidden; /* memotong cahaya blur di tepi kotak */
+  border: 1px solid var(--ct-line);
+  border-radius: 14px;
+  background: var(--ct-bg);
+}
+
+/* ---------- Latar cahaya dari poster ---------- */
+.ct-feat-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ct-feat-glow-img {
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  object-fit: cover;
+  filter: blur(46px) saturate(1.6);
+  opacity: 0;
+  transition: opacity 0.8s ease; /* pindah poster = warna ikut berganti halus */
+}
+.ct-feat-glow-img.on {
+  opacity: 0.6;
+}
+/* vinyet gelap supaya tepi tenang dan kartu tetap jadi pusat perhatian */
+.ct-feat-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(11, 15, 23, 0.1) 0%,
+    rgba(11, 15, 23, 0.6) 90%
+  );
+}
+
+/* ---------- Area geser ---------- */
+.ct-feat-viewport {
+  position: relative;
+  z-index: 1;
+  padding: 6px 0 14px;
+  overflow: hidden;
+  overflow: clip; /* tidak bisa ter-scroll lewat fokus */
+  cursor: grab;
+  touch-action: pan-y; /* geser vertikal tetap men-scroll halaman */
+  user-select: none;
+  -webkit-user-select: none;
+  /* tepi kiri dan kanan memudar */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+}
+.ct-feat-viewport:active {
+  cursor: grabbing;
+}
+.ct-feat-track {
+  display: flex;
+  align-items: center;
+  will-change: transform;
+}
+
+/* ---------- Kartu ---------- */
+.ct-feat-card {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  height: 270px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--ct-line);
+  border-radius: 12px;
+  background: var(--ct-elev);
+  color: var(--ct-tx);
+  font: inherit;
+  text-align: left;
+  cursor: inherit;
+  /* kartu jauh paling kecil dan paling redup */
+  transform: scale(0.78);
+  opacity: 0.45;
+  transition:
+    transform 0.45s cubic-bezier(0.22, 0.8, 0.3, 1),
+    opacity 0.45s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.ct-feat-card.is-near {
+  transform: scale(0.88);
+  opacity: 0.8;
+}
+.ct-feat-card.is-active {
+  transform: scale(1);
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+}
+.ct-feat-card:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.ct-feat-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.ct-feat-fb {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #1a2540, #151a33 55%, #231a44);
+  color: rgba(96, 165, 250, 0.25);
+}
+/* gradasi gelap di bawah supaya teks terbaca di poster terang */
+.ct-feat-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(11, 15, 23, 0.96) 0%,
+    rgba(11, 15, 23, 0.6) 34%,
+    rgba(11, 15, 23, 0) 62%
+  );
+}
+
+/* Tag memakai .ct-tag dari search.css; di sini cuma diposisikan ulang */
+.ct-feat-card .ct-tag-game {
+  top: 10px;
+  left: 10px;
+  max-width: calc(100% - 20px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ct-feat-card .ct-tag-type {
+  top: 10px;
+  right: 10px;
+  bottom: auto;
+  display: none; /* hanya tampil di kartu tengah */
+}
+.ct-feat-card.is-active .ct-tag-type {
+  display: block;
+}
+.ct-feat-card.is-active .ct-tag-game {
+  max-width: calc(100% - 82px);
+}
+
+.ct-feat-info {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  display: grid;
+  gap: 4px;
+}
+.ct-feat-name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.ct-feat-prize {
+  font-size: 12px;
+  color: var(--ct-tx2);
+}
+.ct-feat-prize b {
+  font-weight: 600;
+  color: var(--ct-ok);
+}
+.ct-feat-card:not(.is-active) .ct-feat-prize {
+  display: none;
+}
+
+/* ---------- Titik indikator ---------- */
+.ct-feat-dots {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.ct-feat-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition:
+    width 0.25s,
+    background 0.25s;
+}
+.ct-feat-dot:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+.ct-feat-dot.on {
+  width: 20px;
+  background: #fff;
+}
+
+/* ---------- Responsive dan aksesibilitas ---------- */
+@media (max-width: 600px) {
+  .ct-feat {
+    padding-top: 20px;
+  }
+  .ct-feat-card {
+    height: 240px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ct-feat-track {
+    transition: none !important; /* transisi track ditulis inline */
+  }
+  .ct-feat-card,
+  .ct-feat-dot,
+  .ct-feat-glow-img {
+    transition: none;
+  }
+}

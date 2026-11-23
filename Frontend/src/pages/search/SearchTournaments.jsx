@@ -4,10 +4,12 @@ import Icon from "../../components/icon";
 import FilterPanel from "../../components/search/FilterPanel";
 import ResultCard from "../../components/search/ResultCard";
 import Pagination from "../../components/search/Pagination";
+import FeaturedCarousel from "../../components/search/FeaturedCarousel";
 import {
   FEE_OPTIONS,
   PER_PAGE,
   TYPE_OPTIONS,
+  getFeaturedTournaments,
   getSearchCategories,
   getSearchCities,
   getSearchProvinces,
@@ -102,6 +104,7 @@ function SearchTournaments() {
   const [provinces, setProvinces] = useState([]);
   const [cities, setCities] = useState([]);
   const [reload, setReload] = useState(0);
+  const [featured, setFeatured] = useState([]);
   const [result, setResult] = useState({
     status: "loading",
     items: [],
@@ -119,6 +122,17 @@ function SearchTournaments() {
       .then(setProvinces)
       .catch(() => setProvinces([]));
   }, []);
+
+  // Turnamen unggulan: pendaftaran dibuka, hadiah uang terbesar
+  useEffect(() => {
+    let off = false;
+    getFeaturedTournaments(8)
+      .then((list) => !off && setFeatured(list))
+      .catch(() => !off && setFeatured([]));
+    return () => {
+      off = true;
+    };
+  }, [reload]);
 
   // Kota mengikuti provinsi: yang di panel saat terbuka, yang aktif di URL saat tertutup
   const activeProvince = open ? draft.provinsi : criteria.provinsi;
@@ -445,6 +459,11 @@ function SearchTournaments() {
           </button>
         </div>
       )}
+
+      <FeaturedCarousel
+        items={featured}
+        onOpen={(item) => navigate(DETAIL_PATH(item.id))}
+      />
 
       <h2 className="ct-list-title" ref={listRef}>
         Daftar Turnamen
