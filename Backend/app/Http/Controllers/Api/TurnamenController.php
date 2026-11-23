@@ -77,6 +77,7 @@ class TurnamenController extends Controller
                         'poster' => $pengajuan->poster,
                         'tipe_turnamen' => $pengajuan->tipe_turnamen,
                         'slot' => $pengajuan->slot,
+                        'slot_terisi' => (int) $item->jumlah_terdaftar,
                         'total_hadiah' => $pengajuan->total_hadiah,
 
                         // Jadwal AKTIF (hasil perpanjangan kalau ada, PB-24)
