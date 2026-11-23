@@ -318,7 +318,7 @@ function SquadDetail() {
       </section>
 
       <h2 className="sqd-title">Performa Squad</h2>
-      <SquadPerformance winrates={squad.winrates} badges={squad.badges} />
+      <SquadPerformance squadId={apiId} />
 
       <SquadMembers
         squad={view}

@@ -348,7 +348,14 @@ function KelolaTurnamen() {
 
         {tab === "refund" && <OrganizerRefundPanel id={id} />}
 
-        {tab === "bracket" && <BracketPanel id={id} onChanged={loadHead} />}
+        {tab === "bracket" && (
+          <BracketPanel
+            id={id}
+            onChanged={loadHead}
+            tournamentName={head.name}
+            gameName={head.game}
+          />
+        )}
 
         {tab === "pengumuman" && <AnnouncementPanel id={id} />}
       </section>

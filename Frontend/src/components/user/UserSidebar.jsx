@@ -119,7 +119,10 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
 
   const isItemActive = (item) => {
     // Detail squad (/squad/:id): menu yang aktif mengikuti asal halaman (Cari Squad atau Squad Saya)
-    const isSquadDetail = /^\/squad\/(?!cari$|saya$)[^/]+$/.test(pathname);
+    const isSquadDetail =
+      /^\/squad\/(?!cari(\/|$)|saya(\/|$))[^/]+(\/(winrate|lencana))?$/.test(
+        pathname,
+      );
     if (isSquadDetail && item.detailFrom)
       return squadFrom() === item.detailFrom;
 

@@ -50,6 +50,27 @@ function mapRound(r) {
   };
 }
 
+function mapCorrection(k) {
+  if (!k || k.sedang_berjalan === false) return null;
+  const left =
+    num(k.sisa_detik) ??
+    (k.berakhir_pada
+      ? Math.round((new Date(k.berakhir_pada) - Date.now()) / 1000)
+      : 0);
+  return {
+    endsAt: k.berakhir_pada ?? "",
+    seconds: Math.max(0, left || 0),
+    message: k.pesan ?? "",
+  };
+}
+
+function mapChampions(list) {
+  if (!Array.isArray(list) || list.length === 0) return null;
+  return list
+    .map((h) => ({ rank: Number(h.peringkat), squad: mapSquad(h.squad) }))
+    .filter((h) => h.squad);
+}
+
 function mapBracketData(d) {
   const t = d?.turnamen ?? {};
   const b = d?.bracket ?? null;
@@ -83,6 +104,9 @@ function mapBracketData(d) {
           playerCount: Number(b.jumlah_peserta ?? 0),
           slotCount: Number(b.jumlah_slot ?? 0),
           rounds: (b.babak ?? []).map(mapRound),
+          correction: mapCorrection(b.masa_koreksi),
+          champions: mapChampions(b.hasil_akhir),
+          finalizedAt: b.tanggal_penetapan ?? null,
         }
       : null,
   };
