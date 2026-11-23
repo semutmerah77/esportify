@@ -175,6 +175,7 @@ const mapTournament = (data) => {
   return {
     id: data.id_turnamen ?? data.id ?? null,
     status: String(data.status ?? "").toLowerCase(),
+    createdAt: data.created_at ?? null,
 
     registrationOpen:
       data.pendaftaran_terbuka ?? submission.pendaftaran_terbuka ?? null,
@@ -207,7 +208,8 @@ const mapTournament = (data) => {
     location: [cityName, provinceName].filter(Boolean).join(", "),
 
     slotTotal: Number(submission.slot ?? 0),
-    slotFilled: null,
+    slotFilled:
+      submission.slot_terisi != null ? Number(submission.slot_terisi) : null,
 
     prize: Number.isFinite(prize) ? prize : null,
     fee: feeOf(submission.pendanaan),
@@ -319,11 +321,22 @@ const matches = (tournament, criteria = {}) => {
   return true;
 };
 
+// Pendaftaran masih dibuka = status "pendaftaran" dan belum ditutup.
+const isOpen = (t) =>
+  t.status === "pendaftaran" && t.registrationOpen !== false;
+
+const createdTime = (t) => parseDate(t.createdAt)?.getTime() ?? 0;
+
+// Yang pendaftarannya dibuka di atas, terbaru dulu. Sisanya
+// (pendaftaran ditutup, berlangsung) selalu di bawah.
+const byPriority = (a, b) =>
+  Number(isOpen(b)) - Number(isOpen(a)) || createdTime(b) - createdTime(a);
+
 // criteria: { q, kategori, tipe, biaya, jadwal, dari, sampai, provinsi, kota, page }
 export async function searchTournaments(criteria = {}) {
-  const all = (await loadAll()).filter((tournament) =>
-    matches(tournament, criteria),
-  );
+  const all = (await loadAll())
+    .filter((tournament) => matches(tournament, criteria))
+    .sort(byPriority);
 
   const requestedPage = Math.max(1, Number(criteria.page) || 1);
 
