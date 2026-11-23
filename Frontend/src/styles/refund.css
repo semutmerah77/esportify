@@ -905,6 +905,27 @@
 .refund-skel.row {
   height: 74px;
 }
+
+/* PB-23: avatar & nama penyelenggara bisa diklik (tampilan sama, hanya jadi tombol) */
+.refund-organizer-link {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.refund-organizer-link:hover em {
+  text-decoration: underline;
+}
+.refund-organizer-link:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
 @keyframes refund-shimmer {
   to {
     background-position: -200% 0;

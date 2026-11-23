@@ -469,6 +469,7 @@ export async function getTournamentDetail(id) {
     agencyName: p.nama_instansi ?? "",
     organizerUsername: p.username_penyelenggara ?? "",
     organizerAvatar: p.avatar_penyelenggara ?? null,
+    organizerPlayerId: toNum(t.id_player_penyelenggara), // PB-23: buka profil penyelenggara
     posterUrl: p.poster_url ?? toMediaUrl(p.poster),
     type: String(p.tipe_turnamen ?? "").toLowerCase(),
     city: p.kota?.nama_kota ?? "",

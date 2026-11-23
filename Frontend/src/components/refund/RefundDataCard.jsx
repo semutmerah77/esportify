@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import RefundIcon from "./RefundIcon";
 import RefundFileRow from "./RefundFileRow";
 import {
@@ -15,7 +16,14 @@ const METHOD_TEXT = {
 
 // Kartu "Data pengembalian dana" (peserta, hanya baca): data yang sudah dikirim + status transfer.
 // Anggota non-pendaftar tidak menerima atas nama / rekening / QRIS dari BE: bagian itu otomatis hilang.
-function RefundDataCard({ refund, organizer, organizerAvatar, plannedDate }) {
+function RefundDataCard({
+  refund,
+  organizer,
+  organizerAvatar,
+  organizerPlayerId,
+  plannedDate,
+}) {
+  const navigate = useNavigate();
   const hasData = Boolean(refund.method && refund.holderName);
   const done = refund.status === "selesai";
 
@@ -116,13 +124,37 @@ function RefundDataCard({ refund, organizer, organizerAvatar, plannedDate }) {
       {organizer && (
         <footer className="refund-organizer">
           <small>PENYELENGGARA</small>
-          <RefundAvatar
-            name={organizer}
-            src={organizerAvatar}
-            size={44}
-            color="#1f2a44"
-          />
-          <em>{/\s/.test(organizer) ? organizer : `@${organizer}`}</em>
+          {/* PB-23: avatar & nama bisa diklik membuka profil (kalau id tersedia) */}
+          {organizerPlayerId ? (
+            <button
+              type="button"
+              className="refund-organizer-link"
+              title="Lihat profil penyelenggara"
+              onClick={() =>
+                navigate(`/player/${organizerPlayerId}`, {
+                  state: { area: "turnamen" },
+                })
+              }
+            >
+              <RefundAvatar
+                name={organizer}
+                src={organizerAvatar}
+                size={44}
+                color="#1f2a44"
+              />
+              <em>{/\s/.test(organizer) ? organizer : `@${organizer}`}</em>
+            </button>
+          ) : (
+            <>
+              <RefundAvatar
+                name={organizer}
+                src={organizerAvatar}
+                size={44}
+                color="#1f2a44"
+              />
+              <em>{/\s/.test(organizer) ? organizer : `@${organizer}`}</em>
+            </>
+          )}
         </footer>
       )}
     </section>

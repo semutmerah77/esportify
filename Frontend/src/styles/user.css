@@ -2515,6 +2515,29 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 16px;
 }
+
+/* PB-23: avatar & username penyelenggara bisa diklik (tampilan sama) */
+.td-host-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.td-host-link:hover p {
+  text-decoration: underline;
+  color: #cbd5e1;
+}
+.td-host-link:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
 @keyframes t-skel-shimmer {
   to {
     background-position: -200% 0;

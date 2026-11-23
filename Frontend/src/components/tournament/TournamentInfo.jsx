@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Icon from "../icon";
 import { formatWibDate } from "../../services/scheduleExtensionApi";
 import ScheduleIcon from "../kelola/ScheduleIcon";
@@ -47,6 +48,7 @@ function InfoCard({ title, icon, children, sub }) {
 // d = hasil getTournamentDetail. action = tombol opsional di kartu ringkasan.
 function TournamentInfo({ d, action, registered = null }) {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
 
   // "Pendaftaran Ditutup" hanya label tampilan (bukan status di database)
   const phase = d.status === "pendaftaran" && d.closed ? "ditutup" : d.status;
@@ -216,12 +218,35 @@ function TournamentInfo({ d, action, registered = null }) {
       {d.organizerUsername && (
         <div className="td-host">
           <small>PENYELENGGARA</small>
-          <Avatar
-            src={d.organizerAvatar}
-            name={d.organizerUsername}
-            size={44}
-          />
-          <p>@{d.organizerUsername}</p>
+          {/* PB-23: avatar & username bisa diklik membuka profil (kalau id tersedia) */}
+          {d.organizerPlayerId ? (
+            <button
+              type="button"
+              className="td-host-link"
+              title="Lihat profil penyelenggara"
+              onClick={() =>
+                navigate(`/player/${d.organizerPlayerId}`, {
+                  state: { area: "turnamen" },
+                })
+              }
+            >
+              <Avatar
+                src={d.organizerAvatar}
+                name={d.organizerUsername}
+                size={44}
+              />
+              <p>@{d.organizerUsername}</p>
+            </button>
+          ) : (
+            <>
+              <Avatar
+                src={d.organizerAvatar}
+                name={d.organizerUsername}
+                size={44}
+              />
+              <p>@{d.organizerUsername}</p>
+            </>
+          )}
         </div>
       )}
     </>

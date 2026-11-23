@@ -51,11 +51,17 @@ const squadItems = [
 function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
   const { pathname, search, state } = useLocation();
 
+  // Profil Player (/player/:id) dibuka dari Turnamen (state.area = "turnamen") atau dari Squad
+  const playerFromTournament =
+    pathname.startsWith("/player") && state?.area === "turnamen";
   const [menuOpen, setMenuOpen] = useState(
-    pathname.startsWith("/turnamen") || pathname.startsWith("/pendaftaran"),
+    pathname.startsWith("/turnamen") ||
+      pathname.startsWith("/pendaftaran") ||
+      playerFromTournament,
   );
   const [squadOpen, setSquadOpen] = useState(
-    pathname.startsWith("/squad") || pathname.startsWith("/player"),
+    pathname.startsWith("/squad") ||
+      (pathname.startsWith("/player") && !playerFromTournament),
   );
   const [showGate, setShowGate] = useState(false);
 
@@ -121,11 +127,18 @@ function UserSidebar({ open, onNavigate, onLogout, guest = false }) {
 
   const isItemActive = (item) => {
     // Detail squad (/squad/:id): menu yang aktif mengikuti asal halaman (Cari Squad atau Squad Saya)
-    // PB-23: profil Player (/player/:id) dibuka dari squad, jadi ikut menyalakan menu squad
+    // PB-23: profil Player (/player/:id) mengikuti asalnya.
+    // Dari Turnamen (state.area = "turnamen") -> Cari Turnamen / Turnamen Saya; selain itu -> menu Squad.
+    const isPlayerPage = /^\/player\/[^/]+$/.test(pathname);
+    if (isPlayerPage && state?.area === "turnamen")
+      return (
+        item.to ===
+        (tournamentFrom() === "saya" ? "/turnamen/saya" : "/turnamen/cari")
+      );
     const isSquadDetail =
       /^\/squad\/(?!cari(\/|$)|saya(\/|$))[^/]+(\/(winrate|lencana))?$/.test(
         pathname,
-      ) || /^\/player\/[^/]+$/.test(pathname);
+      ) || isPlayerPage;
     if (isSquadDetail && item.detailFrom)
       return squadFrom() === item.detailFrom;
 
