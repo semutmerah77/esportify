@@ -40,3 +40,14 @@ Artisan::command('turnamen:tetapkan-hasil', function (BracketService $bracket) {
 })->purpose('Menetapkan hasil akhir turnamen setelah masa koreksi 30 menit');
 
 Schedule::command('turnamen:tetapkan-hasil')->everyMinute()->withoutOverlapping();
+
+// ==========================================
+// PB-27/28 (R8.06): pesan chat disimpan 6 bulan, lebih dari itu dihapus otomatis.
+// ==========================================
+
+Artisan::command('chat:hapus-pesan-lama', function () {
+    $jumlah = \App\Models\Pesan::hapusPesanLama();
+    $this->info("Pesan dihapus: {$jumlah}");
+})->purpose('Menghapus pesan chat yang lebih dari 6 bulan (R8.06)');
+
+Schedule::command('chat:hapus-pesan-lama')->dailyAt('02:00')->withoutOverlapping();
