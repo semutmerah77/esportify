@@ -12,7 +12,7 @@ export class ApiError extends Error {
 
 export async function apiRequest(
   path,
-  { method = "GET", body, keepalive = false } = {},
+  { method = "GET", body, keepalive = false, signal } = {},
 ) {
   const token = getToken();
   const isForm = body instanceof FormData;
@@ -29,8 +29,10 @@ export async function apiRequest(
       },
       body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
       keepalive,
+      signal,
     });
-  } catch {
+  } catch (e) {
+    if (e?.name === "AbortError") throw e; // dibatalkan sengaja, bukan error jaringan
     throw new ApiError("Tidak dapat terhubung ke server. Coba lagi nanti.");
   }
 

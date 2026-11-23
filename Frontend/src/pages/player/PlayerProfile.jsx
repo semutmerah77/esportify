@@ -4,6 +4,7 @@ import Icon from "../../components/icon";
 import Avatar from "../../components/user/Avatar";
 import TrophyCards from "../../components/player/TrophyCards";
 import { getPlayerProfile } from "../../services/profileApi";
+import { openChatWithPlayer } from "../../services/chatApi";
 import "../../styles/player-profile.css";
 
 const GENDER_LABEL = {
@@ -76,6 +77,22 @@ function PlayerProfile() {
 
   const { data, error, missing } = state;
 
+  // PB-27: tombol "Kirim Pesan" -> buka/buat percakapan lalu langsung ke halaman pesan
+  const [msgBusy, setMsgBusy] = useState(false);
+  const [msgErr, setMsgErr] = useState("");
+  const startChat = async () => {
+    if (msgBusy) return;
+    setMsgBusy(true);
+    setMsgErr("");
+    try {
+      const page = await openChatWithPlayer(id);
+      navigate(`/obrolan/${page.id}`, { state: { page } });
+    } catch (err) {
+      setMsgErr(err.message || "Tidak dapat membuka percakapan.");
+      setMsgBusy(false);
+    }
+  };
+
   return (
     <div className="pr-page">
       <button type="button" className="pr-back" onClick={() => navigate(-1)}>
@@ -100,6 +117,7 @@ function PlayerProfile() {
 
       {missing && <p className="admin-message">Player tidak ditemukan.</p>}
       {error && <p className="admin-message error">{error}</p>}
+      {msgErr && <p className="admin-message error">{msgErr}</p>}
       {!data && !missing && !error && <Skeleton />}
 
       {data && (
@@ -119,7 +137,12 @@ function PlayerProfile() {
             </div>
             {!data.isSelf && (
               // PB-27 (Chat): aksi tombol ini dipasang di PB-27
-              <button type="button" className="pp-msg-btn">
+              <button
+                type="button"
+                className="pp-msg-btn"
+                onClick={startChat}
+                disabled={msgBusy}
+              >
                 <Icon name="mail" size={16} /> Kirim Pesan
               </button>
             )}

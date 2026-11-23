@@ -8,6 +8,8 @@ import logo from "../assets/ESPORTIFY-Logo.png";
 import "../styles/admin.css";
 import "../styles/user.css";
 import { getProfile } from "../services/profileApi";
+import useChatList from "../hooks/useChatList";
+import "../styles/chat.css";
 
 function UserLayout() {
   const { user, loading, signOut } = useAuth();
@@ -19,6 +21,9 @@ function UserLayout() {
   const [error, setError] = useState("");
 
   const closeSidebar = () => setSidebarOpen(false);
+
+  // Daftar percakapan + jumlah belum dibaca (titik biru di sidebar). Dipakai juga oleh halaman Obrolan.
+  const chat = useChatList(!guest && !loading);
 
   useEffect(() => {
     if (loading || !user) {
@@ -137,6 +142,8 @@ function UserLayout() {
           onNavigate={closeSidebar}
           onLogout={handleLogout}
           guest={guest}
+          chatEnabled={!chat.denied}
+          chatUnread={chat.unread}
         />
 
         {sidebarOpen && (
@@ -146,7 +153,7 @@ function UserLayout() {
         <main className="admin-main">
           {error && <p className="admin-message error">{error}</p>}
 
-          <Outlet context={{ profile, setProfile }} />
+          <Outlet context={{ profile, setProfile, chat }} />
         </main>
       </div>
     </div>
