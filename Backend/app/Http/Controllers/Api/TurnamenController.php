@@ -46,6 +46,9 @@ class TurnamenController extends Controller
     {
         $turnamen = Turnamen::query()
             ->whereHas('pengajuan')
+             ->withCount([
+                'pendaftaran as jumlah_terdaftar' => fn ($q) => $q->aktif(),
+            ])
             ->with([
                 'pengajuan:id_pengajuan,id_game,id_kota,nama_turnamen,nama_penyelenggara,nama_instansi,poster,tipe_turnamen,slot,total_hadiah,jadwal_pendaftaran_tutup,jadwal_main,deskripsi_lokasi',
                 'pengajuan.game:id_game,nama_game',
