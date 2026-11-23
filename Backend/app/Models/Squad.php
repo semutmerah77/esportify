@@ -132,6 +132,18 @@ class Squad extends Model
      */
     public const MAKS_SQUAD_PER_PLAYER = 10;
 
+    /**
+     * PB-23 — SD Lihat Badge Profil Player: getSquadByPlayer(id_player).
+     * Squad aktif yang sedang diikuti Player (keanggotaan aktif).
+     */
+    public static function getSquadByPlayer(int $idPlayer)
+    {
+        return static::aktif()
+            ->whereHas('anggotaAktif', fn ($q) => $q->where('id_player', $idPlayer))
+            ->orderBy('nama_squad')
+            ->get(['id_squad', 'kode_squad', 'nama_squad', 'logo_squad']);
+    }
+
     public static function jumlahSquadAktifPlayer(int $idPlayer): int
     {
         return AnggotaSquad::where('id_player', $idPlayer)

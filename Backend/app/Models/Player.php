@@ -22,5 +22,17 @@ class Player extends Model
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
+
+    
+    /**
+     * PB-23 — SD Lihat Badge Profil Player: getPlayerById(id_player).
+     * Hanya Player dengan akun aktif (sama seperti hasil Cari Player).
+     */
+    public static function getPlayerById(int $idPlayer): ?self
+    {
+        return static::with('user')
+            ->whereHas('user', fn ($q) => $q->where('status', 'aktif'))
+            ->find($idPlayer);
+    }
 }
 ?>
