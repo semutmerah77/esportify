@@ -3,9 +3,13 @@
    di dalam .ct-page. Semua class berawalan .ct-feat. */
 
 .ct-feat {
+  margin-bottom: 20px;
+}
+
+/* Kotak berlatar cahaya. Dibuat rapat supaya kartu yang jadi pusat perhatian. */
+.ct-feat-box {
   position: relative;
-  margin-bottom: 28px;
-  padding: 26px 0 18px;
+  padding: 14px 0;
   overflow: hidden; /* memotong cahaya blur di tepi kotak */
   border: 1px solid var(--ct-line);
   border-radius: 14px;
@@ -48,7 +52,7 @@
 .ct-feat-viewport {
   position: relative;
   z-index: 1;
-  padding: 6px 0 14px;
+  padding: 0;
   overflow: hidden;
   overflow: clip; /* tidak bisa ter-scroll lewat fokus */
   cursor: grab;
@@ -198,13 +202,12 @@
   display: none;
 }
 
-/* ---------- Titik indikator ---------- */
+/* ---------- Titik indikator (di luar kotak) ---------- */
 .ct-feat-dots {
-  position: relative;
-  z-index: 1;
   display: flex;
   justify-content: center;
   gap: 6px;
+  margin-top: 12px;
 }
 .ct-feat-dot {
   width: 8px;
@@ -212,24 +215,24 @@
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--ct-line);
   cursor: pointer;
   transition:
     width 0.25s,
     background 0.25s;
 }
 .ct-feat-dot:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: #3a4d6e;
 }
 .ct-feat-dot.on {
   width: 20px;
-  background: #fff;
+  background: var(--ct-pri);
 }
 
 /* ---------- Responsive dan aksesibilitas ---------- */
 @media (max-width: 600px) {
-  .ct-feat {
-    padding-top: 20px;
+  .ct-feat-box {
+    padding: 10px 0;
   }
   .ct-feat-card {
     height: 240px;
