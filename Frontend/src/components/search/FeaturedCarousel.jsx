@@ -169,55 +169,57 @@ function FeaturedCarousel({ items = [], onOpen }) {
       onMouseLeave={() => setHover(false)}
       onBlur={() => setKbFocus(false)}
     >
-      {/* Latar: poster kartu tengah, diburamkan jadi cahaya berwarna */}
-      <div className="ct-feat-glow" aria-hidden="true">
-        {items.map((item, i) =>
-          item.poster ? (
-            <img
-              key={item.id}
-              className={`ct-feat-glow-img ${i === index ? "on" : ""}`}
-              src={item.poster}
-              alt=""
-              draggable={false}
-            />
-          ) : null,
-        )}
-      </div>
-
-      <div
-        ref={viewportRef}
-        className="ct-feat-viewport"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onClickCapture={swallowClickAfterDrag}
-      >
-        <div
-          className="ct-feat-track"
-          style={{
-            gap: GAP,
-            visibility: vw ? "visible" : "hidden",
-            transform: `translate3d(${x}px, 0, 0)`,
-            transition: dragging
-              ? "none"
-              : "transform 0.45s cubic-bezier(0.22, 0.8, 0.3, 1)",
-          }}
-        >
-          {items.map((item, i) => {
-            const dist = Math.abs(i - index);
-            const state =
-              dist === 0 ? "is-active" : dist === 1 ? "is-near" : "is-far";
-            return (
-              <FeaturedCard
+      <div className="ct-feat-box">
+        {/* Latar: poster kartu tengah, diburamkan jadi cahaya berwarna */}
+        <div className="ct-feat-glow" aria-hidden="true">
+          {items.map((item, i) =>
+            item.poster ? (
+              <img
                 key={item.id}
-                item={item}
-                state={state}
-                onOpen={onOpen}
-                onFocus={onCardFocus(i)}
+                className={`ct-feat-glow-img ${i === index ? "on" : ""}`}
+                src={item.poster}
+                alt=""
+                draggable={false}
               />
-            );
-          })}
+            ) : null,
+          )}
+        </div>
+
+        <div
+          ref={viewportRef}
+          className="ct-feat-viewport"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onClickCapture={swallowClickAfterDrag}
+        >
+          <div
+            className="ct-feat-track"
+            style={{
+              gap: GAP,
+              visibility: vw ? "visible" : "hidden",
+              transform: `translate3d(${x}px, 0, 0)`,
+              transition: dragging
+                ? "none"
+                : "transform 0.45s cubic-bezier(0.22, 0.8, 0.3, 1)",
+            }}
+          >
+            {items.map((item, i) => {
+              const dist = Math.abs(i - index);
+              const state =
+                dist === 0 ? "is-active" : dist === 1 ? "is-near" : "is-far";
+              return (
+                <FeaturedCard
+                  key={item.id}
+                  item={item}
+                  state={state}
+                  onOpen={onOpen}
+                  onFocus={onCardFocus(i)}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 

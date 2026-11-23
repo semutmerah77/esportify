@@ -396,6 +396,11 @@ function SearchTournaments() {
     <div className="ct-page">
       <h1 className="admin-title">Cari Turnamen</h1>
 
+      <FeaturedCarousel
+        items={featured}
+        onOpen={(item) => navigate(DETAIL_PATH(item.id))}
+      />
+
       <form className="ct-search" role="search" onSubmit={handleSearch}>
         <div className="ct-search-field">
           <Icon name="search" size={18} />
@@ -459,11 +464,6 @@ function SearchTournaments() {
           </button>
         </div>
       )}
-
-      <FeaturedCarousel
-        items={featured}
-        onOpen={(item) => navigate(DETAIL_PATH(item.id))}
-      />
 
       <h2 className="ct-list-title" ref={listRef}>
         Daftar Turnamen
