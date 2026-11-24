@@ -94,6 +94,7 @@ class PermissionSeeder extends Seeder
             'perpanjang_jadwal_turnamen',
             // Chat Player (PB-27 & PB-28)
             'chat_player',
+            'lihat_home_player',
         ];
 
         foreach ($permissions as $permission) {

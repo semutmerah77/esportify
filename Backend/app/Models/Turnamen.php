@@ -110,6 +110,39 @@ class Turnamen extends Model
         return static::whereKey($idTurnamen)->value('status');
     }
 
+    
+    /**
+     * PB-29 — SD Melihat Home Player: getTurnamenTerbaru().
+     * Turnamen publik (sama dengan daftar /turnamen: bukan selesai/dibatalkan dan
+     * hari main belum lewat), urut paling baru dibuat, maksimal 5 (Player::BATAS_HOME).
+     */
+    public static function getTurnamenTerbaru(): array
+    {
+        $query = static::query()
+            ->join('pengajuan_turnamen as pj', 'pj.id_pengajuan', '=', 'turnamen.id_pengajuan')
+            ->where(fn ($q) => $q->whereNull('turnamen.status')
+                ->orWhereNotIn('turnamen.status', [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]))
+            ->whereRaw(
+                'COALESCE(turnamen.jadwal_main_baru, turnamen.jadwal_main, pj.jadwal_main) >= ?',
+                [now()->startOfDay()->toDateTimeString()]
+            );
+
+        return [
+            'total' => (clone $query)->count(),
+            'data' => $query
+                ->select('turnamen.*')
+                ->with([
+                    'pengajuan:id_pengajuan,id_game,nama_turnamen,poster,tipe_turnamen,slot,total_hadiah,jadwal_pendaftaran_tutup,jadwal_main',
+                    'pengajuan.game:id_game,nama_game',
+                    'pengajuan.pendanaan',
+                ])
+                ->orderByDesc('turnamen.created_at')
+                ->orderByDesc('turnamen.id_turnamen')
+                ->limit(Player::BATAS_HOME)
+                ->get(),
+        ];
+    }
+
     /**
      * SD: mulaiMasaKoreksi(id_turnamen). Dipanggil saat hasil final & perebutan
      * Juara 3 lengkap, dan dipanggil lagi setiap ada koreksi (waktu di-reset).

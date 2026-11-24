@@ -60,6 +60,7 @@ use App\Http\Controllers\Player\LihatWinRateSquadController;
 use App\Http\Controllers\Player\LihatBadgeSquadController;
 use App\Http\Controllers\Player\LihatBadgeProfilPlayerController;
 use App\Http\Controllers\Player\ChatController;
+use App\Http\Controllers\Player\HomePlayerController;
 use App\Http\Controllers\Player\KelolaRefundTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
@@ -353,6 +354,13 @@ Route::middleware('auth:sanctum')->group(function () {
             'getProfilePlayer'
         ])->whereNumber('id')->middleware('permission:cari_player');
 
+
+        // ==========================================
+        // PB-29: HOME PLAYER
+        // ==========================================
+
+        Route::get('/home-player', [HomePlayerController::class, 'tampilkanHomePlayer'])
+            ->middleware('permission:lihat_home_player');
         
         // ==========================================
         // PB-27 & PB-28: CHAT PLAYER, STATUS TERBACA, BLOKIR
