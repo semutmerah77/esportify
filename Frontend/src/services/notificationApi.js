@@ -21,7 +21,8 @@ export function mapNotification(n) {
     group: n.kelompok, // hari_ini | 7_hari_terakhir | 30_hari_terakhir
     // Label "Diterima"/"Ditolak" (permintaan bergabung & undangan). Belum ada di kontrak PB-30:
     // dipakai bila BE mengirim status_tanggapan ("diterima" | "ditolak").
-    response: n.status_tanggapan ?? null,
+    response: n.status_tanggapan ?? null, // null | "diterima" | "ditolak"
+    note: n.keterangan ?? null,
   };
 }
 
@@ -51,6 +52,8 @@ export async function openNotification(id) {
   return {
     link: d.tautan || "",
     item: d.notifikasi ? mapNotification(d.notifikasi) : null,
+    // Mis. "Pengumuman ini sudah dihapus oleh Penyelenggara."
+    note: d.keterangan || d.notifikasi?.keterangan || "",
   };
 }
 

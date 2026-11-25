@@ -409,6 +409,24 @@
   width: 90%;
   margin-bottom: 0;
 }
+
+/* Sorotan pengumuman yang dituju dari notifikasi */
+.an-anchor.hl {
+  border-radius: 12px;
+  animation: an-hl 3s ease-out 1;
+}
+@keyframes an-hl {
+  0%,
+  70% {
+    box-shadow: 0 0 0 2px #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+    background: transparent;
+  }
+}
+
 @keyframes an-pulse {
   to {
     background-position: -200% 0;

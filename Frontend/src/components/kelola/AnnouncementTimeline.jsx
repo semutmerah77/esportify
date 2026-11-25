@@ -11,7 +11,13 @@ const NEWEST_FIRST = true;
 
 // Daftar pengumuman dikelompokkan per tanggal (WIB) dengan pil tanggal di tengah ("Hari ini", "11 Nov 2026").
 // renderMenu(item): menu titik tiga per kartu (khusus penyelenggara); kosong = tanpa menu
-function AnnouncementTimeline({ items, organizerName, renderMenu }) {
+// highlightId: pengumuman yang disorot (dari tautan notifikasi)
+function AnnouncementTimeline({
+  items,
+  organizerName,
+  renderMenu,
+  highlightId = 0,
+}) {
   const ordered = NEWEST_FIRST ? items : [...items].reverse();
   const groups = [];
   ordered.forEach((item) => {
@@ -34,12 +40,17 @@ function AnnouncementTimeline({ items, organizerName, renderMenu }) {
             <span>{group.label}</span>
           </div>
           {group.items.map((item) => (
-            <AnnouncementCard
+            <div
               key={item.id}
-              item={item}
-              organizerName={organizerName}
-              menu={renderMenu ? renderMenu(item) : undefined}
-            />
+              id={`an-${item.id}`}
+              className={item.id === highlightId ? "an-anchor hl" : "an-anchor"}
+            >
+              <AnnouncementCard
+                item={item}
+                organizerName={organizerName}
+                menu={renderMenu ? renderMenu(item) : undefined}
+              />
+            </div>
           ))}
         </section>
       ))}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getPlayerAnnouncements } from "../../services/announcementApi";
 import AnnouncementIcon from "./AnnouncementIcon";
 import AnnouncementTimeline from "./AnnouncementTimeline";
@@ -20,7 +20,7 @@ function Skeleton() {
 
 // Tab Pengumuman untuk peserta (Ruang Turnamen). id = id turnamen.
 // 403 dari BE (bukan anggota squad yang diterima) ditampilkan apa adanya.
-function PlayerAnnouncementPanel({ id, organizerName = "" }) {
+function PlayerAnnouncementPanel({ id, organizerName = "", highlightId = 0 }) {
   const [state, setState] = useState({ items: null, error: "" });
 
   useEffect(() => {
@@ -40,6 +40,16 @@ function PlayerAnnouncementPanel({ id, organizerName = "" }) {
       off = true;
     };
   }, [id]);
+
+  // Dari notifikasi (?pengumuman=id): gulir ke pengumuman itu, sekali saja
+  const scrolled = useRef(false);
+  useEffect(() => {
+    if (!highlightId || !state.items || scrolled.current) return;
+    scrolled.current = true;
+    document
+      .getElementById(`an-${highlightId}`)
+      ?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [highlightId, state.items]);
 
   if (state.error) return <p className="admin-message error">{state.error}</p>;
   if (!state.items) return <Skeleton />;
@@ -67,6 +77,7 @@ function PlayerAnnouncementPanel({ id, organizerName = "" }) {
         <AnnouncementTimeline
           items={state.items}
           organizerName={organizerName}
+          highlightId={highlightId}
         />
       )}
     </div>
