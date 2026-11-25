@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Player;
 
 use App\Http\Controllers\Controller;
 use App\Models\AnggotaSquad;
+use App\Models\Notification;
 use App\Models\PermintaanBergabung;
 use App\Models\Player;
 use App\Models\Squad;
@@ -89,6 +90,9 @@ class UndanganSquadController extends Controller
             'id_player' => $target->id_player,
             'status_undangan' => 'menunggu',
         ]);
+
+        // PB-31 (R10.12): notifikasi ke Player yang diundang
+        Notification::buatNotifikasiUndanganSquad($undangan);
 
         return response()->json([
             'success' => true,

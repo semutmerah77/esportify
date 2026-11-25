@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Player;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Models\Pengumuman;
 use Illuminate\Http\Request;
 
 /**
@@ -38,6 +39,8 @@ class NotifikasiController extends Controller
     public function tampilkanDaftarNotifikasi(Request $request)
     {
         $daftarNotifikasi = $request->user()->lihatDaftarNotifikasi();
+        // R10.13: label Diterima/Ditolak (maks. 2 query untuk satu halaman)
+        $statusTanggapan = Notification::statusTanggapan($daftarNotifikasi->items());
 
         return response()->json([
             'success' => true,
@@ -46,7 +49,7 @@ class NotifikasiController extends Controller
                 : 'Daftar notifikasi berhasil ditampilkan.',
             'data' => [
                 'notifikasi' => collect($daftarNotifikasi->items())
-                    ->map(fn (Notification $n) => $this->formatNotifikasi($n))
+                    ->map(fn (Notification $n) => $this->formatNotifikasi($n, null, $statusTanggapan[$n->id] ?? null))
                     ->values(),
                 'halaman' => $daftarNotifikasi->currentPage(),
                 'ada_halaman_berikutnya' => $daftarNotifikasi->hasMorePages(),
@@ -75,7 +78,11 @@ class NotifikasiController extends Controller
             'message' => 'Notifikasi ditandai sudah dibaca.',
             'data' => [
                 'tautan' => $notifikasi->data['tautan'] ?? null,
-                'notifikasi' => $this->formatNotifikasi($notifikasi),
+                                'notifikasi' => $this->formatNotifikasi(
+                    $notifikasi,
+                    $this->keteranganSaatDibuka($notifikasi),
+                    Notification::statusTanggapan([$notifikasi])[$notifikasi->id] ?? null
+                ),
             ],
         ]);
     }
@@ -104,7 +111,21 @@ class NotifikasiController extends Controller
     // HELPER
     // ==========================================
 
-    private function formatNotifikasi(Notification $n): array
+     /**
+  * PB-31 (R10.06): pengumuman yang sudah dihapus tetap bisa dibuka notifikasinya,
+  * tetapi menampilkan informasi bahwa pengumuman sudah dihapus.
+  */
+    private function keteranganSaatDibuka(Notification $n): ?string
+    {
+        if ($n->type === Notification::JENIS_PENGUMUMAN_BARU
+            && !Pengumuman::whereKey($n->data['id_pengumuman'] ?? 0)->exists()) {
+            return 'Pengumuman ini sudah dihapus oleh Penyelenggara.';
+        }
+
+        return null;
+    }
+
+    private function formatNotifikasi(Notification $n, ?string $keterangan = null, ?string $statusTanggapan = null): array
     {
         $data = $n->data ?? [];
 
@@ -120,6 +141,8 @@ class NotifikasiController extends Controller
             'dibaca_pada' => $n->read_at?->toIso8601String(),
             'dibuat_pada' => $n->created_at?->toIso8601String(),
             'kelompok' => $n->kelompokWaktu(),
+            'keterangan' => $keterangan,
+            'status_tanggapan' => $statusTanggapan,
         ];
     }
 }

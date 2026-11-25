@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Player;
 
 use App\Http\Controllers\Controller;
 use App\Models\AnggotaSquad;
+use App\Models\Notification;
 use App\Models\PermintaanBergabung;
 use App\Models\Squad;
 use App\Models\UndanganSquad;
@@ -70,6 +71,9 @@ class PermintaanBergabungController extends Controller
             'id_leader_squad' => $squad->leader?->id_leader_squad,
             'status_permintaan' => 'menunggu',
         ]);
+
+        // PB-31 (R10.11): notifikasi ke Leader
+        Notification::buatNotifikasiPermintaanBergabung($permintaan);
 
         return response()->json([
             'success' => true,

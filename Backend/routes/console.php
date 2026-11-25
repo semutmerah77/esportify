@@ -63,3 +63,16 @@ Artisan::command('notifikasi:hapus-kedaluwarsa', function () {
 })->purpose('Menghapus notifikasi yang lebih dari 30 hari (R10.04)');
 
 Schedule::command('notifikasi:hapus-kedaluwarsa')->dailyAt('02:30')->withoutOverlapping();
+
+
+// ==========================================
+// PB-31 (R10.16): notifikasi otomatis — pengajuan ditolak otomatis (revisi lewat batas),
+// jaring pengaman bracket dipublikasikan & juara ditetapkan. Setiap kejadian hanya 1x per penerima.
+// ==========================================
+
+Artisan::command('notifikasi:cek-otomatis', function () {
+    $hasil = \App\Models\Notification::jalankanPengecekanNotifikasiOtomatis();
+    $this->info("Pengajuan ditolak otomatis: {$hasil['pengajuan_ditolak']} | bracket dicek: {$hasil['bracket_dicek']} | juara dicek: {$hasil['juara_dicek']}");
+})->purpose('Membuat notifikasi otomatis yang dipicu sistem (R10.16)');
+
+Schedule::command('notifikasi:cek-otomatis')->everyMinute()->withoutOverlapping();
