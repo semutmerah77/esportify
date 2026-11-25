@@ -59,6 +59,9 @@ function UserSidebar({
 }) {
   const { pathname, search, state } = useLocation();
 
+  // Halaman yang dibuka dari kartu di Home (navigate dengan state.area = "home") -> menu Home menyala
+  const fromHome = state?.area === "home" && pathname !== "/home";
+
   // Profil Player (/player/:id) dibuka dari Turnamen (state.area = "turnamen") atau dari Squad
   const playerFromTournament =
     pathname.startsWith("/player") && state?.area === "turnamen";
@@ -134,6 +137,7 @@ function UserSidebar({
   };
 
   const isItemActive = (item) => {
+    if (fromHome) return false;
     // Detail squad (/squad/:id): menu yang aktif mengikuti asal halaman (Cari Squad atau Squad Saya)
     // PB-23: profil Player (/player/:id) mengikuti asalnya.
     // Dari Turnamen (state.area = "turnamen") -> Cari Turnamen / Turnamen Saya; selain itu -> menu Squad.
@@ -193,7 +197,14 @@ function UserSidebar({
     <aside className={`admin-sidebar ${open ? "open" : ""}`}>
       {/* Home hanya untuk user yang sudah login */}
       {!guest && (
-        <NavLink to="/home" end className={navClass} onClick={onNavigate}>
+        <NavLink
+          to="/home"
+          end
+          className={({ isActive }) =>
+            isActive || fromHome ? "admin-nav-item active" : "admin-nav-item"
+          }
+          onClick={onNavigate}
+        >
           <Icon name="home" size={16} /> Home
         </NavLink>
       )}

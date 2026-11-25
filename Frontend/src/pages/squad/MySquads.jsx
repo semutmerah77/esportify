@@ -28,9 +28,10 @@ function MySquads() {
   const location = useLocation();
   const [notice, setNotice] = useState(location.state?.notice || "");
 
-  // Hapus state navigasi supaya popup tidak muncul lagi saat halaman dimuat ulang
+  // Datang dari Home (belum punya squad): buka modal Buat Squad langsung
   useEffect(() => {
-    if (location.state?.notice)
+    if (location.state?.openCreate) setCreating(true);
+    if (location.state?.notice || location.state?.openCreate)
       navigate(location.pathname, { replace: true, state: null });
   }, []);
 

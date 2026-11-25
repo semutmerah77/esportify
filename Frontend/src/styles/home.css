@@ -1,0 +1,458 @@
+/* PB-29: Home Player (prefix hm-) */
+.hm-page {
+  max-width: 1200px;
+}
+
+.hm-section {
+  margin-bottom: 32px;
+}
+.hm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.hm-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+.hm-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #3b82f6;
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.hm-all:hover {
+  color: #7cb0ff;
+}
+.hm-retry {
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #7cb0ff;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.hm-empty {
+  margin: 0;
+  padding: 22px;
+  border: 1px dashed #243044;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+/* ---------- Kartu & grid ---------- */
+.hm-grid {
+  display: grid;
+  gap: 16px;
+}
+.hm-grid.joined {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.hm-grid.latest {
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+}
+.hm-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #1f2a40;
+  border-radius: 12px;
+  background: #0f1628;
+}
+article.hm-card {
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+article.hm-card:hover {
+  border-color: #2f4170;
+}
+
+/* ---------- Turnamen diikuti ---------- */
+.hm-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.hm-card-top h3 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+.hm-game {
+  margin: 6px 0 14px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+.hm-meta {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.hm-meta li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.hm-card-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #1f2a40;
+}
+
+.hm-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 11.5px;
+  line-height: 1.3;
+}
+.hm-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.hm-badge.green {
+  border-color: #134e3a;
+  background: #0b2a21;
+  color: #34d399;
+}
+.hm-badge.amber {
+  border-color: #5a4310;
+  background: #2a2110;
+  color: #fbbf24;
+}
+.hm-badge.red {
+  border-color: #5a1f27;
+  background: #2a1217;
+  color: #f87171;
+}
+.hm-badge.gray {
+  border-color: #2d3548;
+  background: #1a2133;
+  color: #94a3b8;
+}
+
+/* ---------- Tombol Secondary Outline ---------- */
+.hm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #2a3350;
+  border-radius: 8px;
+  background: transparent;
+  color: #e2e8f0;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.hm-btn.sm {
+  height: 32px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.hm-btn.md {
+  height: 40px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+.hm-btn.block {
+  width: 100%;
+}
+.hm-btn:hover {
+  border-color: #3a4766;
+  background: #1b2338;
+}
+.hm-btn:active {
+  border-color: #3b82f6;
+  background: #14244a;
+  color: #7cb0ff;
+}
+.hm-btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ---------- Squad kamu ---------- */
+.hm-squad-box {
+  padding: 22px 20px;
+}
+.hm-squad-lead {
+  margin: 0 0 16px;
+  font-size: 16px;
+  color: #fff;
+}
+.hm-squad-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #151e35;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.hm-squad-row:last-child {
+  margin-bottom: 0;
+}
+.hm-squad-row:hover {
+  background: #1b2642;
+}
+.hm-squad-name {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+.hm-squad-name b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.hm-squad-name small {
+  font-size: 12px;
+  color: #94a3b8;
+}
+.hm-squad-row code {
+  flex: none;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.hm-squad-logo {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border: 1px solid #3a3320;
+  border-radius: 10px;
+  background: #2a2412;
+  color: #fbbf24;
+  font-size: 12px;
+  font-weight: 700;
+}
+.hm-squad-logo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hm-squad-empty p {
+  margin: 0 0 16px;
+  font-size: 15px;
+  color: #cbd5e1;
+}
+.hm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ---------- Turnamen terbaru ---------- */
+.hm-new {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+.hm-poster {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 150px;
+  overflow: hidden;
+  border: 1px solid #1f2a40;
+  border-radius: 8px;
+  background: #0a0f1d;
+}
+.hm-poster-star {
+  color: #1f2a44;
+}
+.hm-poster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.hm-chip {
+  position: absolute;
+  padding: 2px 8px;
+  border: 1px solid #2a3350;
+  border-radius: 6px;
+  background: #090d18;
+  font-size: 11px;
+  color: #e2e8f0;
+}
+.hm-chip.game {
+  top: 8px;
+  left: 8px;
+}
+.hm-chip.type {
+  right: 8px;
+  bottom: 8px;
+  color: #94a3b8;
+}
+.hm-chip.type.online {
+  border-color: #1e3a8a;
+  color: #60a5fa;
+}
+.hm-new-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 6px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.hm-new h3 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+.hm-closed {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #f87171;
+}
+.hm-money {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #1f2a40;
+}
+.hm-money div {
+  min-width: 0;
+}
+.hm-money div:last-child {
+  text-align: right;
+}
+.hm-money dt {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+.hm-money dd {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.hm-money dd.prize {
+  color: #34d399;
+}
+.hm-slot {
+  display: flex;
+  justify-content: space-between;
+  margin: 12px 0 6px;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+.hm-bar {
+  height: 4px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #1f2a44;
+}
+.hm-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #2563eb;
+}
+.hm-slot b {
+  color: #fff;
+}
+.hm-new .hm-btn {
+  margin-top: auto;
+}
+
+/* ---------- Skeleton ---------- */
+.hm-skel-card {
+  display: grid;
+  gap: 12px;
+  min-height: 150px;
+}
+.hm-skel-card.tall {
+  min-height: 300px;
+}
+.hm-skel {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: #1f2a44;
+  animation: hm-pulse 1.2s ease-in-out infinite;
+}
+.hm-skel.w40 {
+  width: 40%;
+}
+.hm-skel.w50 {
+  width: 50%;
+}
+.hm-skel.w60 {
+  width: 60%;
+}
+.hm-skel.w80 {
+  width: 80%;
+}
+@keyframes hm-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (max-width: 640px) {
+  .hm-grid.joined,
+  .hm-grid.latest {
+    grid-template-columns: 1fr;
+  }
+}
