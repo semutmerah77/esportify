@@ -136,6 +136,8 @@ class Turnamen extends Model
                     'pengajuan.game:id_game,nama_game',
                     'pengajuan.pendanaan',
                 ])
+                // slot terisi = pendaftaran menunggu + diterima (1 query untuk semua)
+                ->withCount(['pendaftaran as slot_terisi' => fn ($q) => $q->aktif()])
                 ->orderByDesc('turnamen.created_at')
                 ->orderByDesc('turnamen.id_turnamen')
                 ->limit(Player::BATAS_HOME)
