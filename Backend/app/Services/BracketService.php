@@ -6,6 +6,7 @@ use App\Models\BabakTurnamen;
 use App\Models\BracketTurnamen;
 use App\Models\PendaftaranTurnamen;
 use App\Models\Pertandingan;
+use App\Models\Notification;
 use App\Models\Turnamen;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -321,7 +322,7 @@ class BracketService
      * US46: publikasi bracket (manual / otomatis). Syarat dicek pemanggil
      * lewat alasanTidakBisaDipublikasikan.
      */
-    public function publikasikan(BracketTurnamen $bracket): void
+        public function publikasikan(BracketTurnamen $bracket, bool $otomatis = false): void
     {
         if (!$bracket->isDraft()) {
             return;
@@ -331,6 +332,12 @@ class BracketService
             'status_bracket' => BracketTurnamen::STATUS_DIPUBLIKASIKAN,
             'tanggal_publikasi' => now(),
         ]);
+
+        // PB-31 (R10.08): manual oleh Penyelenggara / otomatis oleh sistem
+        $turnamen = Turnamen::find($bracket->id_turnamen);
+        if ($turnamen) {
+            Notification::buatNotifikasiBracketDipublikasikan($turnamen, $otomatis);
+        }
     }
 
     /**
@@ -383,7 +390,7 @@ class BracketService
             return null;
         }
 
-        $this->publikasikan($bracket);
+        $this->publikasikan($bracket, true);
         $this->terapkanBerlangsung($turnamen);
 
         return 'dipublikasikan';

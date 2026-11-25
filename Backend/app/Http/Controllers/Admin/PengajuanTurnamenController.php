@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use App\Models\PengajuanTurnamen;
 use App\Models\Penyelenggara;
 use App\Models\Turnamen;
@@ -252,6 +253,9 @@ class PengajuanTurnamenController extends Controller
             return $pengajuan;
         });
 
+        // PB-31 (R10.14): notifikasi hasil verifikasi ke Player pengaju
+        Notification::buatNotifikasiHasilVerifikasiPengajuan($pengajuan->fresh());
+
         return response()->json([
             'message' => 'Pengajuan berhasil disetujui dan turnamen berhasil dibuat.',
             'data' => $pengajuan->fresh(),
@@ -302,6 +306,9 @@ class PengajuanTurnamenController extends Controller
             return $pengajuan;
         });
 
+        // PB-31 (R10.14): notifikasi hasil verifikasi ke Player pengaju
+        Notification::buatNotifikasiHasilVerifikasiPengajuan($pengajuan->fresh());
+
         return response()->json([
             'message' => 'Pengajuan berhasil ditolak.',
             'data' => $pengajuan->fresh(),
@@ -351,6 +358,9 @@ class PengajuanTurnamenController extends Controller
 
             return $pengajuan;
         });
+
+        // PB-31 (R10.14): notifikasi hasil verifikasi ke Player pengaju
+        Notification::buatNotifikasiHasilVerifikasiPengajuan($pengajuan->fresh());
 
         return response()->json([
             'message' => 'Pengajuan berhasil dikembalikan untuk revisi.',

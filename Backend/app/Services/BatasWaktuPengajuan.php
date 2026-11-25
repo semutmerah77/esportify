@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Notification;
 use App\Models\PengajuanTurnamen;
 use Illuminate\Support\Carbon;
 
@@ -76,6 +77,9 @@ class BatasWaktuPengajuan
             $pengajuan->alasan_admin = $this->alasanTolakOtomatis();
             $pengajuan->save();
 
+            // PB-31 (R10.14): notifikasi penolakan otomatis
+            Notification::buatNotifikasiPengajuanDitolak($pengajuan);
+
             return $pengajuan;
         }
 
@@ -93,20 +97,29 @@ class BatasWaktuPengajuan
 
     /**
      * Cek semua pengajuan sekaligus.
-     * Dipanggil di awal halaman daftar dan detail (Admin dan Player).
+     * Dipanggil di awal halaman daftar dan detail (Admin dan Player),
+     * dan oleh scheduler notifikasi:cek-otomatis setiap menit (PB-31, R10.16).
+     *
+     * @return int jumlah pengajuan yang ditolak otomatis
      */
-    public function perbaruiSemua(): void
+    public function perbaruiSemua(): int
     {
         $batasRevisiLewat = now()->subMinutes($this->menitRevisi());
         $batasEditLewat = now()->subMinutes($this->menitEdit());
 
-        PengajuanTurnamen::whereNotNull('revisi_diminta_pada')
+        // Per pengajuan, supaya setiap Player pengaju mendapat notifikasi (PB-31)
+        $lewatBatas = PengajuanTurnamen::whereNotNull('revisi_diminta_pada')
             ->whereIn('status', ['Revisi', 'Sedang diedit'])
             ->where('revisi_diminta_pada', '<=', $batasRevisiLewat)
-            ->update([
+            ->get();
+
+        foreach ($lewatBatas as $pengajuan) {
+            $pengajuan->update([
                 'status' => 'Ditolak',
                 'alasan_admin' => $this->alasanTolakOtomatis(),
             ]);
+            Notification::buatNotifikasiPengajuanDitolak($pengajuan);
+        }
 
         PengajuanTurnamen::where('status', 'Sedang diedit')
             ->whereNull('revisi_diminta_pada')
@@ -115,6 +128,8 @@ class BatasWaktuPengajuan
                 [$batasEditLewat]
             )
             ->update(['status' => 'Menunggu Verifikasi']);
+
+        return $lewatBatas->count();
     }
 
     /**

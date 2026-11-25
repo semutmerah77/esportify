@@ -6,6 +6,7 @@ use App\Models\AnggotaPendaftaranTurnamen;
 use App\Models\PendaftaranTurnamen;
 use App\Models\Player;
 use App\Models\Squad;
+use App\Models\Notification;
 use App\Models\Turnamen;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -396,6 +397,8 @@ class PendaftaranTurnamenService
             'tanggal_verifikasi' => now(),
         ]);
 
+        // PB-31 (R10.10)
+        Notification::buatNotifikasiHasilPendaftaran($pendaftaran);
         return $pendaftaran;
     }
 
@@ -421,6 +424,8 @@ class PendaftaranTurnamenService
                 'tanggal_pembukaan' => $now,
             ]);
 
+        // PB-31 (R10.10): penolakan memuat alasan
+        Notification::buatNotifikasiHasilPendaftaran($pendaftaran);
         return $pendaftaran;
     }
 
@@ -483,6 +488,9 @@ class PendaftaranTurnamenService
             ]);
 
         $turnamen->update(['status' => 'selesai']);
+        
+        // PB-31 (R10.09): juara ditetapkan → peserta & Penyelenggara
+        Notification::buatNotifikasiJuaraDitetapkan($turnamen);
 
         return [
             'roster_dibuka' => $rosterDibuka,

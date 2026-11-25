@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PendaftaranTurnamen;
 use App\Models\Pengumuman;
 use App\Models\Player;
+use App\Models\Notification;
 use App\Models\Turnamen;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -55,14 +56,19 @@ class PengumumanService
         return null;
     }
 
-    public function buat(Turnamen $turnamen, string $judul, string $isi): Pengumuman
+       public function buat(Turnamen $turnamen, string $judul, string $isi): Pengumuman
     {
-        return Pengumuman::create([
+        $pengumuman = Pengumuman::create([
             'id_turnamen' => $turnamen->id_turnamen,
             'id_penyelenggara' => $turnamen->id_penyelenggara,
             'judul' => $judul,
             'isi_pengumuman' => $isi,
         ]);
+
+        // PB-31 (R10.06): notifikasi ke anggota roster peserta. Edit tidak mengirim ulang.
+        Notification::buatNotifikasiPengumumanBaru($pengumuman);
+
+        return $pengumuman;
     }
 
     // ==========================================

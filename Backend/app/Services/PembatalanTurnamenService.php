@@ -8,6 +8,7 @@ use App\Models\BuktiPembatalanTurnamen;
 use App\Models\PendaftaranTurnamen;
 use App\Models\PengajuanPembatalanTurnamen;
 use App\Models\Pertandingan;
+use App\Models\Notification;
 use App\Models\Turnamen;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -166,6 +167,9 @@ class PembatalanTurnamenService
             ->update(['status_roster' => 'terbuka', 'tanggal_pembukaan' => now()]);
             // PB-26: data refund untuk setiap peserta diterima (hanya turnamen berbayar)
             app(RefundTurnamenService::class)->buatUntukTurnamen($turnamen);
+
+        // PB-31 (R10.07): notifikasi pembatalan ke anggota roster peserta
+        Notification::buatNotifikasiTurnamenDibatalkan($turnamen, $this->berbayar($turnamen));
     }
 
     public function tolak(PengajuanPembatalanTurnamen $pengajuan, Admin $admin, string $catatan): void
