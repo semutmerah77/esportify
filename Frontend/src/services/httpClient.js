@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../config/env";
 import { getToken } from "./tokenStorage";
+import { homeCache } from "./homeCache";
 
 export class ApiError extends Error {
   constructor(message, status = 0, fields = {}) {
@@ -38,7 +39,11 @@ export async function apiRequest(
 
   const data = await response.json().catch(() => null);
 
-  if (response.ok) return data;
+  if (response.ok) {
+    // Aksi yang mengubah data (POST/PUT/DELETE) membuat cache Home basi
+    if (method !== "GET") homeCache.clear();
+    return data;
+  }
 
   if (response.status === 401) {
     throw new ApiError(data?.message || "Tidak terautentikasi.", 401);

@@ -67,7 +67,7 @@
   cursor: pointer;
 }
 .ch-new:hover {
-  background: #2f74e6;
+  background: #2563c9;
 }
 .ch-items {
   flex: 1;
@@ -179,17 +179,19 @@
   place-items: center;
   width: 28px;
   height: 36px;
-  border: 0;
+  border: 1px solid #2a3556;
   border-radius: 8px;
   background: #1a2237;
   color: #cbd5e1;
   cursor: pointer;
   transition:
     background 0.15s ease,
+    border-color 0.15s ease,
     color 0.15s ease;
 }
 .ch-dots:hover,
 .ch-dots[aria-expanded="true"] {
+  border-color: #3b5bb5;
   background: #2a3658;
   color: #fff;
 }
@@ -715,6 +717,69 @@
 .ch-msgs::-webkit-scrollbar-button,
 .ch-items::-webkit-scrollbar-button {
   display: none; /* hilangkan panah atas/bawah */
+}
+
+/* ---------- Hover tombol ---------- */
+.ch-new,
+.ch-send,
+.ch-result-btn,
+.ch-modal-x,
+.ch-back,
+.ch-confirm button,
+.ch-blk-btn {
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    filter 0.15s ease;
+}
+
+/* Tombol biru: Obrolan Baru, Kirim, Kirim Pesan */
+.ch-send:hover:not(:disabled) {
+  background: #2f68d0;
+}
+.ch-result-btn:hover:not(:disabled) {
+  background: #1d4fd8;
+}
+
+/* Tombol tutup (X) di modal dan tombol kembali */
+.ch-modal-x:hover {
+  border-color: #3b5bb5;
+  background: #1f3270;
+  color: #fff;
+}
+.ch-back:hover {
+  background: #263050;
+}
+
+/* Popup konfirmasi */
+.ch-confirm-danger:hover:not(:disabled) {
+  border-color: #b4474f;
+  background: #3a2328;
+  color: #fca5a5;
+}
+.ch-confirm-cancel:hover:not(:disabled) {
+  border-color: #454d60;
+  background: #2a2e38;
+}
+
+/* Footer saat memblokir: Hapus percakapan (merah) dan Buka blokir */
+.ch-blk-btn:hover:not(:disabled) {
+  border-color: #454d60;
+  background: #2d313c;
+}
+.ch-blk-btn.danger:hover:not(:disabled) {
+  border-color: #b4474f;
+  background: #3a2328;
+  color: #fca5a5;
+}
+
+/* Efek tekan */
+.ch-send:active:not(:disabled),
+.ch-result-btn:active:not(:disabled),
+.ch-confirm button:active:not(:disabled),
+.ch-blk-btn:active:not(:disabled) {
+  filter: brightness(0.92);
 }
 
 /* ---------- Ponsel ---------- */
