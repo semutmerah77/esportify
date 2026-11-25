@@ -9,6 +9,7 @@ import "../styles/admin.css";
 import "../styles/user.css";
 import { getProfile } from "../services/profileApi";
 import useChatList from "../hooks/useChatList";
+import useNotifMarker from "../hooks/useNotifMarker";
 import "../styles/chat.css";
 
 function UserLayout() {
@@ -24,6 +25,9 @@ function UserLayout() {
 
   // Daftar percakapan + jumlah belum dibaca (titik biru di sidebar). Dipakai juga oleh halaman Obrolan.
   const chat = useChatList(!guest && !loading);
+
+  // Titik biru di lonceng (polling 45 detik, berhenti saat tab tersembunyi)
+  const notif = useNotifMarker(!guest && !loading);
 
   useEffect(() => {
     if (loading || !user) {
@@ -119,13 +123,21 @@ function UserLayout() {
             </>
           ) : (
             <>
-              <button
-                type="button"
-                className="admin-circle-btn"
-                aria-label="Notifikasi"
-              >
-                <Icon name="bell" size={18} />
-              </button>
+              {!notif.denied && (
+                <button
+                  type="button"
+                  className="admin-circle-btn"
+                  aria-label={
+                    notif.unread
+                      ? "Notifikasi, ada yang belum dibaca"
+                      : "Notifikasi"
+                  }
+                  onClick={() => navigate("/notifikasi")}
+                >
+                  <Icon name="bell" size={18} />
+                  {notif.unread && <span className="admin-dot"></span>}
+                </button>
+              )}
 
               <ProfileMenu
                 username={profile?.username ?? user?.username ?? ""}
@@ -153,7 +165,7 @@ function UserLayout() {
         <main className="admin-main">
           {error && <p className="admin-message error">{error}</p>}
 
-          <Outlet context={{ profile, setProfile, chat }} />
+          <Outlet context={{ profile, setProfile, chat, notif }} />
         </main>
       </div>
     </div>

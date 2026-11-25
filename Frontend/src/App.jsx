@@ -29,6 +29,7 @@ import SquadWinRateDetail from "./pages/squad/SquadWinRateDetail";
 import SquadAchievementList from "./pages/squad/SquadAchievementList";
 import PlayerProfile from "./pages/player/PlayerProfile";
 import Obrolan from "./pages/chat/Obrolan";
+import Notifications from "./pages/notification/Notifications";
 import DaftarTurnamen from "./pages/registration/DaftarTurnamen";
 import PendaftaranDetail from "./pages/registration/PendaftaranDetail";
 import TurnamenSaya from "./pages/registration/TurnamenSaya";
@@ -91,6 +92,7 @@ function App() {
             <Route path="/player/:id" element={<PlayerProfile />} />
             <Route path="/obrolan" element={<Obrolan />} />
             <Route path="/obrolan/:id" element={<Obrolan />} />
+            <Route path="/notifikasi" element={<Notifications />} />
           </Route>
         </Route>
 
