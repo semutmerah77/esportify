@@ -283,6 +283,7 @@ class PendaftaranTurnamenService
         }
 
         if ($jadwalTutup && now()->gte(Carbon::parse($jadwalTutup))) {
+            return 'Pendaftaran turnamen sudah ditutup.';
         }
 
         if ($this->sisaSlot($turnamen) <= 0) {
