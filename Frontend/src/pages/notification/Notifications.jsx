@@ -23,6 +23,10 @@ const mergeById = (prev, incoming) => {
   return [...prev, ...incoming.filter((n) => !seen.has(n.id))];
 };
 
+// Hanya tautan internal yang boleh dipakai untuk navigasi
+const safeLink = (l) =>
+  typeof l === "string" && l.startsWith("/") && !l.startsWith("//") ? l : "";
+
 function Skeleton() {
   return (
     <div aria-hidden="true">
@@ -51,6 +55,7 @@ function Notifications() {
   const [marking, setMarking] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [notice, setNotice] = useState("");
+  const [info, setInfo] = useState(null); // { message, link } popup keterangan dari /buka
 
   // Daftar dimuat hanya saat halaman ini dibuka (halaman 1)
   useEffect(() => {
@@ -96,22 +101,29 @@ function Notifications() {
     }
   };
 
-  // Buka notifikasi: tandai dibaca di state lokal lalu pindah ke tautan (tanpa memuat ulang daftar)
+  // Buka notifikasi: tandai dibaca di state lokal lalu pindah ke tautan (tanpa memuat ulang daftar).
+  // Notifikasi yang sudah dibaca langsung pindah, kecuali pengumuman (perlu cek keterangan "sudah dihapus").
   const open = async (n) => {
     if (busyId) return;
-    if (n.read) {
-      if (n.link) navigate(n.link);
+    if (n.read && n.kind !== "pengumuman_baru") {
+      const to = safeLink(n.link);
+      if (to) navigate(to);
       return;
     }
     setBusyId(n.id);
     try {
       const r = await openNotification(n.id);
       setItems((prev) =>
-        prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)),
+        prev.map((x) =>
+          x.id === n.id
+            ? { ...x, read: true, response: r.item?.response ?? x.response }
+            : x,
+        ),
       );
-      notif.refresh(); // titik biru: cek ulang sekali
-      const target = r.link || n.link;
-      if (target) navigate(target);
+      if (!n.read) notif.refresh(); // titik biru: cek ulang sekali
+      const target = safeLink(r.link || n.link);
+      if (r.note) setInfo({ message: r.note, link: target });
+      else if (target) navigate(target);
     } catch (e) {
       if (e.status === 404) {
         setItems((prev) => prev.filter((x) => x.id !== n.id));
@@ -122,6 +134,12 @@ function Notifications() {
     } finally {
       setBusyId(null);
     }
+  };
+
+  const closeInfo = () => {
+    const to = info?.link;
+    setInfo(null);
+    if (to) navigate(to);
   };
 
   const markAll = async () => {
@@ -246,6 +264,17 @@ function Notifications() {
           </div>
         )}
       </section>
+
+      {info && (
+        <div className="nt-overlay" role="dialog" aria-modal="true">
+          <div className="nt-dialog">
+            <p>{info.message}</p>
+            <button type="button" className="nt-dialog-btn" onClick={closeInfo}>
+              Mengerti
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

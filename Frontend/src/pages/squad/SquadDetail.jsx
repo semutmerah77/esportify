@@ -41,7 +41,10 @@ function SquadDetail() {
   const [loadError, setLoadError] = useState("");
   const [joining, setJoining] = useState(false); // dialog konfirmasi gabung
   const [joinError, setJoinError] = useState("");
-  const [requestsOpen, setRequestsOpen] = useState(false);
+  // Dari notifikasi permintaan bergabung (?tab=permintaan): langsung buka daftar permintaan
+  const [requestsOpen, setRequestsOpen] = useState(
+    () => new URLSearchParams(location.search).get("tab") === "permintaan",
+  );
   const [leaving, setLeaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [inviting, setInviting] = useState(false);
@@ -345,7 +348,7 @@ function SquadDetail() {
         />
       )}
 
-      {requestsOpen && (
+      {requestsOpen && role === "leader" && (
         <JoinRequestsModal
           squad={squad}
           locked={false}

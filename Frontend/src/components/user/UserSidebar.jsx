@@ -76,6 +76,21 @@ function UserSidebar({
   );
   const [showGate, setShowGate] = useState(false);
 
+  // Pindah halaman (mis. dari Notifikasi): buka grup menu yang sesuai agar menu aktif terlihat
+  useEffect(() => {
+    if (
+      pathname.startsWith("/turnamen") ||
+      pathname.startsWith("/pendaftaran") ||
+      playerFromTournament
+    )
+      setMenuOpen(true);
+    if (
+      pathname.startsWith("/squad") ||
+      (pathname.startsWith("/player") && !playerFromTournament)
+    )
+      setSquadOpen(true);
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const returnTo = `${pathname}${search}`;
 
   const navClass = ({ isActive }) =>

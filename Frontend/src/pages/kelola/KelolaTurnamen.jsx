@@ -32,7 +32,9 @@ function KelolaTurnamen() {
   const { id } = useParams();
   const navigate = useNavigate();
   // Tab awal dari tombol "Buat pengumuman" (setelah perpanjangan jadwal)
-  const startTab = useLocation().state?.tab ?? "";
+  const loc = useLocation();
+  const startTab =
+    loc.state?.tab ?? new URLSearchParams(loc.search).get("tab") ?? "";
 
   const [head, setHead] = useState(null);
   const [headError, setHeadError] = useState("");
@@ -111,8 +113,9 @@ function KelolaTurnamen() {
         if (off) return;
         setHead(h);
         setTab(
-          startTab === "pengumuman" && h.status !== "dibatalkan"
-            ? "pengumuman"
+          ["pengumuman", "bracket"].includes(startTab) &&
+            h.status !== "dibatalkan"
+            ? startTab
             : h.status !== "dibatalkan" && h.feeType === "berbayar"
               ? "verifikasi"
               : "peserta",

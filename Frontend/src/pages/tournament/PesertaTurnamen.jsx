@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Icon from "../../components/icon";
 import ParticipantDetailModal from "../../components/kelola/ParticipantDetailModal";
@@ -35,8 +40,19 @@ function PesertaTurnamen() {
 
   const [head, setHead] = useState(null);
   const [headError, setHeadError] = useState("");
-  const [tab, setTab] = useState("peserta");
+  const [searchParams] = useSearchParams();
+  // Tab awal dari tautan notifikasi (?tab=), dibaca sekali di awal
+  const [tab, setTab] = useState(() => {
+    const t = searchParams.get("tab");
+    return ["peserta", "bracket", "pengembalian", "pengumuman"].includes(t)
+      ? t
+      : "peserta";
+  });
   const [part, setPart] = useState({ items: [], ready: false, error: "" });
+  // ?pengumuman={id} dari notifikasi: sorot pengumuman itu (hilang bila pindah tab)
+  const [hlId, setHlId] = useState(
+    () => Number(searchParams.get("pengumuman")) || 0,
+  );
   // Detail peserta: { item, data, loading, error }
   const [detailOf, setDetailOf] = useState(null);
 
@@ -219,7 +235,10 @@ function PesertaTurnamen() {
             role="tab"
             aria-selected={tab === t.key}
             className={`kl-tab ${tab === t.key ? "on" : ""}`}
-            onClick={() => setTab(t.key)}
+            onClick={() => {
+              setTab(t.key);
+              setHlId(0);
+            }}
           >
             {t.label}
           </button>
@@ -247,7 +266,9 @@ function PesertaTurnamen() {
           />
         )}
 
-        {tab === "pengumuman" && <PlayerAnnouncementPanel id={id} />}
+        {tab === "pengumuman" && (
+          <PlayerAnnouncementPanel id={id} highlightId={hlId} />
+        )}
       </section>
 
       {detailOf && (
