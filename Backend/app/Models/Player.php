@@ -86,5 +86,15 @@ class Player extends Model
             'data' => $squad->take(self::BATAS_HOME)->values()->loadCount('anggotaAktif'),
         ];
     }
+
+    
+    /**
+     * PB-30 — SD Tandai Semua Dibaca: tandaiSemuaDibaca() : int
+     * Player meneruskan ke User.tandaiSemuaNotifikasiDibaca().
+     */
+    public function tandaiSemuaDibaca(): int
+    {
+        return $this->user->tandaiSemuaNotifikasiDibaca();
+    }
 }
 ?>

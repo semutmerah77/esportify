@@ -51,3 +51,15 @@ Artisan::command('chat:hapus-pesan-lama', function () {
 })->purpose('Menghapus pesan chat yang lebih dari 6 bulan (R8.06)');
 
 Schedule::command('chat:hapus-pesan-lama')->dailyAt('02:00')->withoutOverlapping();
+
+
+// ==========================================
+// PB-30 (R10.04): notifikasi disimpan 30 hari, lebih dari itu dihapus otomatis.
+// ==========================================
+
+Artisan::command('notifikasi:hapus-kedaluwarsa', function () {
+    $jumlah = \App\Models\Notification::hapusNotifikasiKedaluwarsa();
+    $this->info("Notifikasi dihapus: {$jumlah}");
+})->purpose('Menghapus notifikasi yang lebih dari 30 hari (R10.04)');
+
+Schedule::command('notifikasi:hapus-kedaluwarsa')->dailyAt('02:30')->withoutOverlapping();
