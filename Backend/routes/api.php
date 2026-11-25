@@ -61,6 +61,7 @@ use App\Http\Controllers\Player\LihatBadgeSquadController;
 use App\Http\Controllers\Player\LihatBadgeProfilPlayerController;
 use App\Http\Controllers\Player\ChatController;
 use App\Http\Controllers\Player\HomePlayerController;
+use App\Http\Controllers\Player\NotifikasiController;
 use App\Http\Controllers\Player\KelolaRefundTurnamenController;
 use App\Http\Controllers\Api\Player\KategoriController as PlayerKategoriController;
 
@@ -361,6 +362,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/home-player', [HomePlayerController::class, 'tampilkanHomePlayer'])
             ->middleware('permission:lihat_home_player');
+        
+        
+        
+        // ==========================================
+        // PB-30: PUSAT NOTIFIKASI (hanya Player, R10.01)
+        // ==========================================
+
+        Route::middleware('permission:lihat_notifikasi')->prefix('notifikasi')->group(function () {
+            Route::get('/penanda', [NotifikasiController::class, 'cekPenandaNotifikasi']);
+            Route::get('/', [NotifikasiController::class, 'tampilkanDaftarNotifikasi']);
+            Route::post('/tandai-semua-dibaca', [NotifikasiController::class, 'tandaiSemuaDibaca']);
+            Route::post('/{id}/buka', [NotifikasiController::class, 'bukaNotifikasi'])->whereUuid('id');
+        });
         
         // ==========================================
         // PB-27 & PB-28: CHAT PLAYER, STATUS TERBACA, BLOKIR

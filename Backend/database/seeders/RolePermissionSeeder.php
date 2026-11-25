@@ -103,6 +103,7 @@ class RolePermissionSeeder extends Seeder
             // Chat Player (PB-27 & PB-28)
             'chat_player',
             'lihat_home_player',
+            'lihat_notifikasi',
         ];
 
         $admin = Role::findByName('admin', 'web');

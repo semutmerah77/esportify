@@ -66,5 +66,56 @@ class User extends Authenticatable
             'id_user'
         );
     }
+    
+    // ==========================================
+    // PB-30 — SD Melihat dan Membuka Notifikasi / Tandai Semua Dibaca
+    // R10.01: notifikasi hanya untuk Player (termasuk Leader & Penyelenggara).
+    // ==========================================
+
+    /**
+     * Notifikasi milik user memakai model App\Models\Notification
+     * (menggantikan bawaan DatabaseNotification dari trait Notifiable).
+     */
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable')->latest();
+    }
+
+    /** SD: hitungNotifikasiBelumDibaca() : int — untuk titik biru (30 hari terakhir). */
+    public function hitungNotifikasiBelumDibaca(): int
+    {
+        return $this->notifications()->masihBerlaku()->unread()->count();
+    }
+
+    /** SD: lihatDaftarNotifikasi() — 30 hari terakhir, terbaru lebih dulu. */
+    public function lihatDaftarNotifikasi(int $perHalaman = 20)
+    {
+        return $this->notifications()
+            ->masihBerlaku()
+            ->orderByDesc('id') // urutan tetap untuk notifikasi dengan waktu sama
+            ->simplePaginate($perHalaman);
+    }
+
+    /**
+     * SD: tandaiNotifikasiDibaca(id) → Notification.markAsRead().
+     * Mengembalikan null kalau notifikasi bukan milik user / sudah lebih dari 30 hari.
+     */
+    public function tandaiNotifikasiDibaca(string $id): ?Notification
+    {
+        $notifikasi = $this->notifications()->masihBerlaku()->whereKey($id)->first();
+
+        $notifikasi?->markAsRead();
+
+        return $notifikasi;
+    }
+
+    /** SD: tandaiSemuaNotifikasiDibaca() : int — jumlah notifikasi yang ditandai. */
+    public function tandaiSemuaNotifikasiDibaca(): int
+    {
+        return $this->notifications()
+            ->masihBerlaku()
+            ->unread()
+            ->update(['read_at' => now(), 'updated_at' => now()]);
+    }
 }
 ?>
