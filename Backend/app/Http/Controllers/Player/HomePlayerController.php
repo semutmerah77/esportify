@@ -71,6 +71,7 @@ class HomePlayerController extends Controller
             'nama_turnamen' => $pengajuan?->nama_turnamen,
             'poster_url' => $this->fileUrl($pengajuan?->poster),
             'nama_game' => $pengajuan?->game?->nama_game,
+            'tipe_turnamen' => $pengajuan?->tipe_turnamen,
             'jadwal_main' => $turnamen?->jadwalMainAktif()?->toIso8601String(),
             'status_turnamen' => $this->statusTurnamen($turnamen?->status),
             'squad' => [
@@ -88,6 +89,7 @@ class HomePlayerController extends Controller
             'kode_squad' => $squad->kode_squad,
             'nama_squad' => $squad->nama_squad,
             'logo_url' => $this->fileUrl($squad->logo_squad),
+            'jumlah_anggota' => (int) $squad->anggota_aktif_count,
         ];
     }
 
@@ -103,8 +105,10 @@ class HomePlayerController extends Controller
             'nama_game' => $pengajuan?->game?->nama_game,
             'tipe_turnamen' => $pengajuan?->tipe_turnamen,
             'slot' => $pengajuan?->slot,
+            'slot_terisi' => $t->slotTerisi(),
             'total_hadiah' => $pengajuan?->total_hadiah,
             'jenis_biaya' => $pengajuan?->pendanaan?->jenis_biaya,
+            'biaya_pendaftaran' => (int) ($pengajuan?->pendanaan?->biaya_pendaftaran ?? 0),
             'jadwal_pendaftaran_tutup' => $tutup?->toIso8601String(),
             'jadwal_main' => $t->jadwalMainAktif()?->toIso8601String(),
             'pendaftaran_terbuka' => $tutup ? now()->lt($tutup) : true,

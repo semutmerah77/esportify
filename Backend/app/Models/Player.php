@@ -54,7 +54,7 @@ class Player extends Model
             'data' => $query
                 ->with([
                     'turnamen:id_turnamen,id_pengajuan,status,jadwal_main,jadwal_main_baru',
-                    'turnamen.pengajuan:id_pengajuan,id_game,nama_turnamen,poster,jadwal_main',
+                    'turnamen.pengajuan:id_pengajuan,id_game,nama_turnamen,poster,tipe_turnamen,jadwal_main',
                     'turnamen.pengajuan.game:id_game,nama_game',
                     'squad:id_squad,nama_squad,logo_squad',
                 ])
@@ -82,7 +82,8 @@ class Player extends Model
 
         return [
             'total' => $squad->count(),
-            'data' => $squad->take(self::BATAS_HOME)->values(),
+            // jumlah anggota aktif untuk 5 squad sekaligus (1 query)
+            'data' => $squad->take(self::BATAS_HOME)->values()->loadCount('anggotaAktif'),
         ];
     }
 }
