@@ -168,7 +168,7 @@ export async function submitReport(
 // GET /laporan-pertandingan/{idLaporan}/bukti/{idBukti} -> FILE gambar (perlu Bearer token).
 // Tidak bisa dipakai langsung di <img src>: ambil sebagai blob lalu buat object URL.
 export async function fetchEvidenceObjectUrl(url) {
-  let token = "";
+  let token;
   try {
     token = sessionStorage.getItem("esportify_token") || "";
   } catch {

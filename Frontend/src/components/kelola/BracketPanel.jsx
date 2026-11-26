@@ -26,17 +26,7 @@ const wibDate = (iso) => {
     ? ""
     : d.toLocaleDateString("sv-SE", { timeZone: WIB });
 };
-const wibTime = (iso) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? ""
-    : d.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: WIB,
-      });
-};
+
 
 // Konfirmasi Acak / Publikasi
 function ConfirmDialog({
