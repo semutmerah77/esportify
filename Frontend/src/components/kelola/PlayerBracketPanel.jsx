@@ -81,13 +81,13 @@ function PlayerBracketPanel({ id, subtitle = "", onChanged }) {
   const { data } = state;
   const b = data.bracket;
 
-  if (!data.published || !b) {
-    return (
-      <p className="kl-empty">{data.note || "Bracket belum dipublikasikan."}</p>
-    );
+  if (!b) {
+    return <p className="kl-empty">{data.note || "Bracket belum tersedia."}</p>;
   }
 
   const finished = data.tournament.status === "selesai";
+  // Draft: bracket sudah terlihat peserta (squad lain disamarkan), tapi belum bisa lapor skor
+  const draft = !data.published;
 
   return (
     <>
@@ -109,10 +109,11 @@ function PlayerBracketPanel({ id, subtitle = "", onChanged }) {
           <p>{b.description}</p>
         </div>
       )}
+      {draft && data.note && <p className="kl-empty">{data.note}</p>}
       <BracketCanvas
         rounds={b.rounds}
         mineReg={data.mySquad?.regId ?? null}
-        onReport={finished ? undefined : setReporting}
+        onReport={finished || draft ? undefined : setReporting}
       />
       {reporting && !finished && (
         <PlayerReportDialog

@@ -14,8 +14,20 @@ const MONTHS = [
 ];
 
 // 2026-11-12 atau ISO penuh -> 12 November 2026. Teks lain ditampilkan apa adanya.
+// ISO dengan zona waktu (Z / +07:00) dikonversi ke tanggal WIB dulu, supaya
+// "2026-11-24T17:00:00Z" tampil 25 November (bukan 24).
 export const longDate = (value) => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value ?? ""));
+  const s = String(value ?? "");
+  if (/T.*(Z|[+-]\d{2}:?\d{2})$/.test(s)) {
+    const d = new Date(s);
+    if (!Number.isNaN(d.getTime())) {
+      const [y, mo, da] = d
+        .toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" })
+        .split("-");
+      return `${Number(da)} ${MONTHS[Number(mo) - 1]} ${y}`;
+    }
+  }
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
   return m
     ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}`
     : value || "-";
