@@ -467,9 +467,12 @@
   background: rgba(3, 6, 14, 0.65);
 }
 .ch-modal {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 576px;
-  min-height: 420px;
+  height: 420px; /* tinggi tetap: hasil banyak di-scroll, ukuran popup tidak berubah */
+  max-height: calc(100vh - 32px);
   overflow: hidden;
   border: 1px solid #1f2a40;
   border-radius: 14px;
@@ -499,7 +502,22 @@
   cursor: pointer;
 }
 .ch-modal-body {
-  padding: 24px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 24px 24px 12px;
+}
+.ch-modal-head,
+.ch-search,
+.ch-modal-label {
+  flex: none;
+}
+.ch-results {
+  flex: 1;
+  min-height: 0;
+  padding-right: 4px;
+  overflow-y: auto;
 }
 .ch-search {
   display: flex;
@@ -780,6 +798,31 @@
 .ch-confirm button:active:not(:disabled),
 .ch-blk-btn:active:not(:disabled) {
   filter: brightness(0.92);
+}
+
+/* Scrollbar daftar hasil pencarian (popup Obrolan Baru) */
+.ch-results {
+  scrollbar-width: thin;
+  scrollbar-color: #2f3b5a transparent;
+}
+.ch-results::-webkit-scrollbar {
+  width: 8px;
+}
+.ch-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ch-results::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #2f3b5a;
+  background-clip: padding-box;
+}
+.ch-results::-webkit-scrollbar-thumb:hover {
+  background: #44527a;
+  background-clip: padding-box;
+}
+.ch-results::-webkit-scrollbar-button {
+  display: none;
 }
 
 /* ---------- Ponsel ---------- */

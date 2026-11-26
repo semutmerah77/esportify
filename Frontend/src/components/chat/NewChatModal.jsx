@@ -93,40 +93,44 @@ function NewChatModal({ onClose, onOpened }) {
 
           <p className="ch-modal-label">Hasil Pencarian</p>
 
-          {error && <p className="ch-modal-msg error">{error}</p>}
+          <div className="ch-results">
+            {error && <p className="ch-modal-msg error">{error}</p>}
 
-          {searching && !result.done && (
-            <div className="ch-skel-row" aria-hidden="true">
-              <i className="ch-skel round" />
-              <i className="ch-skel line" />
-            </div>
-          )}
-
-          {!searching && result.done && result.items.length === 0 && (
-            <p className="ch-modal-msg">
-              {result.message || "Hasil tidak ditemukan."}
-            </p>
-          )}
-
-          {!query.trim() && (
-            <p className="ch-modal-msg">Ketik username untuk mencari player.</p>
-          )}
-
-          {query.trim() &&
-            result.items.map((p) => (
-              <div className="ch-result" key={p.id}>
-                <Avatar src={p.avatar} name={p.username} size={36} />
-                <b>{p.username}</b>
-                <button
-                  type="button"
-                  className="ch-result-btn"
-                  onClick={() => start(p)}
-                  disabled={startingId !== null}
-                >
-                  Kirim Pesan
-                </button>
+            {searching && !result.done && (
+              <div className="ch-skel-row" aria-hidden="true">
+                <i className="ch-skel round" />
+                <i className="ch-skel line" />
               </div>
-            ))}
+            )}
+
+            {!searching && result.done && result.items.length === 0 && (
+              <p className="ch-modal-msg">
+                {result.message || "Hasil tidak ditemukan."}
+              </p>
+            )}
+
+            {!query.trim() && (
+              <p className="ch-modal-msg">
+                Ketik username untuk mencari player.
+              </p>
+            )}
+
+            {query.trim() &&
+              result.items.map((p) => (
+                <div className="ch-result" key={p.id}>
+                  <Avatar src={p.avatar} name={p.username} size={36} />
+                  <b>{p.username}</b>
+                  <button
+                    type="button"
+                    className="ch-result-btn"
+                    onClick={() => start(p)}
+                    disabled={startingId !== null}
+                  >
+                    Kirim Pesan
+                  </button>
+                </div>
+              ))}
+          </div>
         </div>
       </div>
     </div>
