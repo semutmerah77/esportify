@@ -22,6 +22,7 @@ class PengajuanTurnamen extends Model
         'poster',
         'nama_turnamen',
         'nama_penyelenggara',
+        'nomor_telepon_penyelenggara',
         'nama_instansi',
         'nomor_instansi',
         'tipe_turnamen',

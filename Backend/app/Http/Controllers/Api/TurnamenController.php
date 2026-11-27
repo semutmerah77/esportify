@@ -304,6 +304,7 @@ class TurnamenController extends Controller
                     'id_pengajuan' => $pengajuan->id_pengajuan,
                     'nama_turnamen' => $pengajuan->nama_turnamen,
                     'nama_penyelenggara' => $pengajuan->nama_penyelenggara,
+                    'nomor_telepon_penyelenggara' => $pengajuan->nomor_telepon_penyelenggara,
                     // Nama instansi tampil publik. Nomor instansi sengaja
                     // tidak dikirim (hanya untuk admin dan pengaju).
                     'nama_instansi' => $pengajuan->nama_instansi,
