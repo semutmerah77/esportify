@@ -28,7 +28,13 @@ const money = (v) =>
     ? "-"
     : `Rp${Number(v).toLocaleString("id-ID")}`;
 
-function InfoCard({ title, icon, children, sub }) {
+// 08819835556 -> 0881-9835-556
+const formatPhone = (v) =>
+  String(v)
+    .replace(/\D/g, "")
+    .replace(/(\d{4})(?=\d)/g, "$1-");
+
+function InfoCard({ title, icon, children, sub, extra }) {
   return (
     <section className="td-card">
       <h2>{title}</h2>
@@ -39,6 +45,7 @@ function InfoCard({ title, icon, children, sub }) {
         <div>
           <p className="td-item-main">{children}</p>
           {sub && <p className="td-item-sub">{sub}</p>}
+          {extra && <p className="td-item-sub">{extra}</p>}
         </div>
       </div>
     </section>
@@ -141,13 +148,32 @@ function TournamentInfo({ d, action, registered = null }) {
         </section>
       </div>
 
-      <InfoCard
-        title="Nama Penyelenggara"
-        icon="person"
-        sub={d.agencyName ? `Instansi: ${d.agencyName}` : ""}
-      >
-        {d.organizer}
-      </InfoCard>
+      <section className="td-card">
+        <h2>Nama Penyelenggara</h2>
+        <div className="td-item">
+          <span className="td-icon">
+            <Icon name="person" size={20} />
+          </span>
+          <div>
+            <p className="td-item-main">{d.organizer}</p>
+            {d.agencyName && (
+              <p
+                className="td-item-sub"
+                style={{ display: "flex", alignItems: "center", gap: 6 }}
+              >
+                <Icon name="building" size={14} /> Mewakili {d.agencyName}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {d.organizerPhone && (
+        <InfoCard title="Nomor Telepon Penyelenggara" icon="phone">
+          {formatPhone(d.organizerPhone)}
+        </InfoCard>
+      )}
+
       <InfoCard title="Lokasi" icon="pin" sub={offline ? d.address : ""}>
         {place}
       </InfoCard>

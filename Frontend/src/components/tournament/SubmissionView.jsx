@@ -74,6 +74,8 @@ function SubmissionView({ d }) {
       <section className="d-card">
         <p className="d-label">Nama Lengkap Penyelenggara</p>
         <div className="d-value">{d.organizer || "-"}</div>
+        <p className="d-label">Nomor Telepon Penyelenggara</p>
+        <div className="d-value">{d.organizerPhone || "-"}</div>
         {d.isAgency && (
           <>
             <p className="d-label">Nama Instansi</p>
