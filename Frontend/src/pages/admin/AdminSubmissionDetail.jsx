@@ -326,6 +326,8 @@ function AdminSubmissionDetail() {
           <section className="d-card">
             <p className="d-label">Nama Lengkap Penyelenggara</p>
             <div className="d-value">{data.organizer || "-"}</div>
+            <p className="d-label">Nomor Telepon Penyelenggara</p>
+            <div className="d-value">{data.organizerPhone || "-"}</div>
 
             {data.agencyName && (
               <>

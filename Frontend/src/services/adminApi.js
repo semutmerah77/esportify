@@ -660,6 +660,7 @@ export async function getAdminSubmissionDetail(id) {
     submitterUsername: d.player?.user?.username || "-",
     agencyName: d.nama_instansi ?? "",
     agencyPhone: d.nomor_instansi ?? "",
+    organizerPhone: d.nomor_telepon_penyelenggara ?? "",
     status: d.status ?? "",
     createdAt: d.created_at ?? "",
     resubmittedAt: d.diajukan_ulang_pada ?? null,

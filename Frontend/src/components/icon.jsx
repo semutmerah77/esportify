@@ -69,6 +69,8 @@ import {
   Copy,
   Ban,
   ClipboardCheck,
+  Phone,
+  Building2,
 } from "lucide-react";
 
 // Untuk menambah ikon: import di atas, lalu tambah satu baris di objek icons.
@@ -146,6 +148,8 @@ const icons = {
   copy: Copy,
   ban: Ban,
   "clipboard-check": ClipboardCheck,
+  phone: Phone,
+  building: Building2,
 };
 
 function Icon({ name, size = 16 }) {

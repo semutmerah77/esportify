@@ -36,6 +36,8 @@ const PAYMENT_OPTIONS = [
 const FIELD_MAP = {
   poster: "poster",
   nama_turnamen: "name",
+  nama_penyelenggara: "organizer",
+  nomor_telepon_penyelenggara: "organizerPhone",
   perwakilan_instansi: "isAgency",
   nama_instansi: "agencyName",
   nomor_instansi: "agencyPhone",
@@ -67,6 +69,7 @@ export const emptyForm = {
   poster: null,
   name: "",
   organizer: "",
+  organizerPhone: "",
   isAgency: false,
   agencyName: "",
   agencyPhone: "",
@@ -170,6 +173,13 @@ function TournamentForm({
     value: form[key],
     onChange: (e) => set(key, digits(e.target.value)),
     inputMode: "numeric",
+  });
+  // Nomor telepon: huruf tidak bisa diketik, hanya angka dan + - ( ) spasi
+  const phone = (key) => ({
+    value: form[key],
+    onChange: (e) => set(key, e.target.value.replace(/[^0-9+\-\s()]/g, "")),
+    inputMode: "tel",
+    maxLength: 20,
   });
   const setError = (key) => (msg) =>
     setErrors((prev) => ({ ...prev, [key]: msg }));
@@ -316,6 +326,8 @@ function TournamentForm({
       e.name = "Nama turnamen minimal 3 karakter.";
     if (form.organizer.trim().length < 3)
       e.organizer = "Nama penyelenggara minimal 3 karakter.";
+    if (!/\d/.test(form.organizerPhone))
+      e.organizerPhone = "Isi nomor telepon penyelenggara.";
     if (form.isAgency) {
       if (form.agencyName.trim().length < 3)
         e.agencyName = "Nama instansi minimal 3 karakter.";
@@ -506,6 +518,20 @@ function TournamentForm({
           placeholder: "Masukkan nama lengkap Anda",
           ...text("organizer"),
         })}
+
+        <label className="t-label">
+          Nomor Telepon Penyelenggara <Req />
+        </label>
+        {underline("organizerPhone", {
+          placeholder: "Contoh: 081234567890",
+          ...phone("organizerPhone"),
+        })}
+        {errors.organizerPhone && (
+          <p className="t-field-error">{errors.organizerPhone}</p>
+        )}
+        <p className="t-upload-hint" style={{ justifyContent: "flex-start" }}>
+          Nomor ini akan ditampilkan di halaman turnamen.
+        </p>
 
         <label className="t-radio">
           <input

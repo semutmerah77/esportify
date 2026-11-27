@@ -146,6 +146,7 @@ export async function submitTournament(v) {
   f.append("poster", v.poster);
   f.append("nama_turnamen", v.name.trim());
   f.append("nama_penyelenggara", v.organizer.trim());
+  f.append("nomor_telepon_penyelenggara", v.organizerPhone.trim());
   if (v.isAgency) {
     f.append("perwakilan_instansi", "1");
     f.append("nama_instansi", v.agencyName.trim());
@@ -250,6 +251,7 @@ export async function getSubmissionDetail(id) {
     posterUrl: d.poster_url ?? toMediaUrl(d.poster),
     name: d.nama_turnamen ?? "",
     organizer: d.nama_penyelenggara ?? "",
+    organizerPhone: d.nomor_telepon_penyelenggara ?? "",
     isAgency: Boolean(d.nama_instansi),
     agencyName: d.nama_instansi ?? "",
     agencyPhone: d.nomor_instansi ?? "",
@@ -297,6 +299,7 @@ export const detailToForm = (d) => ({
   poster: null,
   name: d.name,
   organizer: d.organizer,
+  organizerPhone: d.organizerPhone,
   isAgency: d.isAgency,
   agencyName: d.agencyName,
   agencyPhone: d.agencyPhone,
@@ -370,6 +373,7 @@ export async function updateSubmission(
   if (v.poster) f.append("poster", v.poster);
   put("nama_turnamen", "name", (s) => s.trim());
   put("nama_penyelenggara", "organizer", (s) => s.trim());
+  put("nomor_telepon_penyelenggara", "organizerPhone", (s) => s.trim());
   if (diff("isAgency") || diff("agencyName") || diff("agencyPhone")) {
     f.append("perwakilan_instansi", v.isAgency ? "1" : "0");
     if (v.isAgency) {
@@ -466,6 +470,7 @@ export async function getTournamentDetail(id) {
     closed: (t.pendaftaran_terbuka ?? p.pendaftaran_terbuka) === false,
     organizer:
       p.nama_penyelenggara ?? t.penyelenggara?.nama_penyelenggara ?? "-",
+    organizerPhone: p.nomor_telepon_penyelenggara ?? "",
     agencyName: p.nama_instansi ?? "",
     organizerUsername: p.username_penyelenggara ?? "",
     organizerAvatar: p.avatar_penyelenggara ?? null,
