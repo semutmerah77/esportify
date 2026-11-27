@@ -175,6 +175,7 @@ class PengajuanTurnamenController extends Controller
             ],
             'nama_turnamen' => ['required', 'string', 'max:150'],
             'nama_penyelenggara' => ['required', 'string', 'max:150'],
+            'nomor_telepon_penyelenggara' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s()]+$/'],
             'perwakilan_instansi' => ['nullable', 'boolean'],
             'nama_instansi' => [
                 'nullable',
@@ -352,6 +353,7 @@ class PengajuanTurnamenController extends Controller
                     'poster' => $posterPath,
                     'nama_turnamen' => $validated['nama_turnamen'],
                     'nama_penyelenggara' => $validated['nama_penyelenggara'],
+                    'nomor_telepon_penyelenggara' => $validated['nomor_telepon_penyelenggara'],
                     'nama_instansi' => $perwakilan
                         ? $validated['nama_instansi']
                         : null,
@@ -652,6 +654,7 @@ class PengajuanTurnamenController extends Controller
 
             'nama_turnamen' => ['sometimes', 'required', 'string', 'max:150'],
             'nama_penyelenggara' => ['sometimes', 'required', 'string', 'max:150'],
+            'nomor_telepon_penyelenggara' => ['sometimes', 'required', 'string', 'max:20', 'regex:/^[0-9+\-\s()]+$/'],
             'perwakilan_instansi' => ['sometimes', 'boolean'],
             'nama_instansi' => [
                 'nullable',
@@ -861,6 +864,7 @@ class PengajuanTurnamenController extends Controller
                 $fieldPengajuan = [
                     'nama_turnamen',
                     'nama_penyelenggara',
+                    'nomor_telepon_penyelenggara',
                     'id_game',
                     'min_roster',
                     'maks_roster',
